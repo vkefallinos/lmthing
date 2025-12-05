@@ -5,10 +5,10 @@ import { getCustomProvider, isCustomProvider, listCustomProviders } from './cust
 /**
  * Resolves a model identifier to a LanguageModelV2 instance
  *
- * Supports both built-in providers and custom OpenAI-compatible providers
- * configured via environment variables.
+ * Supports built-in providers, custom OpenAI-compatible providers,
+ * and model aliases configured via environment variables.
  *
- * @param model - Either a LanguageModelV2 instance or a string in the format "provider:modelId"
+ * @param model - Either a LanguageModelV2 instance, a string in the format "provider:modelId", or an alias name
  * @returns A LanguageModelV2 instance
  * @throws Error if the provider is not found or the format is invalid
  *
@@ -22,9 +22,13 @@ import { getCustomProvider, isCustomProvider, listCustomProviders } from './cust
  * const model3 = resolveModel('zai:gpt-4');
  * const model4 = resolveModel('openrouter:anthropic/claude-3.5-sonnet');
  *
+ * // Model aliases (configured via LM_MODEL_* env vars)
+ * // Set: LM_MODEL_LARGE=openai:gpt-4o
+ * const model5 = resolveModel('large');
+ *
  * // Direct model instance (passes through)
  * import { openai } from 'lmthing/providers';
- * const model5 = resolveModel(openai('gpt-4o'));
+ * const model6 = resolveModel(openai('gpt-4o'));
  * ```
  */
 export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
@@ -33,15 +37,27 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
     return model;
   }
 
-  // Parse the string format "provider:modelId"
-  // Use indexOf to handle model IDs that contain colons (e.g., bedrock models like "anthropic.claude-3-5-sonnet-20241022-v2:0")
+  // Check for model aliases first (strings without colons)
+  // Model aliases are configured via LM_MODEL_* environment variables
   const colonIndex = model.indexOf(':');
 
   if (colonIndex === -1) {
+    // No colon found - treat as an alias
+    const aliasKey = `LM_MODEL_${model.toUpperCase()}`;
+    const aliasValue = process.env[aliasKey];
+
+    if (aliasValue) {
+      // Recursively resolve the alias value (could be another alias or a provider:modelId)
+      return resolveModel(aliasValue);
+    }
+
     throw new Error(
-      `Invalid model format: "${model}". Expected format is "provider:modelId" (e.g., "openai:gpt-4o")`
+      `Model alias "${model}" not found. Please set the environment variable ${aliasKey} (e.g., ${aliasKey}=openai:gpt-4o)`
     );
   }
+
+  // Parse the string format "provider:modelId"
+  // Use indexOf to handle model IDs that contain colons (e.g., bedrock models like "anthropic.claude-3-5-sonnet-20241022-v2:0")
 
   const providerName = model.slice(0, colonIndex);
   const modelId = model.slice(colonIndex + 1);

@@ -164,12 +164,14 @@ With these environment variables set, you can use the custom provider in your mo
 You can create model aliases using environment variables to make model selection more flexible and easier to change across your application:
 
 ```bash
-# Define a model alias
-GEN_MODEL_LARGE=zai:glm-4.6
+# Define a model alias using the LM_MODEL_* prefix
+LM_MODEL_LARGE=openai:gpt-4o
+LM_MODEL_FAST=openai:gpt-4o-mini
+LM_MODEL_SMART=anthropic:claude-3-opus-20240229
 ```
 ```ts
 {
-  model: 'large', // Resolves to 'zai:glm-4.6'
+  model: 'large', // Resolves to 'openai:gpt-4o'
 }
 ```
 
