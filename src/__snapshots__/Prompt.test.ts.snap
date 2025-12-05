@@ -1,0 +1,437 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Prompt > should handle a complete workflow testing all Prompt class features 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "role:
+You are a professional database assistant.
+guidelines:
+Always verify data integrity before returning results.
+<variables>
+  <userId>
+ 123
+  </userId>
+  <environment>
+ production
+  </environment>
+  <config>
+database: main_db
+timeout: 5000
+retries: 3
+features:
+  caching: true
+  logging:
+    level: info
+    destination: file
+
+  </config>
+  <expectedUser>
+id: 123
+permissions:
+  - read
+  - write
+
+  </expectedUser>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "I need information about user 123",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "id": 123,
+            "query": "getUserById",
+          },
+          "toolCallId": "call_1",
+          "toolName": "database",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me help you with the database query.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "role:
+You are a professional database assistant.
+guidelines:
+Always verify data integrity before returning results.
+<variables>
+  <userId>
+ 123
+  </userId>
+  <environment>
+ production
+  </environment>
+  <config>
+database: main_db
+timeout: 5000
+retries: 3
+features:
+  caching: true
+  logging:
+    level: info
+    destination: file
+
+  </config>
+  <expectedUser>
+id: 123
+permissions:
+  - read
+  - write
+
+  </expectedUser>
+  <stepInfo>
+ Step 1: Querying database
+  </stepInfo>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "I need information about user 123",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me help you with the database query.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "id": 123,
+                "query": "getUserById",
+              },
+              "toolCallId": "call_1",
+              "toolName": "database",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "user": {
+                    "email": "alice@example.com",
+                    "id": 123,
+                    "name": "Alice",
+                  },
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "database",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "data": {
+              "name": "Alice",
+            },
+            "format": "pretty",
+          },
+          "toolCallId": "call_2",
+          "toolName": "formatter",
+          "type": "tool-call",
+        },
+        {
+          "text": "Found the user! Now formatting the result.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "role:
+You are a professional database assistant.
+guidelines:
+Always verify data integrity before returning results.
+<variables>
+  <userId>
+ 123
+  </userId>
+  <environment>
+ production
+  </environment>
+  <config>
+database: main_db
+timeout: 5000
+retries: 3
+features:
+  caching: true
+  logging:
+    level: info
+    destination: file
+
+  </config>
+  <expectedUser>
+id: 123
+permissions:
+  - read
+  - write
+
+  </expectedUser>
+  <stepInfo>
+ Step 2: Formatting results
+  </stepInfo>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "I need information about user 123",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me help you with the database query.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "id": 123,
+                "query": "getUserById",
+              },
+              "toolCallId": "call_1",
+              "toolName": "database",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "user": {
+                    "email": "alice@example.com",
+                    "id": 123,
+                    "name": "Alice",
+                  },
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "database",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Found the user! Now formatting the result.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "data": {
+                  "name": "Alice",
+                },
+                "format": "pretty",
+              },
+              "toolCallId": "call_2",
+              "toolName": "formatter",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "formatted": "User: Alice (alice@example.com)",
+                },
+              },
+              "toolCallId": "call_2",
+              "toolName": "formatter",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Here is the formatted user information.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Prompt > should handle defAgent to create a sub-prompt with its own model 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "I need detailed research on quantum computing.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "depth": "detailed",
+            "topic": "quantum computing",
+          },
+          "toolCallId": "call_agent_1",
+          "toolName": "researchAgent",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me delegate this task to a specialist agent.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "I need detailed research on quantum computing.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me delegate this task to a specialist agent.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "detailed",
+                "topic": "quantum computing",
+              },
+              "toolCallId": "call_agent_1",
+              "toolName": "researchAgent",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "response": "Analyzing quantum computing in depth...Quantum computing uses qubits and superposition principles for computation.",
+                  "steps": [
+                    {
+                      "input": {
+                        "prompt": [
+                          {
+                            "content": [
+                              {
+                                "text": "Please research <researchTopic> with <researchDepth> level of detail.",
+                                "type": "text",
+                              },
+                            ],
+                            "role": "user",
+                          },
+                        ],
+                      },
+                      "output": {
+                        "content": [
+                          {
+                            "text": "Analyzing quantum computing in depth...Quantum computing uses qubits and superposition principles for computation.",
+                            "type": "text",
+                          },
+                        ],
+                        "finishReason": "stop",
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_agent_1",
+              "toolName": "researchAgent",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "The research agent has completed the analysis.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;

@@ -1,0 +1,598 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`runPrompt > should execute a complete prompt workflow with all features 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "role:
+You are a helpful weather and math assistant.
+guidelines:
+Always be precise with temperature conversions.
+<variables>
+  <city>
+ San Francisco
+  </city>
+  <unit>
+ celsius
+  </unit>
+  <config>
+precision: 1
+includeHumidity: true
+preferredUnit: metric
+
+  </config>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "What's the weather in <city> in <unit>? Convert it to the other unit. My config is <config>.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Please provide the weather details and conversion.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "city": "San Francisco",
+            "unit": "celsius",
+          },
+          "toolCallId": "call_weather",
+          "toolName": "getWeather",
+          "type": "tool-call",
+        },
+        {
+          "text": "I understand you need help with weather and calculations.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "role:
+You are a helpful weather and math assistant.
+guidelines:
+Always be precise with temperature conversions.
+<variables>
+  <city>
+ San Francisco
+  </city>
+  <unit>
+ celsius
+  </unit>
+  <config>
+precision: 1
+includeHumidity: true
+preferredUnit: metric
+
+  </config>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "What's the weather in <city> in <unit>? Convert it to the other unit. My config is <config>.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Please provide the weather details and conversion.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I understand you need help with weather and calculations.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "city": "San Francisco",
+                "unit": "celsius",
+              },
+              "toolCallId": "call_weather",
+              "toolName": "getWeather",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "condition": "Partly cloudy",
+                  "humidity": 65,
+                  "temperature": 18,
+                },
+              },
+              "toolCallId": "call_weather",
+              "toolName": "getWeather",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "celsius": 18,
+          },
+          "toolCallId": "call_convert",
+          "toolName": "convertTemperature",
+          "type": "tool-call",
+        },
+        {
+          "text": "The weather is 18°C. Let me calculate the Fahrenheit equivalent.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "role:
+You are a helpful weather and math assistant.
+guidelines:
+Always be precise with temperature conversions.
+<variables>
+  <city>
+ San Francisco
+  </city>
+  <unit>
+ celsius
+  </unit>
+  <config>
+precision: 1
+includeHumidity: true
+preferredUnit: metric
+
+  </config>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "What's the weather in <city> in <unit>? Convert it to the other unit. My config is <config>.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Please provide the weather details and conversion.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I understand you need help with weather and calculations.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "city": "San Francisco",
+                "unit": "celsius",
+              },
+              "toolCallId": "call_weather",
+              "toolName": "getWeather",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "condition": "Partly cloudy",
+                  "humidity": 65,
+                  "temperature": 18,
+                },
+              },
+              "toolCallId": "call_weather",
+              "toolName": "getWeather",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "The weather is 18°C. Let me calculate the Fahrenheit equivalent.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "celsius": 18,
+              },
+              "toolCallId": "call_convert",
+              "toolName": "convertTemperature",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "fahrenheit": 64.4,
+                },
+              },
+              "toolCallId": "call_convert",
+              "toolName": "convertTemperature",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "That is 64.4°F. Have a great day!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`runPrompt > should support defAgent for creating hierarchical agent workflows 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Please validate and process user data for the new signup.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Coordinate the validation and processing agents to handle this request.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "data": {
+              "age": 25,
+              "email": "test@example.com",
+            },
+          },
+          "toolCallId": "call_validator",
+          "toolName": "validationAgent",
+          "type": "tool-call",
+        },
+        {
+          "text": "I will coordinate with specialized agents to solve this.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Please validate and process user data for the new signup.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Coordinate the validation and processing agents to handle this request.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I will coordinate with specialized agents to solve this.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "data": {
+                  "age": 25,
+                  "email": "test@example.com",
+                },
+              },
+              "toolCallId": "call_validator",
+              "toolName": "validationAgent",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "response": "Validating email format...Validating age range...All validations passed.",
+                  "steps": [
+                    {
+                      "input": {
+                        "prompt": [
+                          {
+                            "content": [
+                              {
+                                "text": "Validate the following data: <inputData>",
+                                "type": "text",
+                              },
+                            ],
+                            "role": "user",
+                          },
+                        ],
+                      },
+                      "output": {
+                        "content": [
+                          {
+                            "text": "Validating email format...Validating age range...All validations passed.",
+                            "type": "text",
+                          },
+                        ],
+                        "finishReason": "stop",
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_validator",
+              "toolName": "validationAgent",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "input": "validated_data",
+            "operation": "transform",
+          },
+          "toolCallId": "call_processor",
+          "toolName": "processingAgent",
+          "type": "tool-call",
+        },
+        {
+          "text": "Validation complete. Now processing...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Please validate and process user data for the new signup.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Coordinate the validation and processing agents to handle this request.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I will coordinate with specialized agents to solve this.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "data": {
+                  "age": 25,
+                  "email": "test@example.com",
+                },
+              },
+              "toolCallId": "call_validator",
+              "toolName": "validationAgent",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "response": "Validating email format...Validating age range...All validations passed.",
+                  "steps": [
+                    {
+                      "input": {
+                        "prompt": [
+                          {
+                            "content": [
+                              {
+                                "text": "Validate the following data: <inputData>",
+                                "type": "text",
+                              },
+                            ],
+                            "role": "user",
+                          },
+                        ],
+                      },
+                      "output": {
+                        "content": [
+                          {
+                            "text": "Validating email format...Validating age range...All validations passed.",
+                            "type": "text",
+                          },
+                        ],
+                        "finishReason": "stop",
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_validator",
+              "toolName": "validationAgent",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Validation complete. Now processing...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "input": "validated_data",
+                "operation": "transform",
+              },
+              "toolCallId": "call_processor",
+              "toolName": "processingAgent",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "response": "Starting transformation process...Data transformed successfully.",
+                  "steps": [
+                    {
+                      "input": {
+                        "prompt": [
+                          {
+                            "content": [
+                              {
+                                "text": "Execute <operation> on <inputSource>",
+                                "type": "text",
+                              },
+                            ],
+                            "role": "user",
+                          },
+                        ],
+                      },
+                      "output": {
+                        "content": [
+                          {
+                            "text": "Starting transformation process...Data transformed successfully.",
+                            "type": "text",
+                          },
+                        ],
+                        "finishReason": "stop",
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_processor",
+              "toolName": "processingAgent",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "All agent tasks completed successfully!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;

@@ -1,0 +1,37 @@
+{
+  "name": "lmthing",
+  "version": "0.1.0",
+  "description": "A library for creating AI agents with structured prompts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "testing",
+    "mock",
+    "ai-sdk"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "ai": "^5.0.0",
+    "js-yaml": "^4.1.1",
+    "zod": "^4.1.13"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.0.0",
+    "msw": "^2.12.4",
+    "typescript": "^5.5.4",
+    "vitest": "^4.0.15"
+  }
+}

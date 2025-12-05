@@ -1,0 +1,271 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`StreamTextBuilder > Integration Test > should handle all features in a comprehensive workflow 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "Remember to use the tools wisely to assist the user effectively.",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Hello, I need help with some calculations.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Of course! I'd be happy to help with calculations.",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "text": "Can you add 25 and 17, then format the result as currency?",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "a": 25,
+            "b": 17,
+            "operation": "add",
+          },
+          "toolCallId": "call_1",
+          "toolName": "calculator",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me help you with that calculation. ",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "You are an expert mathematical assistant.
+Always explain your calculations clearly.
+Use the tools available to you for accuracy.",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Hello, I need help with some calculations.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Of course! I'd be happy to help with calculations.",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "text": "Can you add 25 and 17, then format the result as currency?",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me help you with that calculation. ",
+              "type": "text",
+            },
+            {
+              "input": {
+                "a": 25,
+                "b": 17,
+                "operation": "add",
+              },
+              "toolCallId": "call_1",
+              "toolName": "calculator",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": 42,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "calculator",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "format": "currency",
+            "value": 42,
+          },
+          "toolCallId": "call_2",
+          "toolName": "formatter",
+          "type": "tool-call",
+        },
+        {
+          "text": "The sum of 25 and 17 is 42. ",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "You are an expert mathematical assistant.
+Always explain your calculations clearly.
+Use the tools available to you for accuracy.",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Hello, I need help with some calculations.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Of course! I'd be happy to help with calculations.",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "text": "Can you add 25 and 17, then format the result as currency?",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me help you with that calculation. ",
+              "type": "text",
+            },
+            {
+              "input": {
+                "a": 25,
+                "b": 17,
+                "operation": "add",
+              },
+              "toolCallId": "call_1",
+              "toolName": "calculator",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": 42,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "calculator",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "The sum of 25 and 17 is 42. ",
+              "type": "text",
+            },
+            {
+              "input": {
+                "format": "currency",
+                "value": 42,
+              },
+              "toolCallId": "call_2",
+              "toolName": "formatter",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "formatted": "$42.00",
+                },
+              },
+              "toolCallId": "call_2",
+              "toolName": "formatter",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Formatted as currency: $42.00",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
