@@ -69,15 +69,18 @@ describe('resolveModel', () => {
     expect(resolved.modelId).toBe('deployment-name');
   });
 
-  it('should throw an error for invalid format (no colon)', () => {
-    expect(() => resolveModel('gpt-4o')).toThrow(
-      'Invalid model format: "gpt-4o". Expected format is "provider:modelId"'
+  it('should throw an error for undefined alias (no colon and no env var)', () => {
+    // Ensure the env var is not set
+    delete process.env.LM_MODEL_UNDEFINED;
+    expect(() => resolveModel('undefined')).toThrow(
+      'Model alias "undefined" not found. Please set the environment variable LM_MODEL_UNDEFINED'
     );
   });
 
-  it('should throw an error for invalid format (empty string)', () => {
+  it('should throw an error for empty string (treated as alias)', () => {
+    delete process.env.LM_MODEL_;
     expect(() => resolveModel('')).toThrow(
-      'Invalid model format'
+      'Model alias "" not found'
     );
   });
 
@@ -95,5 +98,100 @@ describe('resolveModel', () => {
       expect((error as Error).message).toContain('openai');
       expect((error as Error).message).toContain('anthropic');
     }
+  });
+
+  describe('Model Aliases (LM_MODEL_*)', () => {
+    it('should resolve a simple alias to a provider:modelId', () => {
+      process.env.LM_MODEL_TEST = 'openai:gpt-4o';
+      const resolved = resolveModel('test');
+      expect(resolved).toBeDefined();
+      expect(resolved.modelId).toBe('gpt-4o');
+      delete process.env.LM_MODEL_TEST;
+    });
+
+    it('should resolve aliases in uppercase format', () => {
+      process.env.LM_MODEL_LARGE = 'anthropic:claude-3-5-sonnet-20241022';
+      const resolved = resolveModel('large');
+      expect(resolved).toBeDefined();
+      expect(resolved.modelId).toBe('claude-3-5-sonnet-20241022');
+      delete process.env.LM_MODEL_LARGE;
+    });
+
+    it('should resolve lowercase alias name by converting to uppercase env var', () => {
+      process.env.LM_MODEL_FAST = 'openai:gpt-4o-mini';
+      const resolved = resolveModel('fast');
+      expect(resolved).toBeDefined();
+      expect(resolved.modelId).toBe('gpt-4o-mini');
+      delete process.env.LM_MODEL_FAST;
+    });
+
+    it('should resolve mixed-case alias name by converting to uppercase env var', () => {
+      process.env.LM_MODEL_SMART = 'anthropic:claude-3-opus-20240229';
+      const resolved = resolveModel('SmArT');
+      expect(resolved).toBeDefined();
+      expect(resolved.modelId).toBe('claude-3-opus-20240229');
+      delete process.env.LM_MODEL_SMART;
+    });
+
+    it('should support chained alias resolution (alias -> alias -> provider:modelId)', () => {
+      process.env.LM_MODEL_PRODUCTION = 'default';
+      process.env.LM_MODEL_DEFAULT = 'openai:gpt-4o';
+      const resolved = resolveModel('production');
+      expect(resolved).toBeDefined();
+      expect(resolved.modelId).toBe('gpt-4o');
+      delete process.env.LM_MODEL_PRODUCTION;
+      delete process.env.LM_MODEL_DEFAULT;
+    });
+
+    it('should work with all built-in providers via aliases', () => {
+      // Test that aliases can point to any provider
+      process.env.LM_MODEL_MYOPENAI = 'openai:gpt-4o';
+      process.env.LM_MODEL_MYANTHROPIC = 'anthropic:claude-3-5-sonnet-20241022';
+      process.env.LM_MODEL_MYGOOGLE = 'google:gemini-1.5-pro';
+
+      const resolved1 = resolveModel('myopenai');
+      expect(resolved1.modelId).toBe('gpt-4o');
+
+      const resolved2 = resolveModel('myanthropic');
+      expect(resolved2.modelId).toBe('claude-3-5-sonnet-20241022');
+
+      const resolved3 = resolveModel('mygoogle');
+      expect(resolved3.modelId).toBe('gemini-1.5-pro');
+
+      delete process.env.LM_MODEL_MYOPENAI;
+      delete process.env.LM_MODEL_MYANTHROPIC;
+      delete process.env.LM_MODEL_MYGOOGLE;
+    });
+
+    it('should work with Bedrock models (model IDs with colons)', () => {
+      process.env.LM_MODEL_BEDROCK = 'bedrock:anthropic.claude-3-5-sonnet-20241022-v2:0';
+      const resolved = resolveModel('bedrock');
+      expect(resolved).toBeDefined();
+      expect(resolved.modelId).toBe('anthropic.claude-3-5-sonnet-20241022-v2:0');
+      delete process.env.LM_MODEL_BEDROCK;
+    });
+
+    it('should throw a helpful error when alias is not found', () => {
+      delete process.env.LM_MODEL_NOTFOUND;
+      expect(() => resolveModel('notfound')).toThrow(
+        'Model alias "notfound" not found. Please set the environment variable LM_MODEL_NOTFOUND (e.g., LM_MODEL_NOTFOUND=openai:gpt-4o)'
+      );
+    });
+
+    it('should throw error if alias points to invalid provider', () => {
+      process.env.LM_MODEL_INVALID = 'invalidprovider:model';
+      expect(() => resolveModel('invalid')).toThrow(
+        'Unknown provider: "invalidprovider"'
+      );
+      delete process.env.LM_MODEL_INVALID;
+    });
+
+    it('should allow underscore-separated alias names', () => {
+      process.env.LM_MODEL_MY_LARGE_MODEL = 'openai:gpt-4o';
+      const resolved = resolveModel('my_large_model');
+      expect(resolved).toBeDefined();
+      expect(resolved.modelId).toBe('gpt-4o');
+      delete process.env.LM_MODEL_MY_LARGE_MODEL;
+    });
   });
 });
