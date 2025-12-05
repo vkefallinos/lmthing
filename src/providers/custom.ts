@@ -112,7 +112,6 @@ export function createCustomProvider(config: CustomProviderConfig) {
   return createOpenAI({
     apiKey: config.apiKey,
     baseURL: config.baseURL,
-    compatibility: 'compatible',
   });
 }
 

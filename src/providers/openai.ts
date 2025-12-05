@@ -13,7 +13,6 @@ export interface OpenAIConfig {
   baseURL?: string;
   organization?: string;
   project?: string;
-  compatibility?: 'strict' | 'compatible';
 }
 
 /**
@@ -37,7 +36,6 @@ export function createOpenAIProvider(config?: OpenAIConfig) {
     baseURL: config?.baseURL,
     organization: config?.organization,
     project: config?.project,
-    compatibility: config?.compatibility || 'compatible',
   });
 }
 
