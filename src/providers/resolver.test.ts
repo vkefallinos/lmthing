@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { resolveModel } from './resolver';
 import { openai } from './openai';
-import { google } from './google';
 
 describe('resolveModel', () => {
   it('should pass through a LanguageModelV2 instance unchanged', () => {
