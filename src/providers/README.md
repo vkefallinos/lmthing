@@ -266,38 +266,43 @@ You can add any OpenAI-compatible provider using environment variables. This is 
 
 Custom providers are configured using environment variables with this pattern:
 
-- `CUSTOM_PROVIDER_{NAME}_API_KEY`: Your API key
-- `CUSTOM_PROVIDER_{NAME}_BASE_URL`: The API endpoint URL
-- `CUSTOM_PROVIDER_{NAME}_NAME`: (Optional) Display name (defaults to lowercase NAME)
+- `{NAME}_API_KEY`: Your API key
+- `{NAME}_API_BASE`: The API endpoint URL
+- `{NAME}_API_TYPE`: Must be set to `openai` to identify as a custom provider
+- `{NAME}_API_NAME`: (Optional) Display name (defaults to lowercase NAME)
 
 ### Examples
 
 **Z.AI**
 ```bash
-CUSTOM_PROVIDER_ZAI_API_KEY=your-zai-api-key-here
-CUSTOM_PROVIDER_ZAI_BASE_URL=https://api.z.ai/api/coding/paas/v4
-CUSTOM_PROVIDER_ZAI_NAME=zai
+ZAI_API_KEY=your-zai-api-key-here
+ZAI_API_BASE=https://api.z.ai/api/coding/paas/v4
+ZAI_API_TYPE=openai
+ZAI_API_NAME=zai  # Optional
 ```
 
 **OpenRouter**
 ```bash
-CUSTOM_PROVIDER_OPENROUTER_API_KEY=your-openrouter-api-key-here
-CUSTOM_PROVIDER_OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
-CUSTOM_PROVIDER_OPENROUTER_NAME=openrouter
+OPENROUTER_API_KEY=your-openrouter-api-key-here
+OPENROUTER_API_BASE=https://openrouter.ai/api/v1
+OPENROUTER_API_TYPE=openai
+OPENROUTER_API_NAME=openrouter  # Optional
 ```
 
 **Together AI**
 ```bash
-CUSTOM_PROVIDER_TOGETHER_API_KEY=your-together-api-key-here
-CUSTOM_PROVIDER_TOGETHER_BASE_URL=https://api.together.xyz/v1
-CUSTOM_PROVIDER_TOGETHER_NAME=together
+TOGETHER_API_KEY=your-together-api-key-here
+TOGETHER_API_BASE=https://api.together.xyz/v1
+TOGETHER_API_TYPE=openai
+TOGETHER_API_NAME=together  # Optional
 ```
 
 **Perplexity**
 ```bash
-CUSTOM_PROVIDER_PERPLEXITY_API_KEY=your-perplexity-api-key-here
-CUSTOM_PROVIDER_PERPLEXITY_BASE_URL=https://api.perplexity.ai
-CUSTOM_PROVIDER_PERPLEXITY_NAME=perplexity
+PERPLEXITY_API_KEY=your-perplexity-api-key-here
+PERPLEXITY_API_BASE=https://api.perplexity.ai
+PERPLEXITY_API_TYPE=openai
+PERPLEXITY_API_NAME=perplexity  # Optional
 ```
 
 ### Usage
@@ -371,10 +376,11 @@ const myProvider = createCustomProvider({
 
 Custom providers are automatically discovered and registered when you import from `lmthing/providers`. The system:
 
-1. Scans environment variables for the `CUSTOM_PROVIDER_{NAME}_*` pattern
-2. Creates provider instances for each valid configuration
-3. Makes them available through the string format resolver
-4. Allows access via the custom provider utilities
+1. Scans environment variables for the `{NAME}_API_KEY` pattern
+2. Validates that `{NAME}_API_TYPE=openai` is set
+3. Creates provider instances for each valid configuration
+4. Makes them available through the string format resolver
+5. Allows access via the custom provider utilities
 
 No additional setup or registration code is required - just set the environment variables and use the provider name in your model strings.
 

@@ -31,8 +31,9 @@ describe('Custom Providers', () => {
 
   describe('scanCustomProviders', () => {
     it('should find custom providers in environment variables', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-zai-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_KEY = 'test-zai-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       const configs = scanCustomProviders();
 
@@ -46,10 +47,12 @@ describe('Custom Providers', () => {
     });
 
     it('should find multiple custom providers', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-zai-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
-      process.env.CUSTOM_PROVIDER_OPENROUTER_API_KEY = 'test-openrouter-key';
-      process.env.CUSTOM_PROVIDER_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+      process.env.ZAI_API_KEY = 'test-zai-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
+      process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
+      process.env.OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
+      process.env.OPENROUTER_API_TYPE = 'openai';
 
       const configs = scanCustomProviders();
 
@@ -59,9 +62,10 @@ describe('Custom Providers', () => {
     });
 
     it('should use custom display name if provided', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
-      process.env.CUSTOM_PROVIDER_ZAI_NAME = 'custom-zai';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
+      process.env.ZAI_API_NAME = 'custom-zai';
 
       const configs = scanCustomProviders();
 
@@ -70,7 +74,8 @@ describe('Custom Providers', () => {
     });
 
     it('should ignore providers with missing API key', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       const configs = scanCustomProviders();
 
@@ -78,7 +83,18 @@ describe('Custom Providers', () => {
     });
 
     it('should ignore providers with missing base URL', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_TYPE = 'openai';
+
+      const configs = scanCustomProviders();
+
+      expect(configs).toHaveLength(0);
+    });
+
+    it('should ignore providers with missing or wrong API_TYPE', () => {
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      // No API_TYPE set
 
       const configs = scanCustomProviders();
 
@@ -86,8 +102,9 @@ describe('Custom Providers', () => {
     });
 
     it('should handle underscores in provider names', () => {
-      process.env.CUSTOM_PROVIDER_MY_PROVIDER_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_MY_PROVIDER_BASE_URL = 'https://api.example.com';
+      process.env.MY_PROVIDER_API_KEY = 'test-key';
+      process.env.MY_PROVIDER_API_BASE = 'https://api.example.com';
+      process.env.MY_PROVIDER_API_TYPE = 'openai';
 
       const configs = scanCustomProviders();
 
@@ -143,8 +160,9 @@ describe('Custom Providers', () => {
     });
 
     it('should return a map with custom providers', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       const providers = getCustomProviders();
 
@@ -153,8 +171,9 @@ describe('Custom Providers', () => {
     });
 
     it('should cache providers after first initialization', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       const providers1 = getCustomProviders();
       const providers2 = getCustomProviders();
@@ -165,8 +184,9 @@ describe('Custom Providers', () => {
 
   describe('isCustomProvider', () => {
     it('should return true for configured custom providers', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       expect(isCustomProvider('zai')).toBe(true);
     });
@@ -183,8 +203,9 @@ describe('Custom Providers', () => {
 
   describe('getCustomProvider', () => {
     it('should return provider instance for configured providers', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       const provider = getCustomProvider('zai');
 
@@ -199,8 +220,9 @@ describe('Custom Providers', () => {
     });
 
     it('should create models correctly', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       const provider = getCustomProvider('zai');
       const model = provider?.('gpt-4o');
@@ -218,10 +240,12 @@ describe('Custom Providers', () => {
     });
 
     it('should return array of provider names', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
-      process.env.CUSTOM_PROVIDER_OPENROUTER_API_KEY = 'test-key2';
-      process.env.CUSTOM_PROVIDER_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
+      process.env.OPENROUTER_API_KEY = 'test-key2';
+      process.env.OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
+      process.env.OPENROUTER_API_TYPE = 'openai';
 
       const names = listCustomProviders();
 
@@ -236,8 +260,9 @@ describe('Custom Providers', () => {
       // We'll need to import resolveModel to test this
       const { resolveModel } = await import('./resolver');
 
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'test-key';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/v1';
+      process.env.ZAI_API_KEY = 'test-key';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/v1';
+      process.env.ZAI_API_TYPE = 'openai';
 
       // Clear the registry to force re-initialization
       resetCustomProvidersRegistry();
@@ -259,9 +284,10 @@ describe('Custom Providers', () => {
 
   describe('Real-world examples', () => {
     it('should configure Z.AI provider', () => {
-      process.env.CUSTOM_PROVIDER_ZAI_API_KEY = 'zai-key-123';
-      process.env.CUSTOM_PROVIDER_ZAI_BASE_URL = 'https://api.z.ai/api/coding/paas/v4';
-      process.env.CUSTOM_PROVIDER_ZAI_NAME = 'zai';
+      process.env.ZAI_API_KEY = 'zai-key-123';
+      process.env.ZAI_API_BASE = 'https://api.z.ai/api/coding/paas/v4';
+      process.env.ZAI_API_TYPE = 'openai';
+      process.env.ZAI_API_NAME = 'zai';
 
       const configs = scanCustomProviders();
       const config = configs.find(c => c.name === 'zai');
@@ -275,8 +301,9 @@ describe('Custom Providers', () => {
     });
 
     it('should configure OpenRouter provider', () => {
-      process.env.CUSTOM_PROVIDER_OPENROUTER_API_KEY = 'or-key-456';
-      process.env.CUSTOM_PROVIDER_OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+      process.env.OPENROUTER_API_KEY = 'or-key-456';
+      process.env.OPENROUTER_API_BASE = 'https://openrouter.ai/api/v1';
+      process.env.OPENROUTER_API_TYPE = 'openai';
 
       const configs = scanCustomProviders();
       const config = configs.find(c => c.name === 'openrouter');
@@ -290,9 +317,10 @@ describe('Custom Providers', () => {
     });
 
     it('should configure Together AI provider', () => {
-      process.env.CUSTOM_PROVIDER_TOGETHER_API_KEY = 'together-key-789';
-      process.env.CUSTOM_PROVIDER_TOGETHER_BASE_URL = 'https://api.together.xyz/v1';
-      process.env.CUSTOM_PROVIDER_TOGETHER_NAME = 'together';
+      process.env.TOGETHER_API_KEY = 'together-key-789';
+      process.env.TOGETHER_API_BASE = 'https://api.together.xyz/v1';
+      process.env.TOGETHER_API_TYPE = 'openai';
+      process.env.TOGETHER_API_NAME = 'together';
 
       const configs = scanCustomProviders();
       const config = configs.find(c => c.name === 'together');
@@ -306,9 +334,10 @@ describe('Custom Providers', () => {
     });
 
     it('should configure Perplexity provider', () => {
-      process.env.CUSTOM_PROVIDER_PERPLEXITY_API_KEY = 'pplx-key-abc';
-      process.env.CUSTOM_PROVIDER_PERPLEXITY_BASE_URL = 'https://api.perplexity.ai';
-      process.env.CUSTOM_PROVIDER_PERPLEXITY_NAME = 'perplexity';
+      process.env.PERPLEXITY_API_KEY = 'pplx-key-abc';
+      process.env.PERPLEXITY_API_BASE = 'https://api.perplexity.ai';
+      process.env.PERPLEXITY_API_TYPE = 'openai';
+      process.env.PERPLEXITY_API_NAME = 'perplexity';
 
       const configs = scanCustomProviders();
       const config = configs.find(c => c.name === 'perplexity');

@@ -6,9 +6,10 @@ import { createOpenAI } from '@ai-sdk/openai';
  * Allows creating custom OpenAI-compatible providers from environment variables.
  *
  * Environment variable format:
- * - {PREFIX}_API_KEY: API key for the provider
- * - {PREFIX}_BASE_URL: Base URL for the API endpoint
- * - {PREFIX}_NAME: (Optional) Human-readable name for the provider
+ * - {NAME}_API_KEY: API key for the provider
+ * - {NAME}_API_BASE: Base URL for the API endpoint
+ * - {NAME}_API_TYPE: Must be set to "openai" to identify as custom provider
+ * - {NAME}_API_NAME: (Optional) Human-readable name for the provider
  *
  * @see https://sdk.vercel.ai/providers/ai-sdk-providers/openai#provider-instance
  */
@@ -24,18 +25,21 @@ export interface CustomProviderConfig {
  * Scans environment variables for custom provider configurations
  *
  * Looks for patterns like:
- * - CUSTOM_PROVIDER_{NAME}_API_KEY
- * - CUSTOM_PROVIDER_{NAME}_BASE_URL
+ * - {NAME}_API_KEY
+ * - {NAME}_API_BASE
+ * - {NAME}_API_TYPE (must be "openai")
  *
  * @returns Array of custom provider configurations
  *
  * @example
  * ```bash
  * # .env
- * CUSTOM_PROVIDER_ZAI_API_KEY=your-key
- * CUSTOM_PROVIDER_ZAI_BASE_URL=https://api.z.ai/v1
- * CUSTOM_PROVIDER_OPENROUTER_API_KEY=your-key
- * CUSTOM_PROVIDER_OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+ * ZAI_API_KEY=your-key
+ * ZAI_API_BASE=https://api.z.ai/api/coding/paas/v4
+ * ZAI_API_TYPE=openai
+ * OPENROUTER_API_KEY=your-key
+ * OPENROUTER_API_BASE=https://openrouter.ai/api/v1
+ * OPENROUTER_API_TYPE=openai
  * ```
  */
 export function scanCustomProviders(): CustomProviderConfig[] {
@@ -44,18 +48,32 @@ export function scanCustomProviders(): CustomProviderConfig[] {
 
   // Scan all environment variables
   for (const key in process.env) {
-    // Look for CUSTOM_PROVIDER_{NAME}_API_KEY pattern
-    const match = key.match(/^CUSTOM_PROVIDER_([A-Z0-9_]+)_API_KEY$/);
+    // Look for {NAME}_API_KEY pattern
+    const match = key.match(/^([A-Z0-9_]+)_API_KEY$/);
     if (match) {
       const name = match[1];
 
+      // Skip if already processed
       if (processedPrefixes.has(name)) {
         continue;
       }
 
+      // Skip built-in providers (they don't use this pattern)
+      const builtInPrefixes = ['OPENAI', 'ANTHROPIC', 'GOOGLE_GENERATIVE_AI', 'GOOGLE_VERTEX', 'MISTRAL', 'AZURE', 'GROQ', 'COHERE', 'AWS'];
+      if (builtInPrefixes.includes(name)) {
+        continue;
+      }
+
+      const apiType = process.env[`${name}_API_TYPE`];
+
+      // Only process if API_TYPE is set to "openai"
+      if (apiType !== 'openai') {
+        continue;
+      }
+
       const apiKey = process.env[key];
-      const baseURL = process.env[`CUSTOM_PROVIDER_${name}_BASE_URL`];
-      const displayName = process.env[`CUSTOM_PROVIDER_${name}_NAME`] || name.toLowerCase();
+      const baseURL = process.env[`${name}_API_BASE`];
+      const displayName = process.env[`${name}_API_NAME`] || name.toLowerCase();
 
       if (apiKey && baseURL) {
         configs.push({
