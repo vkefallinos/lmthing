@@ -1,7 +1,7 @@
 import { StreamTextResult } from "ai";
 import { Prompt } from "./Prompt";
 import { StreamTextOptions } from "./StreamText";
-import { resolveModel, type ModelInput } from "./providers/resolver";
+import { type ModelInput } from "./providers/resolver";
 
 interface PromptConfig {
   model: ModelInput;
@@ -35,10 +35,8 @@ export const runPrompt = async (
   promptFn: (prompt: Prompt) => Promise<void>,
   config: PromptConfig
 ): Promise<RunPromptResult> => {
-  // Resolve the model (handles both string format and direct instances)
-  const resolvedModel = resolveModel(config.model);
-
-  const prompt = new Prompt(resolvedModel);
+  // Model resolution happens in StreamTextBuilder constructor
+  const prompt = new Prompt(config.model);
 
   // Apply any additional options if provided
   if (config.options) {

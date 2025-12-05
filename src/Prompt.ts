@@ -1,6 +1,6 @@
 import { PrepareStepOptions, StreamTextBuilder } from "./StreamText";
 import yaml from 'js-yaml';
-import { resolveModel, type ModelInput } from "./providers/resolver";
+import { type ModelInput } from "./providers/resolver";
 
 
 interface DefHookResult {
@@ -58,9 +58,8 @@ export class Prompt extends StreamTextBuilder {
     {model, ...options}: {model?: ModelInput} & any = {}
   ) {
     this.addTool(name, { description, inputSchema, execute: async (args:any)=>{
-      // Resolve model if provided as string, otherwise use parent model
-      const resolvedModel = model ? resolveModel(model) : this.getModel();
-      const prompt = new Prompt(resolvedModel);
+      // Model resolution happens in StreamTextBuilder constructor
+      const prompt = new Prompt(model || this.getModel());
       prompt.withOptions(options || this.getOptions());
       await execute({ ...args}, prompt);
       const result = await prompt.run();
