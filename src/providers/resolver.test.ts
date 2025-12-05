@@ -1,7 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { resolveModel } from './resolver';
 import { openai } from './openai';
-import { anthropic } from './anthropic';
 import { google } from './google';
 
 describe('resolveModel', () => {
