@@ -1,14 +1,15 @@
 import { LanguageModelV2, LanguageModelV2Middleware } from '@ai-sdk/provider';
 import { stepCountIs, streamText, wrapLanguageModel } from 'ai';
-import type { 
-    LanguageModel, 
-    ToolSet, 
+import type {
+    LanguageModel,
+    ToolSet,
     StreamTextResult,
     StepResult,
     PrepareStepFunction,
     PrepareStepResult,
     ModelMessage
 } from 'ai';
+import { resolveModel, type ModelInput } from './providers/resolver';
 
 // Helper type for the options object
 export type StreamTextOptions = Parameters<typeof streamText>[0];
@@ -45,7 +46,7 @@ export class StreamTextBuilder {
     // prepareStep hooks return modifications to the step
     private _prepareStepHooks: Array<(options: PrepareStepOptions<any>) => PrepareStepResult<any> | Promise<PrepareStepResult<any>>> = [];
     private _lastPrepareStep?: (options: PrepareStepOptions<any>) => PrepareStepResult<any> | Promise<PrepareStepResult<any>>;
-    constructor(model?: LanguageModelV2) {
+    constructor(model?: ModelInput) {
         if (model) {
           this.withModel(model);
         }
@@ -174,9 +175,11 @@ export class StreamTextBuilder {
     }
     /**
      * Sets the language model.
+     * Accepts either a LanguageModelV2 instance or a string in "provider:modelId" format.
      */
-    public withModel(model: LanguageModelV2): this {
-        this._model = wrapLanguageModel({middleware: this._getMiddleware(), model: model});
+    public withModel(model: ModelInput): this {
+        const resolvedModel = resolveModel(model);
+        this._model = wrapLanguageModel({middleware: this._getMiddleware(), model: resolvedModel});
         return this;
     }
 

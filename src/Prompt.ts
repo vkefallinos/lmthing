@@ -1,5 +1,6 @@
 import { PrepareStepOptions, StreamTextBuilder } from "./StreamText";
 import yaml from 'js-yaml';
+import { type ModelInput } from "./providers/resolver";
 
 
 interface DefHookResult {
@@ -50,11 +51,11 @@ export class Prompt extends StreamTextBuilder {
     })
   }
   defAgent(
-    name: string, 
-    description: string, 
-    inputSchema: any, 
-    execute: Function, 
-    {model, ...options}: any
+    name: string,
+    description: string,
+    inputSchema: any,
+    execute: Function,
+    {model, ...options}: {model?: ModelInput} & any = {}
   ) {
     this.addTool(name, { description, inputSchema, execute: async (args:any)=>{
       const prompt = new Prompt(model || this.getModel());
