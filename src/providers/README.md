@@ -258,6 +258,126 @@ const customOpenAI = createOpenAIProvider({
 const model = customOpenAI('gpt-4o');
 ```
 
+## Custom OpenAI-Compatible Providers
+
+You can add any OpenAI-compatible provider using environment variables. This is useful for services like OpenRouter, Together AI, Perplexity, and other providers that support the OpenAI API format.
+
+### Configuration
+
+Custom providers are configured using environment variables with this pattern:
+
+- `CUSTOM_PROVIDER_{NAME}_API_KEY`: Your API key
+- `CUSTOM_PROVIDER_{NAME}_BASE_URL`: The API endpoint URL
+- `CUSTOM_PROVIDER_{NAME}_NAME`: (Optional) Display name (defaults to lowercase NAME)
+
+### Examples
+
+**Z.AI**
+```bash
+CUSTOM_PROVIDER_ZAI_API_KEY=your-zai-api-key-here
+CUSTOM_PROVIDER_ZAI_BASE_URL=https://api.z.ai/api/coding/paas/v4
+CUSTOM_PROVIDER_ZAI_NAME=zai
+```
+
+**OpenRouter**
+```bash
+CUSTOM_PROVIDER_OPENROUTER_API_KEY=your-openrouter-api-key-here
+CUSTOM_PROVIDER_OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+CUSTOM_PROVIDER_OPENROUTER_NAME=openrouter
+```
+
+**Together AI**
+```bash
+CUSTOM_PROVIDER_TOGETHER_API_KEY=your-together-api-key-here
+CUSTOM_PROVIDER_TOGETHER_BASE_URL=https://api.together.xyz/v1
+CUSTOM_PROVIDER_TOGETHER_NAME=together
+```
+
+**Perplexity**
+```bash
+CUSTOM_PROVIDER_PERPLEXITY_API_KEY=your-perplexity-api-key-here
+CUSTOM_PROVIDER_PERPLEXITY_BASE_URL=https://api.perplexity.ai
+CUSTOM_PROVIDER_PERPLEXITY_NAME=perplexity
+```
+
+### Usage
+
+Custom providers work seamlessly with the string format:
+
+```typescript
+import { runPrompt } from 'lmthing';
+
+// Use Z.AI
+const result = await runPrompt(
+  (ctx) => ctx.$`Write a poem`,
+  { model: 'zai:gpt-4o' }
+);
+
+// Use OpenRouter
+const result2 = await runPrompt(
+  (ctx) => ctx.$`Hello!`,
+  { model: 'openrouter:anthropic/claude-3.5-sonnet' }
+);
+
+// Use Together AI
+const result3 = await runPrompt(
+  (ctx) => ctx.$`Hi there!`,
+  { model: 'together:meta-llama/Llama-3-70b-chat-hf' }
+);
+```
+
+### Programmatic Access
+
+You can also work with custom providers programmatically:
+
+```typescript
+import {
+  scanCustomProviders,
+  getCustomProviders,
+  getCustomProvider,
+  listCustomProviders,
+  isCustomProvider,
+  createCustomProvider,
+} from 'lmthing/providers';
+
+// Scan for all custom providers in environment
+const configs = scanCustomProviders();
+
+// Get all custom providers
+const customProviders = getCustomProviders();
+
+// List custom provider names
+const names = listCustomProviders(); // ['zai', 'openrouter', 'together', ...]
+
+// Check if a provider is custom
+const isCustom = isCustomProvider('zai'); // true
+
+// Get a specific custom provider
+const zai = getCustomProvider('zai');
+if (zai) {
+  const model = zai('gpt-4o');
+}
+
+// Create a custom provider manually
+const myProvider = createCustomProvider({
+  name: 'myprovider',
+  apiKey: 'your-key',
+  baseURL: 'https://api.example.com/v1',
+  prefix: 'MYPROVIDER',
+});
+```
+
+### Discovery and Registration
+
+Custom providers are automatically discovered and registered when you import from `lmthing/providers`. The system:
+
+1. Scans environment variables for the `CUSTOM_PROVIDER_{NAME}_*` pattern
+2. Creates provider instances for each valid configuration
+3. Makes them available through the string format resolver
+4. Allows access via the custom provider utilities
+
+No additional setup or registration code is required - just set the environment variables and use the provider name in your model strings.
+
 ## Environment Variables
 
 Copy `.env.example` to `.env` and add your API keys:

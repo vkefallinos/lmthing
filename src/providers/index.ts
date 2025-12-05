@@ -149,3 +149,16 @@ export function listProviders(): ProviderName[] {
  * Model resolution utilities
  */
 export { resolveModel, type ModelInput } from './resolver';
+
+/**
+ * Custom provider utilities
+ */
+export {
+  scanCustomProviders,
+  createCustomProvider,
+  getCustomProviders,
+  getCustomProvider,
+  isCustomProvider,
+  listCustomProviders,
+  type CustomProviderConfig,
+} from './custom';

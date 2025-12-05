@@ -1,8 +1,12 @@
 import { LanguageModelV2 } from '@ai-sdk/provider';
 import { providers } from './index';
+import { getCustomProvider, isCustomProvider, listCustomProviders } from './custom';
 
 /**
  * Resolves a model identifier to a LanguageModelV2 instance
+ *
+ * Supports both built-in providers and custom OpenAI-compatible providers
+ * configured via environment variables.
  *
  * @param model - Either a LanguageModelV2 instance or a string in the format "provider:modelId"
  * @returns A LanguageModelV2 instance
@@ -10,13 +14,17 @@ import { providers } from './index';
  *
  * @example
  * ```typescript
- * // Using string format
+ * // Built-in providers
  * const model1 = resolveModel('openai:gpt-4o');
  * const model2 = resolveModel('anthropic:claude-3-5-sonnet-20241022');
  *
- * // Using direct model instance (passes through)
+ * // Custom providers (configured via env vars)
+ * const model3 = resolveModel('zai:gpt-4');
+ * const model4 = resolveModel('openrouter:anthropic/claude-3.5-sonnet');
+ *
+ * // Direct model instance (passes through)
  * import { openai } from 'lmthing/providers';
- * const model3 = resolveModel(openai('gpt-4o'));
+ * const model5 = resolveModel(openai('gpt-4o'));
  * ```
  */
 export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
@@ -38,18 +46,29 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
   const providerName = model.slice(0, colonIndex);
   const modelId = model.slice(colonIndex + 1);
 
-  // Get the provider from the registry
+  // Check built-in providers first
   const provider = providers[providerName as keyof typeof providers];
 
-  if (!provider) {
-    const availableProviders = Object.keys(providers).join(', ');
-    throw new Error(
-      `Unknown provider: "${providerName}". Available providers: ${availableProviders}`
-    );
+  if (provider) {
+    return provider(modelId);
   }
 
-  // Create and return the model instance
-  return provider(modelId);
+  // Check custom providers
+  if (isCustomProvider(providerName)) {
+    const customProvider = getCustomProvider(providerName);
+    if (customProvider) {
+      return customProvider(modelId);
+    }
+  }
+
+  // Provider not found
+  const builtInProviders = Object.keys(providers);
+  const customProviders = listCustomProviders();
+  const allProviders = [...builtInProviders, ...customProviders].join(', ');
+
+  throw new Error(
+    `Unknown provider: "${providerName}". Available providers: ${allProviders}`
+  );
 }
 
 /**
