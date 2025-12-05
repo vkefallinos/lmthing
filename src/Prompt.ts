@@ -58,7 +58,6 @@ export class Prompt extends StreamTextBuilder {
     {model, ...options}: {model?: ModelInput} & any = {}
   ) {
     this.addTool(name, { description, inputSchema, execute: async (args:any)=>{
-      // Model resolution happens in StreamTextBuilder constructor
       const prompt = new Prompt(model || this.getModel());
       prompt.withOptions(options || this.getOptions());
       await execute({ ...args}, prompt);

@@ -35,7 +35,6 @@ export const runPrompt = async (
   promptFn: (prompt: Prompt) => Promise<void>,
   config: PromptConfig
 ): Promise<RunPromptResult> => {
-  // Model resolution happens in StreamTextBuilder constructor
   const prompt = new Prompt(config.model);
 
   // Apply any additional options if provided
