@@ -146,13 +146,6 @@ export function listProviders(): ProviderName[] {
 }
 
 /**
- * Model identifier constants
+ * Model resolution utilities
  */
-export { OpenAIModels } from './openai';
-export { AnthropicModels } from './anthropic';
-export { GoogleModels } from './google';
-export { MistralModels } from './mistral';
-export { GroqModels } from './groq';
-export { CohereModels } from './cohere';
-export { BedrockModels } from './bedrock';
-export { VertexModels } from './vertex';
+export { resolveModel, type ModelInput } from './resolver';

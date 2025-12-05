@@ -105,7 +105,9 @@ const model = vertex(VertexModels.GEMINI_1_5_PRO);
 
 ## Usage with runPrompt
 
-All providers can be used directly with the `runPrompt` function:
+All providers can be used directly with the `runPrompt` function in two ways:
+
+### 1. Using Provider Instances (Direct)
 
 ```typescript
 import { runPrompt } from 'lmthing';
@@ -119,14 +121,105 @@ const result = await runPrompt(
     model: openai(OpenAIModels.GPT4O),
   }
 );
+```
 
-// Or using string format (provider:model)
-const result2 = await runPrompt(
+### 2. Using String Format (Recommended)
+
+The string format `"provider:modelId"` is the recommended approach as it's more concise and easier to configure:
+
+```typescript
+import { runPrompt } from 'lmthing';
+
+const result = await runPrompt(
   (ctx) => {
     ctx.$`Write a short poem about AI`;
   },
   {
     model: 'openai:gpt-4o',
+  }
+);
+
+// Works with all providers
+const result2 = await runPrompt(
+  (ctx) => ctx.$`Hello!`,
+  { model: 'anthropic:claude-3-5-sonnet-20241022' }
+);
+
+// Even supports complex model IDs (e.g., Bedrock)
+const result3 = await runPrompt(
+  (ctx) => ctx.$`Hi there!`,
+  { model: 'bedrock:anthropic.claude-3-5-sonnet-20241022-v2:0' }
+);
+```
+
+### String Format Examples
+
+All providers support the `"provider:modelId"` format:
+
+```typescript
+// OpenAI
+'openai:gpt-4o'
+'openai:gpt-4o-mini'
+'openai:gpt-3.5-turbo'
+
+// Anthropic
+'anthropic:claude-3-5-sonnet-20241022'
+'anthropic:claude-3-opus-20240229'
+
+// Google
+'google:gemini-1.5-pro'
+'google:gemini-1.5-flash'
+
+// Mistral
+'mistral:mistral-large-latest'
+'mistral:codestral-latest'
+
+// Groq
+'groq:llama-3.3-70b-versatile'
+'groq:mixtral-8x7b-32768'
+
+// Cohere
+'cohere:command-r-plus'
+
+// Amazon Bedrock (supports model IDs with colons)
+'bedrock:anthropic.claude-3-5-sonnet-20241022-v2:0'
+'bedrock:us.meta.llama3-2-90b-instruct-v1:0'
+
+// Google Vertex AI
+'vertex:gemini-1.5-pro'
+
+// Azure (use your deployment name)
+'azure:your-deployment-name'
+```
+
+### Using with defAgent
+
+Agents can also use the string format for their models:
+
+```typescript
+import { runPrompt } from 'lmthing';
+import { z } from 'zod';
+
+await runPrompt(
+  (ctx) => {
+    // Agent with a different model
+    ctx.defAgent(
+      'researcher',
+      'Research topics in depth',
+      z.object({ topic: z.string() }),
+      async (args, agentCtx) => {
+        agentCtx.$`Research ${args.topic}`;
+      },
+      {
+        model: 'anthropic:claude-3-opus-20240229', // String format
+        temperature: 0.2,
+      }
+    );
+
+    ctx.$`Research quantum computing`;
+  },
+  {
+    model: 'openai:gpt-4o', // Main model
   }
 );
 ```

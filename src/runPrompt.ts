@@ -1,9 +1,10 @@
 import { StreamTextResult } from "ai";
 import { Prompt } from "./Prompt";
 import { StreamTextOptions } from "./StreamText";
+import { resolveModel, type ModelInput } from "./providers/resolver";
 
 interface PromptConfig {
-  model: any;
+  model: ModelInput;
   // Allow passing any streamText options except the ones we handle internally
   options?: Partial<Omit<StreamTextOptions, 'model' | 'system' | 'messages' | 'tools' | 'onFinish' | 'onStepFinish' | 'prepareStep'>>;
 }
@@ -34,13 +35,16 @@ export const runPrompt = async (
   promptFn: (prompt: Prompt) => Promise<void>,
   config: PromptConfig
 ): Promise<RunPromptResult> => {
-  const prompt = new Prompt(config.model);
-  
+  // Resolve the model (handles both string format and direct instances)
+  const resolvedModel = resolveModel(config.model);
+
+  const prompt = new Prompt(resolvedModel);
+
   // Apply any additional options if provided
   if (config.options) {
     prompt.withOptions(config.options);
   }
-  
+
   // Wrap prompt in a proxy that auto-binds methods
   const proxiedPrompt = createPromptProxy(prompt);
   await promptFn(proxiedPrompt);
