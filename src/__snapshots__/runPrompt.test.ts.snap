@@ -379,6 +379,32 @@ exports[`runPrompt > should support defAgent for creating hierarchical agent wor
         {
           "content": [
             {
+              "agentSteps": [
+                {
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "Validate the following data: <inputData>",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "Validating email format...Validating age range...All validations passed.",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
               "output": {
                 "type": "text",
                 "value": "Validating email format...Validating age range...All validations passed.",
@@ -455,6 +481,32 @@ exports[`runPrompt > should support defAgent for creating hierarchical agent wor
         {
           "content": [
             {
+              "agentSteps": [
+                {
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "Validate the following data: <inputData>",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "Validating email format...Validating age range...All validations passed.",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
               "output": {
                 "type": "text",
                 "value": "Validating email format...Validating age range...All validations passed.",
@@ -487,6 +539,32 @@ exports[`runPrompt > should support defAgent for creating hierarchical agent wor
         {
           "content": [
             {
+              "agentSteps": [
+                {
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "Execute <operation> on <inputSource>",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "Starting transformation process...Data transformed successfully.",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
               "output": {
                 "type": "text",
                 "value": "Starting transformation process...Data transformed successfully.",
