@@ -2,70 +2,73 @@
 
 ## runPrompt
 
-The `runPrompt` function is the main entry point for executing agentic workflows. It creates a `PromptContext` and executes a prompt configuration function, returning a `streamText` result.
+The `runPrompt` function is the main entry point for executing agentic workflows. It creates a `Prompt` instance and executes a prompt configuration function, returning the execution result.
 
 **Signature:**
 
 ```typescript
 runPrompt(
-  fn: (ctx: PromptContext) => void | Promise<void>,
-  config?: RunPromptConfig
-): Promise<StreamTextResult>
+  fn: (prompt: Prompt) => Promise<void>,
+  config: PromptConfig
+): Promise<RunPromptResult>
 ```
 
 **Parameters:**
 
-- `fn`: A function that receives a `PromptContext` and configures the prompt by calling context methods (`def`, `defTool`, `defAgent`, etc.)
-- `config`: Optional configuration object that maps directly to `streamText` parameters:
-  - `model`: The language model to use. Can be either:
+- `fn`: A function that receives a `Prompt` instance and configures the prompt by calling context methods (`def`, `defTool`, `defAgent`, etc.)
+- `config`: Configuration object with the following structure:
+  - `model`: (required) The language model to use. Can be either:
     - A string in the format `provider:model_id` (e.g., `'openai:gpt-4o'`, `'anthropic:claude-3-5-sonnet'`). The provider is automatically resolved from the AI SDK.
     - An AI SDK `LanguageModelV1` provider implementation directly (e.g., `openai('gpt-4o')`, `anthropic('claude-3-5-sonnet-20241022')`).
-  - `system`: System prompt (can be augmented by `def`/`defData`)
-  - `plugins`: A list of plugins that enable tools or system prompts or any other def* or prompt
-  - `maxOutputTokens`: Maximum number of tokens to generate
-  - `temperature`: Temperature setting for randomness
-  - `topP`: Nucleus sampling parameter
-  - `topK`: Top-K sampling parameter
-  - `presencePenalty`: Presence penalty setting
-  - `frequencyPenalty`: Frequency penalty setting
-  - `stopSequences`: Sequences that stop generation
-  - `seed`: Seed for deterministic generation
-  - `maxRetries`: Maximum number of retries (default: 2)
-  - `abortSignal`: Signal for canceling the operation
-  - `headers`: Additional HTTP headers
-  - `toolChoice`: Tool selection strategy
-  - `stopWhen`: Condition for stopping multi-step generation
-  - `prepareStep`: Function to modify settings for each step during multi-step generation. Receives step information and can return modified model, toolChoice, activeTools, system prompt, or messages for the current step. Is given access through defHook.
-  - `onChunk`: Callback for each chunk
-  - `onStepFinish`: Callback when a step finishes
-  - `onFinish`: Callback when generation finishes
-  - `onError`: Callback for errors
-  - `onAbort`: Callback when aborted
+  - `options`: (optional) Additional configuration options that map to `streamText` parameters:
+    - `system`: System prompt (can be augmented by `def`/`defData`)
+    - `plugins`: A list of plugins that enable tools or system prompts or any other def* or prompt
+    - `maxOutputTokens`: Maximum number of tokens to generate
+    - `temperature`: Temperature setting for randomness
+    - `topP`: Nucleus sampling parameter
+    - `topK`: Top-K sampling parameter
+    - `presencePenalty`: Presence penalty setting
+    - `frequencyPenalty`: Frequency penalty setting
+    - `stopSequences`: Sequences that stop generation
+    - `seed`: Seed for deterministic generation
+    - `maxRetries`: Maximum number of retries (default: 2)
+    - `abortSignal`: Signal for canceling the operation
+    - `headers`: Additional HTTP headers
+    - `toolChoice`: Tool selection strategy
+    - `stopWhen`: Condition for stopping multi-step generation
+    - `prepareStep`: Function to modify settings for each step during multi-step generation. Receives step information and can return modified model, toolChoice, activeTools, system prompt, or messages for the current step. Is given access through defHook.
+    - `onChunk`: Callback for each chunk
+    - `onStepFinish`: Callback when a step finishes
+    - `onFinish`: Callback when generation finishes
+    - `onError`: Callback for errors
+    - `onAbort`: Callback when aborted
 
 **Returns:**
 
-Returns a `Promise<StreamTextResult>` with all the properties from [`streamText`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text), including:
-- `textStream`: Async iterable of text deltas
-- `fullStream`: Async iterable of all events
-- `text`: Promise resolving to full text
-- `usage`: Promise resolving to token usage
-- `toolCalls`: Promise resolving to tool calls
-- `toolResults`: Promise resolving to tool results
-- And all other `streamText` return properties
+Returns a `Promise<RunPromptResult>` which contains:
+- `result`: A `StreamTextResult` with all the properties from [`streamText`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text), including:
+  - `textStream`: Async iterable of text deltas
+  - `fullStream`: Async iterable of all events
+  - `text`: Promise resolving to full text
+  - `usage`: Promise resolving to token usage
+  - `toolCalls`: Promise resolving to tool calls
+  - `toolResults`: Promise resolving to tool results
+  - And all other `streamText` return properties
+- `prompt`: The `Prompt` instance used for execution
 
 **Example:**
 
 ```typescript
 import { runPrompt } from 'lmthing';
 
-const result = await runPrompt(
-  (ctx) => {
+const { result, prompt } = await runPrompt(
+  async (prompt) => {
     // Define variables that will be prepended to prompts
-    const userName = ctx.def('USER_NAME', 'John Doe');
-    const userData = ctx.defData('USER_DATA', { age: 30, city: 'NYC' });
-    
+    const userName = prompt.def('USER_NAME', 'John Doe');
+    const userData = prompt.defData('USER_DATA', { age: 30, city: 'NYC' });
+
     // Register tools
-    ctx.defTool(
+    prompt.defTool(
       'getWeather',
       'Get weather for a city',
       z.object({ city: z.string() }),
@@ -73,24 +76,26 @@ const result = await runPrompt(
         return `Weather in ${city}: Sunny, 72°F`;
       }
     );
-    
+
     // Register sub-agents
-    ctx.defAgent(
+    prompt.defAgent(
       'researcher',
       'Research topics in depth',
       z.object({ topic: z.string() }),
-      async (args, agentCtx) => {
-        return agentCtx.$`Research: ${args.topic}`;
+      async (args, prompt) => {
+        prompt.$`Research: ${args.topic}`;
       }
     );
-    
-    // Construct the final prompt (does not execute)
-    ctx.$`Help ${userName} with their question about weather.`;
+
+    // Construct the final prompt and add as user message
+    prompt.$`Help ${userName} with their question about weather.`;
   },
   {
     model: 'openai:gpt-4o', // Format: provider:model_id
-    temperature: 0.7,
-    maxOutputTokens: 1000,
+    options: {
+      temperature: 0.7,
+      maxOutputTokens: 1000,
+    }
   }
 );
 
@@ -187,16 +192,30 @@ Custom providers follow this pattern:
 
 ## Context Functions
 
-The `PromptContext` object provides the following functions for building agentic workflows. These functions construct the arguments passed to the AI SDK's [`streamText`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text) function:
+The `Prompt` object provides the following functions for building agentic workflows. These functions construct the arguments passed to the AI SDK's [`streamText`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text) function:
 
-### `defMessage(name: string, content: string)`
+### `defMessage(role: 'user' | 'assistant', content: string)`
 
-Adds a message to the conversation history. Maps to the `messages` parameter in `streamText`. Supports all message types: system, user, assistant, and tool messages.
+Adds a message to the conversation history. Maps to the `messages` parameter in `streamText`. Only supports `'user'` and `'assistant'` roles. For system prompts, use `defSystem` instead.
 
 ```typescript
-ctx.defMessage('system', 'You are a helpful assistant.');
-ctx.defMessage('user', 'Hello!');
-ctx.defMessage('assistant', 'Hi there! How can I help?');
+prompt.defMessage('user', 'Hello!');
+prompt.defMessage('assistant', 'Hi there! How can I help?');
+```
+
+### `defSystem(name: string, value: string)`
+
+Adds a named system prompt part that will be prepended to the `system` prompt in `streamText`. Multiple system parts can be defined and will be joined together with labels.
+
+```typescript
+prompt.defSystem('role', 'You are a helpful assistant.');
+prompt.defSystem('guidelines', 'Always be polite and professional.');
+
+// Results in a system prompt like:
+// role:
+// You are a helpful assistant.
+// guidelines:
+// Always be polite and professional.
 ```
 
 ### `def(variableName: string, content: string)`
@@ -204,11 +223,11 @@ ctx.defMessage('assistant', 'Hi there! How can I help?');
 Defines a variable that will be prepended to the `system` prompt in `streamText`. Variables are formatted as `<VARIABLE_NAME>content</VARIABLE_NAME>` and can be referenced in prompts using the returned `<VARIABLE_NAME>` placeholder. Automatically adds system instructions on first use.
 
 ```typescript
-const userNameRef = ctx.def('USER_NAME', 'John Doe');
-const contextRef = ctx.def('CONTEXT', 'This is a customer support conversation');
+const userNameRef = prompt.def('USER_NAME', 'John Doe');
+const contextRef = prompt.def('CONTEXT', 'This is a customer support conversation');
 
 // Use the returned reference in prompts
-ctx.$`Please help ${userNameRef} with their question. Context: ${contextRef}`;
+prompt.$`Please help ${userNameRef} with their question. Context: ${contextRef}`;
 ```
 
 ### `defData(variableName: string, data: object)`
@@ -216,7 +235,7 @@ ctx.$`Please help ${userNameRef} with their question. Context: ${contextRef}`;
 Defines a data variable containing JSON that will be prepended to the `system` prompt in `streamText`, wrapped in XML tags and transformed to YAML format. This is useful for structured data that's easier to read in YAML. Returns `<VARIABLE_NAME>` which can be used as a placeholder in prompts. Automatically adds system instructions on first use.
 
 ```typescript
-const userData = ctx.defData('USER_DATA', {
+const userData = prompt.defData('USER_DATA', {
   name: 'John Doe',
   age: 30,
   preferences: ['coding', 'reading']
@@ -231,7 +250,7 @@ const userData = ctx.defData('USER_DATA', {
 //   - reading
 // </USER_DATA>
 
-ctx.$`Analyze the following user data: ${userData}`;
+prompt.$`Analyze the following user data: ${userData}`;
 ```
 
 ### `defTool<T>(name: string, description: string, schema: T, fn: Function)`
@@ -239,7 +258,7 @@ ctx.$`Analyze the following user data: ${userData}`;
 Registers a tool that maps to the `tools` parameter in `streamText`. Takes a Zod schema for input validation (mapped to `inputSchema`) and executes the provided function when invoked by the model (mapped to `execute`).
 
 ```typescript
-ctx.defTool(
+prompt.defTool(
   'search',
   'Search for information',
   z.object({ query: z.string() }),
@@ -257,7 +276,7 @@ The tool execution function receives `ToolExecutionOptions` as the second parame
 - `abortSignal`: Signal for canceling the operation
 
 ```typescript
-ctx.defTool(
+prompt.defTool(
   'longRunningTask',
   'Performs a task that can be cancelled',
   z.object({ data: z.string() }),
@@ -283,76 +302,92 @@ Registers a sub-agent as a callable tool in the `tools` parameter. The agent run
 ```typescript
 import { openai } from '@ai-sdk/openai';
 
-ctx.defAgent(
+prompt.defAgent(
   'researcher',
   'Research a topic in depth',
   z.object({ topic: z.string() }),
-  async (args, agentCtx) => {
-    return agentCtx.$`Research the topic: ${args.topic}`;
+  async (args, prompt) => {
+    prompt.$`Research the topic: ${args.topic}`;
   },
-  { 
+  {
     model: 'openai:gpt-4o', // String format
     system: 'You are a research specialist.'
   }
 );
 
 // Or with direct provider
-ctx.defAgent(
+prompt.defAgent(
   'analyst',
   'Analyze data with structured output',
   z.object({ data: z.string() }),
-  async (args, agentCtx) => {
-    return agentCtx.$`Analyze: ${args.data}`;
+  async (args, prompt) => {
+    prompt.$`Analyze: ${args.data}`;
   },
-  { 
+  {
     model: openai('gpt-4o', { structuredOutputs: true }), // Direct provider
     system: 'You are a data analyst.'
   }
 );
 ```
 
-### `defHook(hook: MessageHistoryHook)`
+### `defHook(hookFn: (options) => DefHookResult)`
 
-Registers a hook that maps to the `prepareStep` parameter in `streamText`. The hook transforms message history before each LLM request step, receiving the current messages array and returning a modified version. This integrates with AI SDK's streaming lifecycle:
+Registers a hook that maps to the `prepareStep` parameter in `streamText`. The hook is called before each generation step and can modify the step configuration.
 
-- **`prepareStep`**: Called before each generation step to transform messages
-- **`onStepFinish`**: Used internally to restore original messages after the step
+**Hook Function Parameters:**
+
+The hook receives an options object containing:
+- `messages`: Current message history
+- `model`: The language model being used
+- `steps`: Array of previous step results
+- `stepNumber`: Current step number (0-indexed)
+- `variables`: Record of defined variables (from `def` and `defData`)
+
+**Return Value:**
+
+The hook should return an object with optional properties:
+- `system`: Override the system prompt
+- `activeTools`: Array of tool names to make available for this step
+- `messages`: Modified message history
+- `variables`: Updated variables
 
 Use cases:
-- Filter messages (e.g., remove old system messages)
-- Transform message content (e.g., anonymize data)
-- Add dynamic context (e.g., inject recent data)
-- Implement sliding window contexts
+- Control which tools are available at each step
+- Filter or transform messages
+- Add dynamic context based on step number
+- Modify variables during execution
 
 ```typescript
-// Filter out certain messages
-ctx.defHook((messages) => {
-  return messages.filter(msg => msg.role !== 'system');
+// Control tool availability by step
+prompt.defHook(({ stepNumber }) => {
+  if (stepNumber === 0) {
+    return { activeTools: ['search'] }; // Only search on first step
+  }
+  return {};
 });
 
-// Transform message content
-ctx.defHook((messages) => {
-  return messages.map(msg => ({
-    ...msg,
-    content: typeof msg.content === 'string' 
-      ? msg.content.toLowerCase() 
-      : msg.content
-  }));
-});
-
-// Add contextual information dynamically
-ctx.defHook((messages) => {
-  return [
-    { role: 'system', content: 'Current time: ' + new Date().toISOString() },
-    ...messages,
-  ];
-});
-
-// Implement sliding window (keep last N messages)
-ctx.defHook((messages) => {
+// Filter messages to implement sliding window
+prompt.defHook(({ messages }) => {
   const systemMessages = messages.filter(m => m.role === 'system');
   const otherMessages = messages.filter(m => m.role !== 'system').slice(-10);
-  return [...systemMessages, ...otherMessages];
+  return { messages: [...systemMessages, ...otherMessages] };
+});
+
+// Add dynamic system prompt based on context
+prompt.defHook(({ stepNumber, variables }) => {
+  return {
+    system: `Step ${stepNumber}. Current time: ${new Date().toISOString()}`
+  };
+});
+
+// Modify variables during execution
+prompt.defHook(({ variables, stepNumber }) => {
+  return {
+    variables: {
+      ...variables,
+      CURRENT_STEP: { type: 'string', value: String(stepNumber) }
+    }
+  };
 });
 ```
 
@@ -374,14 +409,14 @@ Each task requires:
 - `task`: Description of what needs to be done
 - `validation`: Function that returns error message on failure, or `undefined`/`void` on success
 - `extend` (optional): Function to add task-specific context, tools, and messages
-  - Receives `ctx` (PromptContext) and `messages` (current message history)
+  - Receives `prompt` (Prompt instance) and `messages` (current message history)
   - Can call any context methods (`defTool`, `def`, `defMessage`, etc.)
   - Uses `prepareStep` internally to activate extensions when the task starts
   - Extensions are automatically cleaned up via `prepareStep` when the task completes
   - Only active during the specific task execution
 
 ```typescript
-ctx.defTaskList([
+prompt.defTaskList([
   {
     task: 'Calculate 5 + 3',
     validation: (result) => {
@@ -393,21 +428,21 @@ ctx.defTaskList([
   },
   {
     task: 'Multiply the previous result by 2',
-    extend: (ctx, messages) => {
+    extend: (prompt, messages) => {
       // Add task-specific tools
-      ctx.defTool(
+      prompt.defTool(
         'calculator',
         'Perform multiplication',
         z.object({ a: z.number(), b: z.number() }),
         async ({ a, b }) => String(a * b)
       );
-      
+
       // Add task-specific context
-      ctx.def('ALLOWED_OPERATIONS', 'multiplication only');
-      
-      // Add task-specific message
-      ctx.defMessage('system', 'Use the calculator tool for multiplication.');
-      
+      prompt.def('ALLOWED_OPERATIONS', 'multiplication only');
+
+      // Add task-specific system instruction
+      prompt.defSystem('instructions', 'Use the calculator tool for multiplication.');
+
       // All extensions are automatically removed via prepareStep when task completes
     },
     validation: (result) => {
@@ -429,7 +464,7 @@ ctx.defTaskList([
 ]);
 
 // The LLM receives finishTask tool automatically
-await ctx.$`Complete all tasks using the finishTask tool.`;
+prompt.$`Complete all tasks using the finishTask tool.`;
 ```
 
 **How `extend` integrates with `prepareStep`:**
@@ -495,24 +530,28 @@ Uses `defHook` (via `prepareStep`) to maintain focused context:
 - Agent must complete all tasks to finish
 
 ```typescript
-ctx.defDynamicTaskList();
+prompt.defDynamicTaskList();
 
 // Agent can now dynamically manage tasks
-await ctx.$`
+prompt.$`
   Create a plan to build a user authentication system.
   Break it down into tasks and complete them one by one.
 `;
 ```
 
-### `$(strings: TemplateStringsArray, ...values: any[]): string`
+### `$(strings: TemplateStringsArray, ...values: any[]): void`
 
-Template literal tag function for creating prompts. Automatically prepends all defined variables to the prompt and returns the formatted prompt string.
+Template literal tag function for adding user messages to the conversation. Interpolates the values into the template string and adds the result as a user message to the message history.
 
 ```typescript
-const prompt = ctx.$`
+// Adds a user message to the conversation
+prompt.$`
   Please help ${userName} with their question:
   ${userQuestion}
 `;
+
+// Note: This returns void and cannot be assigned to a variable
+// It directly modifies the message history
 ```
 
 ## Integration with AI SDK
