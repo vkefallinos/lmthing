@@ -5,8 +5,22 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./test": {
+      "types": "./dist/test/createMockModel.d.ts",
+      "default": "./dist/test/createMockModel.js"
+    }
+  },
+  "bin": {
+    "lmthing": "./dist/cli.js"
+  },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && npm run build:cli",
+    "build:cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --outfile=dist/cli.js --packages=external",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
@@ -39,6 +53,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^22.0.0",
     "@vitest/coverage-v8": "^4.0.0",
+    "esbuild": "^0.27.1",
     "msw": "^2.12.4",
     "typescript": "^5.5.4",
     "vitest": "^4.0.15"

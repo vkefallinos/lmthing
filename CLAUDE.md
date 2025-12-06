@@ -30,6 +30,7 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/StreamText.ts` | Low-level builder wrapping AI SDK's `streamText()` |
 | `src/Prompt.ts` | High-level API with `def*` methods for prompt construction |
 | `src/runPrompt.ts` | Entry point that orchestrates Prompt execution |
+| `src/cli.ts` | CLI for running `.lmt.mjs` prompt files |
 | `src/providers/` | Provider adapters for OpenAI, Anthropic, Google, etc. |
 | `src/providers/resolver.ts` | Model string resolution (`provider:model_id` → LanguageModel) |
 | `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
@@ -146,6 +147,89 @@ prompt.$`Help ${userRef} with their question about ${topic}`;
 // Adds: { role: 'user', content: 'Help <USER> with their question about AI' }
 ```
 
+## CLI (`src/cli.ts`)
+
+The CLI allows running `.lmt.mjs` prompt files directly without writing boilerplate code.
+
+### Usage
+
+```bash
+npx lmthing run <file.lmt.mjs>
+```
+
+### File Format
+
+`.lmt.mjs` files export:
+- `default` (required) - Async function that receives the prompt methods
+- `config` (required) - Configuration object with `model` property
+- `mock` (optional) - Mock response array when using `model: 'mock'`
+
+```javascript
+// myagent.lmt.mjs
+export default async ({ def, defTool, defSystem, $ }) => {
+  defSystem('role', 'You are a helpful assistant.');
+  const name = def('NAME', 'World');
+  $`Say hello to ${name}`;
+};
+
+export const config = {
+  model: 'openai:gpt-4o'  // or 'mock' for testing
+};
+```
+
+### Mock Model Support
+
+When `config.model` is `'mock'`, the CLI uses the exported `mock` array to create a mock model. **No imports needed!**
+
+```javascript
+// Mock response data
+export const mock = [
+  { type: 'text', text: 'Hello! ' },
+  { type: 'text', text: 'How can I help you?' }
+];
+
+// With tool calls
+export const mock = [
+  { type: 'text', text: 'Let me calculate... ' },
+  { type: 'tool-call', toolCallId: 'c1', toolName: 'calculator', args: { a: 1, b: 2 } },
+  { type: 'text', text: 'The result is 3!' }
+];
+
+export default async ({ defTool, $ }) => {
+  defTool('calculator', 'Add numbers', schema, async (args) => ({ sum: args.a + args.b }));
+  $`Calculate 1 + 2`;
+};
+
+export const config = { model: 'mock' };
+```
+
+### CLI Architecture
+
+```
+CLI (src/cli.ts)
+    │
+    ├─► validateFile() - Check .lmt.mjs extension and file exists
+    │
+    ├─► loadModule() - Dynamic import of the file
+    │
+    ├─► Handle mock model
+    │   └─► If config.model === 'mock', use createMockModel(module.mock)
+    │
+    ├─► runPrompt(promptFn, config) - Execute the prompt
+    │
+    └─► Stream output to stdout
+```
+
+### Examples
+
+Examples are in `examples/` directory:
+- `mock-demo.lmt.mjs` - Simple mock model demo
+- `mock-tools.lmt.mjs` - Tool usage with mock model
+- `hello.lmt.mjs` - Real model example (requires API key)
+- `weather.lmt.mjs` - Tool example with real model
+- `multi-agent.lmt.mjs` - Agent orchestration example
+- `data-analysis.lmt.mjs` - Data analysis with defData/defHook
+
 ## Provider System
 
 ### Built-in Providers
@@ -255,9 +339,14 @@ npm test -- -u
 ### Build
 
 ```bash
-npm run build   # TypeScript compile to dist/
-npm run dev     # Watch mode
+npm run build      # TypeScript compile + bundle CLI
+npm run build:cli  # Bundle CLI only (esbuild)
+npm run dev        # Watch mode (tsc only)
 ```
+
+The build process:
+1. `tsc` compiles TypeScript to `dist/`
+2. `esbuild` bundles `src/cli.ts` into `dist/cli.js` with external dependencies
 
 ### Adding a New Provider
 
@@ -400,6 +489,28 @@ Verify environment variables:
 - `{NAME}_API_BASE` is set
 - `{NAME}_API_TYPE=openai` (required flag)
 
+## Package Exports
+
+The package provides multiple entry points:
+
+```json
+{
+  "exports": {
+    ".": "./dist/index.js",           // Main entry: runPrompt, providers
+    "./test": "./dist/test/createMockModel.js"  // Test utilities
+  },
+  "bin": {
+    "lmthing": "./dist/cli.js"        // CLI executable
+  }
+}
+```
+
+Usage:
+```typescript
+import { runPrompt } from 'lmthing';
+import { createMockModel } from 'lmthing/test';
+```
+
 ## Dependencies
 
 ### Runtime
@@ -411,6 +522,7 @@ Verify environment variables:
 ### Development
 - `vitest` (^4.0.15) - Test framework
 - `typescript` (^5.5.4) - Compiler
+- `esbuild` (^0.27.1) - CLI bundler
 - `msw` (^2.12.4) - Mock service worker (not currently used)
 
 ## Links
