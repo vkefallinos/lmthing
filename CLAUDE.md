@@ -1,0 +1,421 @@
+# CLAUDE.md - Development Guide for lmthing
+
+## Project Overview
+
+**lmthing** is a TypeScript library for building agentic AI workflows. It provides a high-level abstraction over the Vercel AI SDK's `streamText` function, enabling developers to create complex multi-agent systems with tools, hooks, and hierarchical prompts.
+
+**Package name:** `lmthing`
+**Entry point:** `src/index.ts`
+**Build output:** `dist/`
+**Test framework:** Vitest
+
+## Architecture
+
+### Core Class Hierarchy
+
+```
+StreamTextBuilder (src/StreamText.ts)
+       │
+       ▼
+    Prompt (src/Prompt.ts)
+       │
+       ▼
+  runPrompt() (src/runPrompt.ts) - Main entry point
+```
+
+### Key Components
+
+| File | Purpose |
+|------|---------|
+| `src/StreamText.ts` | Low-level builder wrapping AI SDK's `streamText()` |
+| `src/Prompt.ts` | High-level API with `def*` methods for prompt construction |
+| `src/runPrompt.ts` | Entry point that orchestrates Prompt execution |
+| `src/providers/` | Provider adapters for OpenAI, Anthropic, Google, etc. |
+| `src/providers/resolver.ts` | Model string resolution (`provider:model_id` → LanguageModel) |
+| `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
+| `src/test/createMockModel.ts` | Mock model for testing without API calls |
+
+## Data Flow
+
+```
+runPrompt(fn, config)
+    │
+    ├─► Create Prompt instance with model
+    │
+    ├─► Execute user's prompt function (fn)
+    │   └─► User calls def*, defTool, defAgent, $`...`, etc.
+    │
+    ├─► prompt.run()
+    │   ├─► setLastPrepareStep() - Build system prompt from variables
+    │   └─► execute() - Call AI SDK streamText()
+    │
+    └─► Return { result: StreamTextResult, prompt: Prompt }
+```
+
+## Key Concepts
+
+### 1. Variables (`def` and `defData`)
+
+Variables are stored in `Prompt.variables` and formatted into the system prompt as XML:
+
+```typescript
+prompt.def('USER_NAME', 'Alice');     // Returns '<USER_NAME>'
+prompt.defData('CONFIG', { x: 1 });   // Returns '<CONFIG>' (YAML-formatted)
+
+// Results in system prompt:
+// <variables>
+//   <USER_NAME>Alice</USER_NAME>
+//   <CONFIG>
+// x: 1
+//   </CONFIG>
+// </variables>
+```
+
+### 2. System Parts (`defSystem`)
+
+Named system prompt sections stored in `Prompt.systems`:
+
+```typescript
+prompt.defSystem('role', 'You are a helpful assistant.');
+prompt.defSystem('rules', 'Always be polite.');
+
+// Results in:
+// role:
+// You are a helpful assistant.
+// rules:
+// Always be polite.
+```
+
+### 3. Tools (`defTool`)
+
+Tools are registered via `StreamTextBuilder.addTool()` and passed to `streamText({ tools })`:
+
+```typescript
+prompt.defTool(
+  'search',                    // name
+  'Search the web',            // description
+  z.object({ query: z.string() }),  // inputSchema (Zod)
+  async (args) => { ... }      // execute function
+);
+```
+
+### 4. Agents (`defAgent`)
+
+Agents are tools that spawn a child `Prompt` with independent execution:
+
+```typescript
+prompt.defAgent(
+  'researcher',
+  'Research topics',
+  z.object({ topic: z.string() }),
+  async (args, childPrompt) => {
+    childPrompt.$`Research: ${args.topic}`;
+  },
+  { model: 'openai:gpt-4o' }  // Optional different model
+);
+```
+
+**Agent execution flow:**
+1. Parent model calls agent tool
+2. New `Prompt` created with specified/inherited model
+3. User's callback configures the child prompt
+4. Child `prompt.run()` executes
+5. Returns `{ response: text, steps: [...] }` to parent
+
+### 5. Hooks (`defHook`)
+
+Hooks map to `streamText({ prepareStep })` for per-step modifications:
+
+```typescript
+prompt.defHook(({ stepNumber, messages, variables }) => {
+  return {
+    activeTools: ['search'],      // Limit available tools
+    system: 'Updated system...',  // Override system prompt
+    messages: messages.slice(-5), // Sliding window
+    variables: { ...variables }   // Modify variables
+  };
+});
+```
+
+### 6. Template Literal (`$`)
+
+Adds user messages to the conversation:
+
+```typescript
+prompt.$`Help ${userRef} with their question about ${topic}`;
+// Adds: { role: 'user', content: 'Help <USER> with their question about AI' }
+```
+
+## Provider System
+
+### Built-in Providers
+
+Located in `src/providers/`:
+- `openai.ts` - OpenAI (GPT-4, GPT-3.5)
+- `anthropic.ts` - Anthropic (Claude)
+- `google.ts` - Google AI (Gemini)
+- `mistral.ts` - Mistral AI
+- `azure.ts` - Azure OpenAI
+- `groq.ts` - Groq
+- `cohere.ts` - Cohere
+- `bedrock.ts` - Amazon Bedrock
+- `vertex.ts` - Google Vertex AI
+
+### Model Resolution (`src/providers/resolver.ts`)
+
+```typescript
+resolveModel('openai:gpt-4o')           // Built-in provider
+resolveModel('zai:glm-4')               // Custom provider (env vars)
+resolveModel('large')                   // Alias (LM_MODEL_LARGE env var)
+resolveModel(openai('gpt-4o'))          // Direct LanguageModel instance
+```
+
+### Custom Providers (`src/providers/custom.ts`)
+
+Environment variable pattern:
+```bash
+{NAME}_API_KEY=your-key
+{NAME}_API_BASE=https://api.example.com/v1
+{NAME}_API_TYPE=openai  # Required to activate
+```
+
+### Model Aliases
+
+```bash
+LM_MODEL_LARGE=openai:gpt-4o
+LM_MODEL_FAST=openai:gpt-4o-mini
+```
+
+Then use: `model: 'large'` or `model: 'fast'`
+
+## Step Tracking (Middleware)
+
+The `StreamTextBuilder` wraps the model with middleware that:
+1. Captures all stream chunks per step
+2. Processes agent tool results (extracts response text)
+3. Exposes via `prompt.steps` (simplified) and `prompt.fullSteps` (raw)
+
+**Step structure:**
+```typescript
+{
+  input: {
+    prompt: [{ role, content }...]
+  },
+  output: {
+    content: [{ type: 'text'|'tool-call', ... }],
+    finishReason: 'stop'|'tool-calls'
+  }
+}
+```
+
+## Testing
+
+### Running Tests
+
+```bash
+npm test              # Run all tests once
+npm run test:watch    # Watch mode
+npm run test:coverage # With coverage report
+```
+
+### Mock Model Usage
+
+```typescript
+import { createMockModel } from './test/createMockModel';
+
+const mockModel = createMockModel([
+  { type: 'text', text: 'Hello!' },
+  { type: 'tool-call', toolCallId: 'call_1', toolName: 'search', args: { q: 'test' } },
+  { type: 'text', text: 'Found results!' }
+]);
+```
+
+**Key behaviors:**
+- Text items emit as text deltas
+- Tool calls pause the stream and return control to AI SDK
+- Each `doStream` call advances through content until next tool call
+- Maintains state across multiple calls (multi-step execution)
+
+### Test File Locations
+
+- `src/*.test.ts` - Unit tests for main classes
+- `src/providers/*.test.ts` - Provider-specific tests
+- `src/test/` - Test utilities
+
+### Snapshot Testing
+
+Tests use Vitest snapshots (`expect(steps).toMatchSnapshot()`) to verify step structure. Update snapshots with:
+
+```bash
+npm test -- -u
+```
+
+## Development Workflow
+
+### Build
+
+```bash
+npm run build   # TypeScript compile to dist/
+npm run dev     # Watch mode
+```
+
+### Adding a New Provider
+
+1. Create `src/providers/{name}.ts`:
+```typescript
+import { create{Name} } from '@ai-sdk/{name}';
+
+export interface {Name}Config { ... }
+
+export function create{Name}Provider(config?: {Name}Config) {
+  return create{Name}({ ... });
+}
+
+export const {name} = create{Name}Provider();
+
+export const {Name}Models = { ... } as const;
+```
+
+2. Export from `src/providers/index.ts`
+3. Add to `providers` registry object
+4. Add tests
+
+### Adding a New Context Method (`def*`)
+
+1. Add method to `Prompt` class in `src/Prompt.ts`
+2. Store state in private instance variables
+3. Process in `run()` via `setLastPrepareStep()` if needed
+4. Add tests in `src/Prompt.test.ts`
+
+### Adding Configuration Options
+
+Options flow through `StreamTextBuilder.withOptions()` and merge into `streamText()` call. Excluded options (handled internally): `model`, `system`, `messages`, `tools`, `onFinish`, `onStepFinish`, `prepareStep`.
+
+## Important Implementation Details
+
+### Proxy in runPrompt
+
+`runPrompt` wraps the Prompt in a Proxy to auto-bind methods, allowing destructuring:
+
+```typescript
+const { def, defTool, $ } = prompt; // Works due to proxy
+```
+
+### PrepareStep Hook Chain
+
+Multiple hooks registered via `addPrepareStep()` execute sequentially with merged results. The `_lastPrepareStep` (set by Prompt.run()) executes last to inject variables.
+
+### stopWhen Default
+
+`StreamTextBuilder.execute()` sets `stopWhen: stepCountIs(1000)` to prevent infinite loops. Override via `options.stopWhen`.
+
+### Agent Response Processing
+
+Middleware in `_getMiddleware()` transforms agent responses:
+```typescript
+// Agent returns: { response: "text", steps: [...] }
+// Middleware transforms tool result to just the response text
+```
+
+## Code Style & Conventions
+
+- **TypeScript strict mode** enabled
+- **ES2022 target** with ES module syntax
+- **Zod** for schema validation (tools, agents)
+- **js-yaml** for data serialization in variables
+- **No classes for configuration** - use interfaces and factory functions
+- **Fluent builder pattern** in StreamTextBuilder
+
+## Future Development (from PROPOSAL.md)
+
+### Planned Features
+
+1. **Memory System** - Persistent state across conversations
+2. **Agent Teams** - Multi-agent coordination patterns (sequential, parallel, voting)
+3. **Plugin Architecture** - Extensible hook system
+4. **Task Lists** - `defTaskList` and `defDynamicTaskList` for structured workflows
+5. **Enhanced Error Handling** - Retry policies, circuit breakers
+6. **Metrics & Observability** - Built-in profiling and monitoring
+
+### Not Yet Implemented (from README)
+
+The README documents several features that may not be fully implemented:
+- `defTaskList` - Sequential task execution with validation
+- `defDynamicTaskList` - Dynamic task management
+- `defHook` variable modifications
+- Plugin system
+
+**When implementing these, ensure:**
+1. Add to `Prompt` class
+2. Store state appropriately
+3. Process in prepareStep or run()
+4. Add comprehensive tests
+5. Update README if behavior changes
+
+## Common Tasks
+
+### Debug Step Execution
+
+```typescript
+const { result, prompt } = await runPrompt(...);
+await result.text; // Wait for completion
+console.log(prompt.steps);     // Simplified view
+console.log(prompt.fullSteps); // Raw chunks
+```
+
+### Test Tool Calls
+
+```typescript
+const toolFn = vi.fn().mockResolvedValue({ result: 'ok' });
+// ...setup with mock model that calls the tool...
+expect(toolFn).toHaveBeenCalledWith(
+  { expectedArgs: 'value' },
+  expect.anything() // ToolExecutionOptions
+);
+```
+
+### Override Model Per Agent
+
+```typescript
+prompt.defAgent('name', 'desc', schema, fn, {
+  model: 'anthropic:claude-3-5-sonnet-20241022',
+  // or: model: anthropic('claude-3-5-sonnet-20241022')
+});
+```
+
+## Troubleshooting
+
+### "Model is required to execute streamText"
+Ensure model is passed to `runPrompt` config or `new Prompt(model)`.
+
+### Tool not being called
+Check tool name matches between `defTool` and mock model's `toolName`.
+
+### Variables not appearing in system prompt
+Variables are injected in `prompt.run()` via `setLastPrepareStep()`. Ensure `run()` is called (automatic in `runPrompt`).
+
+### Custom provider not found
+Verify environment variables:
+- `{NAME}_API_KEY` is set
+- `{NAME}_API_BASE` is set
+- `{NAME}_API_TYPE=openai` (required flag)
+
+## Dependencies
+
+### Runtime
+- `ai` (^5.0.0) - Vercel AI SDK core
+- `@ai-sdk/*` - Provider packages
+- `zod` (^4.1.13) - Schema validation
+- `js-yaml` (^4.1.1) - YAML serialization
+
+### Development
+- `vitest` (^4.0.15) - Test framework
+- `typescript` (^5.5.4) - Compiler
+- `msw` (^2.12.4) - Mock service worker (not currently used)
+
+## Links
+
+- [AI SDK Documentation](https://ai-sdk.dev/docs/reference/ai-sdk-core)
+- [streamText Reference](./STREAM_TEXT.md)
+- [Testing Guide](./TESTING.md)
+- [API Extension Proposal](./PROPOSAL.md)
