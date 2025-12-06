@@ -52,12 +52,13 @@ export class StreamTextBuilder {
         }
     }
     private _steps: Array<any> = [];
+    private _agentStepsMap: Map<string, any[]> = new Map();
     private _getMiddleware(): LanguageModelV2Middleware {
         return {
             middlewareVersion: 'v2',
             transformParams: async ({ params }) => {
               console.log(params);
-              const lastMessage = params.prompt[params.prompt.length -1]; 
+              const lastMessage = params.prompt[params.prompt.length -1];
                 if(lastMessage.role === 'tool'){
                   // Modify behavior based on tool message
                   for(const part of lastMessage.content){
@@ -67,6 +68,8 @@ export class StreamTextBuilder {
                         if(Object.keys(outputData).length === 2){
                           if(outputData.response && outputData.steps){
                             if(typeof outputData.response === 'string'){
+                              // Store agent steps before discarding them
+                              this._agentStepsMap.set(part.toolCallId, outputData.steps);
                               part.output.value = outputData.response;
                               //@ts-ignore
                               part.output.type = 'text';
@@ -75,7 +78,7 @@ export class StreamTextBuilder {
                           }
                         }
                       }
-                      
+
                     }
                   }
                 }
@@ -151,19 +154,28 @@ export class StreamTextBuilder {
               role: msg.role,
               content: typeof msg.content === 'string' ?
                 msg.content :
-                msg.content.map((part: any) => ({
-                  type: part.type,
-                  ...part.type === 'text' ? { text: part.text, } :
-                    part.type === 'tool-call' ? {
+                msg.content.map((part: any) => {
+                  if (part.type === 'text') {
+                    return { type: 'text', text: part.text };
+                  } else if (part.type === 'tool-call') {
+                    return {
+                      type: 'tool-call',
                       input: part.input,
                       toolCallId: part.toolCallId,
                       toolName: part.toolName,
-                    } : {
+                    };
+                  } else {
+                    // tool-result
+                    const agentSteps = this._agentStepsMap.get(part.toolCallId);
+                    return {
+                      type: part.type,
                       toolName: part.toolName,
                       toolCallId: part.toolCallId,
                       output: part.output,
-                    },
-                })),
+                      ...(agentSteps ? { agentSteps } : {}),
+                    };
+                  }
+                }),
             })),
           },
           output: {

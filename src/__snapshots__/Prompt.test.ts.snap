@@ -382,6 +382,32 @@ exports[`Prompt > should handle defAgent to create a sub-prompt with its own mod
         {
           "content": [
             {
+              "agentSteps": [
+                {
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "Please research <researchTopic> with <researchDepth> level of detail.",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "Analyzing quantum computing in depth...Quantum computing uses qubits and superposition principles for computation.",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
               "output": {
                 "type": "text",
                 "value": "Analyzing quantum computing in depth...Quantum computing uses qubits and superposition principles for computation.",
