@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { writeFileSync, unlinkSync, mkdirSync, rmSync } from 'fs';
+import { writeFileSync, mkdirSync, rmSync } from 'fs';
 import { join } from 'path';
 import { tmpdir } from 'os';
 import {
@@ -133,35 +133,19 @@ describe('CLI', () => {
   });
 
   describe('runLmtFile', () => {
-    it('should run a valid lmt file and return output', async () => {
-      // Create a test file that uses MockLanguageModelV2 directly
-      // Note: CLI tests use direct mock since temp files can't resolve 'lmthing' package
-      // Real usage should use: import { createMockModel } from 'lmthing';
+    it('should run a valid lmt file with mock export and return output', async () => {
       const testFile = join(testDir, 'runnable.lmt.mjs');
       writeFileSync(testFile, `
-        import { MockLanguageModelV2 } from 'ai/test';
-        import { simulateReadableStream } from 'ai';
-
-        const mockModel = new MockLanguageModelV2({
-          doStream: async () => ({
-            stream: simulateReadableStream({
-              chunks: [
-                { type: 'response-metadata', id: 'r1' },
-                { type: 'text-start', id: '0' },
-                { type: 'text-delta', id: '0', delta: 'Hello from lmthing CLI!' },
-                { type: 'finish', finishReason: 'stop', usage: { inputTokens: 5, outputTokens: 10, totalTokens: 15 } }
-              ]
-            }),
-            rawCall: { rawPrompt: null, rawSettings: {} }
-          })
-        });
+        export const mock = [
+          { type: 'text', text: 'Hello from lmthing CLI!' }
+        ];
 
         export default async ({ def, $ }) => {
           const name = def('NAME', 'World');
           $\`Say hello to \${name}\`;
         };
 
-        export const config = { model: mockModel };
+        export const config = { model: 'mock' };
       `);
 
       const chunks: string[] = [];
@@ -174,38 +158,38 @@ describe('CLI', () => {
       expect(chunks.join('')).toBe('Hello from lmthing CLI!');
     });
 
-    it('should use default model when config is not provided', async () => {
-      // This test verifies the config default behavior
-      // Note: CLI tests use direct mock since temp files can't resolve 'lmthing' package
-      const testFile = join(testDir, 'nomodel.lmt.mjs');
+    it('should run mock file with multiple text chunks', async () => {
+      const testFile = join(testDir, 'multi.lmt.mjs');
       writeFileSync(testFile, `
-        import { MockLanguageModelV2 } from 'ai/test';
-        import { simulateReadableStream } from 'ai';
+        export const mock = [
+          { type: 'text', text: 'First ' },
+          { type: 'text', text: 'Second ' },
+          { type: 'text', text: 'Third' }
+        ];
 
-        const mockModel = new MockLanguageModelV2({
-          doStream: async () => ({
-            stream: simulateReadableStream({
-              chunks: [
-                { type: 'response-metadata', id: 'r1' },
-                { type: 'text-start', id: '0' },
-                { type: 'text-delta', id: '0', delta: 'Default model test' },
-                { type: 'finish', finishReason: 'stop', usage: { inputTokens: 5, outputTokens: 10, totalTokens: 15 } }
-              ]
-            }),
-            rawCall: { rawPrompt: null, rawSettings: {} }
-          })
-        });
+        export default async ({ $ }) => {
+          $\`Say something\`;
+        };
 
+        export const config = { model: 'mock' };
+      `);
+
+      const result = await runLmtFile('multi.lmt.mjs', { cwd: testDir });
+      expect(result).toBe('First Second Third');
+    });
+
+    it('should throw CliError when mock export is missing for mock model', async () => {
+      const testFile = join(testDir, 'nomock.lmt.mjs');
+      writeFileSync(testFile, `
         export default async ({ $ }) => {
           $\`Test\`;
         };
 
-        // Override with mock model for testing
-        export const config = { model: mockModel };
+        export const config = { model: 'mock' };
       `);
 
-      const result = await runLmtFile('nomodel.lmt.mjs', { cwd: testDir });
-      expect(result).toBe('Default model test');
+      await expect(runLmtFile('nomock.lmt.mjs', { cwd: testDir }))
+        .rejects.toThrow('When using model: "mock", you must export a mock array');
     });
 
     it('should throw CliError for invalid file extension', async () => {

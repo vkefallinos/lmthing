@@ -4,56 +4,22 @@
  * Run with: npx lmthing run examples/mock-tools.lmt.mjs
  *
  * Demonstrates tool usage with a mock model.
- * When installed via npm, you can also use: import { createMockModel } from 'lmthing';
+ * When config.model is "mock", the CLI uses the exported mock array.
  */
-import { MockLanguageModelV2 } from 'ai/test';
-import { simulateReadableStream } from 'ai';
 import { z } from 'zod';
 
-// Track which step we're on for multi-step responses
-let stepCount = 0;
-
-// Create a mock model that calls the calculator tool then responds
-const mockModel = new MockLanguageModelV2({
-  doStream: async () => {
-    stepCount++;
-
-    if (stepCount === 1) {
-      // First step: model decides to call the calculator tool
-      return {
-        stream: simulateReadableStream({
-          chunks: [
-            { type: 'response-metadata', id: 'r1' },
-            { type: 'text-start', id: '0' },
-            { type: 'text-delta', id: '0', delta: 'Let me calculate that for you. ' },
-            {
-              type: 'tool-call',
-              toolCallId: 'calc_1',
-              toolName: 'calculator',
-              input: JSON.stringify({ a: 42, b: 17, operation: 'add' })
-            },
-            { type: 'finish', finishReason: 'tool-calls', usage: { inputTokens: 10, outputTokens: 15, totalTokens: 25 } }
-          ]
-        }),
-        rawCall: { rawPrompt: null, rawSettings: {} }
-      };
-    } else {
-      // Second step: model provides final response after tool result
-      return {
-        stream: simulateReadableStream({
-          chunks: [
-            { type: 'response-metadata', id: 'r2' },
-            { type: 'text-start', id: '0' },
-            { type: 'text-delta', id: '0', delta: 'The result of 42 + 17 is 59. ' },
-            { type: 'text-delta', id: '0', delta: 'Is there anything else you\'d like me to calculate?' },
-            { type: 'finish', finishReason: 'stop', usage: { inputTokens: 20, outputTokens: 20, totalTokens: 40 } }
-          ]
-        }),
-        rawCall: { rawPrompt: null, rawSettings: {} }
-      };
-    }
-  }
-});
+// Mock response data - simulates model calling a tool then responding
+export const mock = [
+  { type: 'text', text: 'Let me calculate that for you. ' },
+  {
+    type: 'tool-call',
+    toolCallId: 'calc_1',
+    toolName: 'calculator',
+    args: { a: 42, b: 17, operation: 'add' }
+  },
+  { type: 'text', text: 'The result of 42 + 17 is 59. ' },
+  { type: 'text', text: 'Is there anything else you\'d like me to calculate?' }
+];
 
 export default async ({ defSystem, defTool, $ }) => {
   defSystem('role', 'You are a helpful calculator assistant.');
@@ -82,5 +48,5 @@ export default async ({ defSystem, defTool, $ }) => {
 };
 
 export const config = {
-  model: mockModel
+  model: 'mock'
 };

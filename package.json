@@ -5,6 +5,16 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./test": {
+      "types": "./dist/test/createMockModel.d.ts",
+      "default": "./dist/test/createMockModel.js"
+    }
+  },
   "bin": {
     "lmthing": "./dist/cli.js"
   },

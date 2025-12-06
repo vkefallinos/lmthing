@@ -3,15 +3,17 @@
 import { resolve } from 'path';
 import { existsSync } from 'fs';
 import { runPrompt } from './runPrompt';
+import { createMockModel, MockContent } from './test/createMockModel';
 
 export const VALID_EXTENSION = '.lmt.mjs';
 
 export interface LmtModule {
   default: (prompt: any) => Promise<void>;
   config?: {
-    model: string;
+    model: string | object;
     options?: Record<string, unknown>;
   };
+  mock?: MockContent[];
 }
 
 export class CliError extends Error {
@@ -93,7 +95,7 @@ export async function runLmtFile(
   const module = await loadModule(fileUrl);
 
   const promptFn = module.default;
-  const config = module.config ?? { model: 'openai:gpt-4o' };
+  let config = module.config ?? { model: 'openai:gpt-4o' };
 
   // Validate config has a model
   if (!config.model) {
@@ -103,7 +105,31 @@ export async function runLmtFile(
     );
   }
 
-  const { result } = await runPrompt(promptFn, config);
+  // Handle mock model
+  if (config.model === 'mock') {
+    if (!module.mock || !Array.isArray(module.mock)) {
+      throw new CliError(
+        'When using model: "mock", you must export a mock array\n' +
+        '  Example: export const mock = [{ type: "text", text: "Hello!" }]'
+      );
+    }
+    const mockModel = createMockModel(module.mock);
+    const { result } = await runPrompt(promptFn, { ...config, model: mockModel });
+
+    let fullText = '';
+
+    // Stream the output
+    for await (const chunk of result.textStream) {
+      fullText += chunk;
+      if (output) {
+        output(chunk);
+      }
+    }
+
+    return fullText;
+  }
+
+  const { result } = await runPrompt(promptFn, config as { model: string; options?: Record<string, unknown> });
 
   let fullText = '';
 
