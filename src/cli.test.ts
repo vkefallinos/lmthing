@@ -134,7 +134,9 @@ describe('CLI', () => {
 
   describe('runLmtFile', () => {
     it('should run a valid lmt file and return output', async () => {
-      // Create a test file that uses a mock model embedded in the file
+      // Create a test file that uses MockLanguageModelV2 directly
+      // Note: CLI tests use direct mock since temp files can't resolve 'lmthing' package
+      // Real usage should use: import { createMockModel } from 'lmthing';
       const testFile = join(testDir, 'runnable.lmt.mjs');
       writeFileSync(testFile, `
         import { MockLanguageModelV2 } from 'ai/test';
@@ -174,7 +176,7 @@ describe('CLI', () => {
 
     it('should use default model when config is not provided', async () => {
       // This test verifies the config default behavior
-      // We can't actually run without a valid model, but we can verify the config handling
+      // Note: CLI tests use direct mock since temp files can't resolve 'lmthing' package
       const testFile = join(testDir, 'nomodel.lmt.mjs');
       writeFileSync(testFile, `
         import { MockLanguageModelV2 } from 'ai/test';

@@ -3,7 +3,8 @@
  *
  * Run with: npx lmthing run examples/mock-tools.lmt.mjs
  *
- * Demonstrates tool usage with a mock model
+ * Demonstrates tool usage with a mock model.
+ * When installed via npm, you can also use: import { createMockModel } from 'lmthing';
  */
 import { MockLanguageModelV2 } from 'ai/test';
 import { simulateReadableStream } from 'ai';
@@ -12,6 +13,7 @@ import { z } from 'zod';
 // Track which step we're on for multi-step responses
 let stepCount = 0;
 
+// Create a mock model that calls the calculator tool then responds
 const mockModel = new MockLanguageModelV2({
   doStream: async () => {
     stepCount++;

@@ -3,7 +3,8 @@
  *
  * Run with: npx lmthing run examples/mock-demo.lmt.mjs
  *
- * This example uses a mock model to demonstrate the CLI works
+ * This example uses a mock model to demonstrate the CLI works.
+ * When installed via npm, you can also use: import { createMockModel } from 'lmthing';
  */
 import { MockLanguageModelV2 } from 'ai/test';
 import { simulateReadableStream } from 'ai';
@@ -19,11 +20,7 @@ const mockModel = new MockLanguageModelV2({
         { type: 'text-delta', id: '0', delta: 'Welcome to lmthing! ' },
         { type: 'text-delta', id: '0', delta: 'This is a demo running with a mock model. ' },
         { type: 'text-delta', id: '0', delta: 'In real usage, you would configure a real model like openai:gpt-4o.' },
-        {
-          type: 'finish',
-          finishReason: 'stop',
-          usage: { inputTokens: 10, outputTokens: 30, totalTokens: 40 }
-        }
+        { type: 'finish', finishReason: 'stop', usage: { inputTokens: 10, outputTokens: 30, totalTokens: 40 } }
       ]
     }),
     rawCall: { rawPrompt: null, rawSettings: {} }
