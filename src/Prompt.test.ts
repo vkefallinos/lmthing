@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Prompt } from './Prompt';
+import { Prompt, tool } from './Prompt';
 import { createMockModel } from './test/createMockModel';
 import { z } from 'zod';
 
@@ -296,5 +296,162 @@ describe('Prompt', () => {
     );
     expect(agentToolCalls.length).toBeGreaterThanOrEqual(1);
     expect(steps).toMatchSnapshot();
+  });
+
+  it('should handle composite tools with defTool array syntax', async () => {
+    // Create a mock model that calls a composite tool with multiple sub-tool calls
+    const mockModel = createMockModel([
+      { type: 'text', text: 'I will perform multiple file operations.' },
+      {
+        type: 'tool-call',
+        toolCallId: 'call_composite_1',
+        toolName: 'file',
+        args: {
+          calls: [
+            { name: 'write', args: { path: '/tmp/test.txt', content: 'Hello World' } },
+            { name: 'append', args: { path: '/tmp/test.txt', content: '\nAppended line' } },
+            { name: 'read', args: { path: '/tmp/test.txt' } }
+          ]
+        }
+      },
+      { type: 'text', text: 'All file operations completed successfully!' }
+    ]);
+
+    // Mock sub-tool implementations
+    const writeFn = vi.fn().mockResolvedValue({ success: true, bytesWritten: 11 });
+    const appendFn = vi.fn().mockResolvedValue({ success: true, bytesWritten: 14 });
+    const readFn = vi.fn().mockResolvedValue({ content: 'Hello World\nAppended line' });
+
+    const prompt = new Prompt(mockModel);
+
+    // Define a composite tool using array syntax
+    prompt.defTool('file', 'File system operations', [
+      tool('write', 'Write content to a file', z.object({
+        path: z.string().describe('File path'),
+        content: z.string().describe('Content to write')
+      }), writeFn),
+      tool('append', 'Append content to a file', z.object({
+        path: z.string().describe('File path'),
+        content: z.string().describe('Content to append')
+      }), appendFn),
+      tool('read', 'Read content from a file', z.object({
+        path: z.string().describe('File path')
+      }), readFn)
+    ]);
+
+    prompt.defMessage('user', 'Please write, append, and then read the file.');
+
+    const result = prompt.run();
+    const finalText = await result.text;
+
+    // Verify all sub-tools were called
+    expect(writeFn).toHaveBeenCalledWith(
+      { path: '/tmp/test.txt', content: 'Hello World' },
+      expect.anything()
+    );
+    expect(appendFn).toHaveBeenCalledWith(
+      { path: '/tmp/test.txt', content: '\nAppended line' },
+      expect.anything()
+    );
+    expect(readFn).toHaveBeenCalledWith(
+      { path: '/tmp/test.txt' },
+      expect.anything()
+    );
+
+    // Verify the text was generated
+    expect(finalText).toContain('completed');
+
+    // Verify the steps structure
+    const steps = prompt.steps;
+    expect(steps.length).toBeGreaterThanOrEqual(1);
+
+    // Find the composite tool call
+    const toolCalls = steps.flatMap((step: any) =>
+      step.output?.content?.filter((c: any) =>
+        c.type === 'tool-call' && c.toolName === 'file'
+      ) || []
+    );
+    expect(toolCalls.length).toBe(1);
+    expect(toolCalls[0].input.calls).toHaveLength(3);
+
+    expect(steps).toMatchSnapshot();
+  });
+
+  it('should handle errors in composite tool sub-calls gracefully', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Executing operations...' },
+      {
+        type: 'tool-call',
+        toolCallId: 'call_error_1',
+        toolName: 'operations',
+        args: {
+          calls: [
+            { name: 'success', args: { value: 1 } },
+            { name: 'fail', args: { value: 2 } },
+            { name: 'success', args: { value: 3 } }
+          ]
+        }
+      },
+      { type: 'text', text: 'Operations finished with some errors.' }
+    ]);
+
+    const successFn = vi.fn().mockResolvedValue({ result: 'ok' });
+    const failFn = vi.fn().mockRejectedValue(new Error('Intentional failure'));
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defTool('operations', 'Test operations', [
+      tool('success', 'Always succeeds', z.object({ value: z.number() }), successFn),
+      tool('fail', 'Always fails', z.object({ value: z.number() }), failFn)
+    ]);
+
+    prompt.defMessage('user', 'Run the operations.');
+
+    const result = prompt.run();
+    await result.text;
+
+    // Verify success function was called twice
+    expect(successFn).toHaveBeenCalledTimes(2);
+    expect(successFn).toHaveBeenCalledWith({ value: 1 }, expect.anything());
+    expect(successFn).toHaveBeenCalledWith({ value: 3 }, expect.anything());
+    // Verify fail function was called (even though it throws)
+    expect(failFn).toHaveBeenCalledWith({ value: 2 }, expect.anything());
+
+    // The steps should contain the tool result with error info
+    const steps = prompt.steps;
+    expect(steps).toMatchSnapshot();
+  });
+
+  it('should work with single sub-tool in array (edge case)', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Using single tool...' },
+      {
+        type: 'tool-call',
+        toolCallId: 'call_single_1',
+        toolName: 'wrapper',
+        args: {
+          calls: [
+            { name: 'inner', args: { data: 'test' } }
+          ]
+        }
+      },
+      { type: 'text', text: 'Done!' }
+    ]);
+
+    const innerFn = vi.fn().mockResolvedValue({ processed: true });
+
+    const prompt = new Prompt(mockModel);
+
+    // Edge case: composite tool with only one sub-tool
+    prompt.defTool('wrapper', 'Wrapper tool', [
+      tool('inner', 'Inner operation', z.object({ data: z.string() }), innerFn)
+    ]);
+
+    prompt.defMessage('user', 'Run the wrapper.');
+
+    const result = prompt.run();
+    await result.text;
+
+    expect(innerFn).toHaveBeenCalledWith({ data: 'test' }, expect.anything());
   });
 });

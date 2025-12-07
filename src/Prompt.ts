@@ -1,6 +1,35 @@
 import { PrepareStepOptions, StreamTextBuilder } from "./StreamText";
 import yaml from 'js-yaml';
+import { z } from 'zod';
 import { type ModelInput } from "./providers/resolver";
+
+/**
+ * Definition for a sub-tool used within a composite tool.
+ */
+export interface SubToolDefinition {
+  name: string;
+  description: string;
+  inputSchema: z.ZodType<any>;
+  execute: Function;
+}
+
+/**
+ * Helper function to create a sub-tool definition for use with defTool arrays.
+ *
+ * @example
+ * defTool('file', 'File operations', [
+ *   tool('write', 'Write to file', z.object({ path: z.string(), content: z.string() }), writeFile),
+ *   tool('append', 'Append to file', z.object({ path: z.string(), content: z.string() }), appendFile),
+ * ]);
+ */
+export function tool(
+  name: string,
+  description: string,
+  inputSchema: z.ZodType<any>,
+  execute: Function
+): SubToolDefinition {
+  return { name, description, inputSchema, execute };
+}
 
 
 interface DefHookResult {
@@ -38,8 +67,92 @@ export class Prompt extends StreamTextBuilder {
   defMessage(role: 'user' | 'assistant', content: string) {
     this.addMessage({ role, content });
   }
-  defTool(name: string, description: string, inputSchema: any, execute: Function) {
-    this.addTool(name, { description, inputSchema, execute });
+  /**
+   * Define a tool for the LLM to use.
+   *
+   * @overload Single tool: defTool(name, description, inputSchema, execute)
+   * @overload Composite tool: defTool(name, description, subTools[])
+   *
+   * When an array of sub-tools is provided, creates a composite tool that allows
+   * the LLM to invoke multiple sub-tools in a single tool call.
+   *
+   * @example
+   * // Single tool
+   * defTool('search', 'Search the web', z.object({ query: z.string() }), searchFn);
+   *
+   * // Composite tool
+   * defTool('file', 'File operations', [
+   *   tool('write', 'Write to file', z.object({ path: z.string(), content: z.string() }), writeFn),
+   *   tool('read', 'Read a file', z.object({ path: z.string() }), readFn),
+   * ]);
+   */
+  defTool(name: string, description: string, inputSchemaOrSubTools: any, execute?: Function) {
+    // Check if this is a composite tool (array of sub-tools)
+    if (Array.isArray(inputSchemaOrSubTools)) {
+      const subTools = inputSchemaOrSubTools as SubToolDefinition[];
+      this._registerCompositeTool(name, description, subTools);
+    } else {
+      // Standard single tool
+      this.addTool(name, { description, inputSchema: inputSchemaOrSubTools, execute });
+    }
+  }
+
+  /**
+   * Creates and registers a composite tool from an array of sub-tool definitions.
+   */
+  private _registerCompositeTool(name: string, description: string, subTools: SubToolDefinition[]) {
+    // Build the discriminated union schema for calls
+    // Each call is: { name: 'subToolName', args: { ...subToolArgs } }
+    const callSchemas = subTools.map(subTool => {
+      return z.object({
+        name: z.literal(subTool.name).describe(`Call the "${subTool.name}" sub-tool`),
+        args: subTool.inputSchema.describe(subTool.description)
+      });
+    });
+
+    // Create the composite input schema
+    const compositeSchema = z.object({
+      calls: z.array(z.union(callSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
+        .describe('Array of sub-tool calls to execute')
+    });
+
+    // Build enhanced description with sub-tool documentation
+    const subToolDocs = subTools.map(st => `  - ${st.name}: ${st.description}`).join('\n');
+    const enhancedDescription = `${description}\n\nAvailable sub-tools:\n${subToolDocs}`;
+
+    // Create the composite execute function
+    const compositeExecute = async (args: { calls: Array<{ name: string; args: any }> }, options?: any) => {
+      const results: Array<{ name: string; result: any }> = [];
+
+      for (const call of args.calls) {
+        const subTool = subTools.find(st => st.name === call.name);
+        if (!subTool) {
+          results.push({
+            name: call.name,
+            result: { error: `Unknown sub-tool: ${call.name}` }
+          });
+          continue;
+        }
+
+        try {
+          const result = await subTool.execute(call.args, options);
+          results.push({ name: call.name, result });
+        } catch (error: any) {
+          results.push({
+            name: call.name,
+            result: { error: error.message || String(error) }
+          });
+        }
+      }
+
+      return { results };
+    };
+
+    this.addTool(name, {
+      description: enhancedDescription,
+      inputSchema: compositeSchema,
+      execute: compositeExecute
+    });
   }
   defHook(hookFn: (opts: PrepareStepOptions<any> & {variables: Record<string, any>})=>DefHookResult) {
     this.addPrepareStep(({messages, model, steps, stepNumber})=>{
