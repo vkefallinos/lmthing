@@ -314,6 +314,166 @@ permissions:
 ]
 `;
 
+exports[`Prompt > should handle composite tools with defTool array syntax 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Please write, append, and then read the file.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "content": "Hello World",
+                  "path": "/tmp/test.txt",
+                },
+                "name": "write",
+              },
+              {
+                "args": {
+                  "content": "
+Appended line",
+                  "path": "/tmp/test.txt",
+                },
+                "name": "append",
+              },
+              {
+                "args": {
+                  "path": "/tmp/test.txt",
+                },
+                "name": "read",
+              },
+            ],
+          },
+          "toolCallId": "call_composite_1",
+          "toolName": "file",
+          "type": "tool-call",
+        },
+        {
+          "text": "I will perform multiple file operations.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Please write, append, and then read the file.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I will perform multiple file operations.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "content": "Hello World",
+                      "path": "/tmp/test.txt",
+                    },
+                    "name": "write",
+                  },
+                  {
+                    "args": {
+                      "content": "
+Appended line",
+                      "path": "/tmp/test.txt",
+                    },
+                    "name": "append",
+                  },
+                  {
+                    "args": {
+                      "path": "/tmp/test.txt",
+                    },
+                    "name": "read",
+                  },
+                ],
+              },
+              "toolCallId": "call_composite_1",
+              "toolName": "file",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "write",
+                      "result": {
+                        "bytesWritten": 11,
+                        "success": true,
+                      },
+                    },
+                    {
+                      "name": "append",
+                      "result": {
+                        "bytesWritten": 14,
+                        "success": true,
+                      },
+                    },
+                    {
+                      "name": "read",
+                      "result": {
+                        "content": "Hello World
+Appended line",
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_composite_1",
+              "toolName": "file",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "All file operations completed successfully!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
 exports[`Prompt > should handle defAgent to create a sub-prompt with its own model 1`] = `
 [
   {
@@ -425,6 +585,157 @@ exports[`Prompt > should handle defAgent to create a sub-prompt with its own mod
       "content": [
         {
           "text": "The research agent has completed the analysis.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Prompt > should handle errors in composite tool sub-calls gracefully 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run the operations.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "value": 1,
+                },
+                "name": "success",
+              },
+              {
+                "args": {
+                  "value": 2,
+                },
+                "name": "fail",
+              },
+              {
+                "args": {
+                  "value": 3,
+                },
+                "name": "success",
+              },
+            ],
+          },
+          "toolCallId": "call_error_1",
+          "toolName": "operations",
+          "type": "tool-call",
+        },
+        {
+          "text": "Executing operations...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run the operations.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Executing operations...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "value": 1,
+                    },
+                    "name": "success",
+                  },
+                  {
+                    "args": {
+                      "value": 2,
+                    },
+                    "name": "fail",
+                  },
+                  {
+                    "args": {
+                      "value": 3,
+                    },
+                    "name": "success",
+                  },
+                ],
+              },
+              "toolCallId": "call_error_1",
+              "toolName": "operations",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "success",
+                      "result": {
+                        "result": "ok",
+                      },
+                    },
+                    {
+                      "name": "fail",
+                      "result": {
+                        "error": "Intentional failure",
+                      },
+                    },
+                    {
+                      "name": "success",
+                      "result": {
+                        "result": "ok",
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_error_1",
+              "toolName": "operations",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Operations finished with some errors.",
           "type": "text",
         },
       ],
