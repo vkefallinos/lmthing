@@ -139,6 +139,7 @@ prompt.defTool('file', 'File operations', [
 Agents are tools that spawn a child `Prompt` with independent execution:
 
 ```typescript
+// Single agent
 prompt.defAgent(
   'researcher',
   'Research topics',
@@ -156,6 +157,38 @@ prompt.defAgent(
 3. User's callback configures the child prompt
 4. Child `prompt.run()` executes
 5. Returns `{ response: text, steps: [...] }` to parent
+
+**Composite Agents (Array Syntax):**
+
+When an array of sub-agent definitions is passed, `defAgent` creates a single composite agent that allows the LLM to invoke multiple sub-agents in one tool call:
+
+```typescript
+import { agent } from 'lmthing';
+
+// Composite agent with multiple sub-agents
+prompt.defAgent('specialists', 'Specialist agents', [
+  agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn, { model: 'openai:gpt-4o' }),
+  agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn),
+]);
+
+// LLM calls with:
+// { calls: [
+//   { name: 'researcher', args: { topic: 'AI' } },
+//   { name: 'analyst', args: { data: '...' } }
+// ]}
+
+// Returns:
+// { results: [
+//   { name: 'researcher', response: '...', steps: [...] },
+//   { name: 'analyst', response: '...', steps: [...] }
+// ]}
+```
+
+**Implementation details:**
+- Uses `z.union()` to create a discriminated union schema from sub-agent schemas
+- Automatically generates enhanced description listing available sub-agents
+- Executes sub-agents sequentially, collecting responses and steps
+- Handles errors gracefully per sub-agent (continues execution, returns error message)
 
 ### 5. Hooks (`defHook`)
 
@@ -530,7 +563,7 @@ The package provides multiple entry points:
 ```json
 {
   "exports": {
-    ".": "./dist/index.js",           // Main entry: runPrompt, tool, providers
+    ".": "./dist/index.js",           // Main entry: runPrompt, tool, agent, providers
     "./test": "./dist/test/createMockModel.js"  // Test utilities
   },
   "bin": {
@@ -541,7 +574,7 @@ The package provides multiple entry points:
 
 Usage:
 ```typescript
-import { runPrompt, tool } from 'lmthing';
+import { runPrompt, tool, agent } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
 ```
 

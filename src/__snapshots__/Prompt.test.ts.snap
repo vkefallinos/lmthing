@@ -314,6 +314,187 @@ permissions:
 ]
 `;
 
+exports[`Prompt > should handle composite agents with defAgent array syntax 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Research quantum computing and analyze the data.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "topic": "quantum computing",
+                },
+                "name": "researcher",
+              },
+              {
+                "args": {
+                  "data": "quantum data",
+                },
+                "name": "analyst",
+              },
+            ],
+          },
+          "toolCallId": "call_agents_1",
+          "toolName": "specialists",
+          "type": "tool-call",
+        },
+        {
+          "text": "I will delegate to multiple specialist agents.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Research quantum computing and analyze the data.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I will delegate to multiple specialist agents.",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "topic": "quantum computing",
+                    },
+                    "name": "researcher",
+                  },
+                  {
+                    "args": {
+                      "data": "quantum data",
+                    },
+                    "name": "analyst",
+                  },
+                ],
+              },
+              "toolCallId": "call_agents_1",
+              "toolName": "specialists",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "researcher",
+                      "response": "Researching quantum computing...Quantum computing uses qubits for computation.",
+                      "steps": [
+                        {
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "Research: quantum computing",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "Researching quantum computing...Quantum computing uses qubits for computation.",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      "name": "analyst",
+                      "response": "Analyzing quantum data...Analysis shows promising results.",
+                      "steps": [
+                        {
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "Analyze: quantum data",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "Analyzing quantum data...Analysis shows promising results.",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_agents_1",
+              "toolName": "specialists",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Both agents have completed their tasks.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
 exports[`Prompt > should handle composite tools with defTool array syntax 1`] = `
 [
   {
@@ -585,6 +766,161 @@ exports[`Prompt > should handle defAgent to create a sub-prompt with its own mod
       "content": [
         {
           "text": "The research agent has completed the analysis.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Prompt > should handle errors in composite agent sub-calls gracefully 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run the agents.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "input": "test",
+                },
+                "name": "working",
+              },
+              {
+                "args": {
+                  "input": "fail",
+                },
+                "name": "failing",
+              },
+            ],
+          },
+          "toolCallId": "call_agents_error_1",
+          "toolName": "agents",
+          "type": "tool-call",
+        },
+        {
+          "text": "Delegating to agents...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run the agents.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Delegating to agents...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "input": "test",
+                    },
+                    "name": "working",
+                  },
+                  {
+                    "args": {
+                      "input": "fail",
+                    },
+                    "name": "failing",
+                  },
+                ],
+              },
+              "toolCallId": "call_agents_error_1",
+              "toolName": "agents",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "working",
+                      "response": "Working agent response.",
+                      "steps": [
+                        {
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "Process: test",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "Working agent response.",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      "name": "failing",
+                      "response": "Error: Agent execution failed",
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_agents_error_1",
+              "toolName": "agents",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Agent tasks completed with some errors.",
           "type": "text",
         },
       ],

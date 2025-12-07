@@ -31,6 +31,35 @@ export function tool(
   return { name, description, inputSchema, execute };
 }
 
+/**
+ * Definition for a sub-agent used within a composite agent.
+ */
+export interface SubAgentDefinition {
+  name: string;
+  description: string;
+  inputSchema: z.ZodType<any>;
+  execute: Function;
+  options?: { model?: ModelInput } & Record<string, any>;
+}
+
+/**
+ * Helper function to create a sub-agent definition for use with defAgent arrays.
+ *
+ * @example
+ * defAgent('specialists', 'Specialist agents', [
+ *   agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn, { model: 'openai:gpt-4o' }),
+ *   agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn),
+ * ]);
+ */
+export function agent(
+  name: string,
+  description: string,
+  inputSchema: z.ZodType<any>,
+  execute: Function,
+  options?: { model?: ModelInput } & Record<string, any>
+): SubAgentDefinition {
+  return { name, description, inputSchema, execute, options };
+}
 
 interface DefHookResult {
   system ?: string;
@@ -163,22 +192,110 @@ export class Prompt extends StreamTextBuilder {
       return updates;
     })
   }
+  /**
+   * Define an agent for the LLM to delegate tasks to.
+   *
+   * @overload Single agent: defAgent(name, description, inputSchema, execute, options)
+   * @overload Composite agent: defAgent(name, description, subAgents[])
+   *
+   * When an array of sub-agents is provided, creates a composite agent that allows
+   * the LLM to invoke multiple sub-agents in a single tool call.
+   *
+   * @example
+   * // Single agent
+   * defAgent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn);
+   *
+   * // Composite agent
+   * defAgent('specialists', 'Specialist agents', [
+   *   agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn),
+   *   agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn),
+   * ]);
+   */
   defAgent(
     name: string,
     description: string,
-    inputSchema: any,
-    execute: Function,
+    inputSchemaOrSubAgents: any,
+    execute?: Function,
     {model, ...options}: {model?: ModelInput} & any = {}
   ) {
-    this.addTool(name, { description, inputSchema, execute: async (args:any)=>{
-      const prompt = new Prompt(model || this.getModel());
-      prompt.withOptions(options || this.getOptions());
-      await execute({ ...args}, prompt);
-      const result = await prompt.run();
-      const lastResponse = await result.text;
-      return { response: lastResponse, steps: prompt.steps };
-    }});
+    // Check if this is a composite agent (array of sub-agents)
+    if (Array.isArray(inputSchemaOrSubAgents)) {
+      const subAgents = inputSchemaOrSubAgents as SubAgentDefinition[];
+      this._registerCompositeAgent(name, description, subAgents);
+    } else {
+      // Standard single agent
+      this.addTool(name, { description, inputSchema: inputSchemaOrSubAgents, execute: async (args:any)=>{
+        const prompt = new Prompt(model || this.getModel());
+        prompt.withOptions(options || this.getOptions());
+        await execute!({ ...args}, prompt);
+        const result = await prompt.run();
+        const lastResponse = await result.text;
+        return { response: lastResponse, steps: prompt.steps };
+      }});
+    }
+  }
 
+  /**
+   * Creates and registers a composite agent from an array of sub-agent definitions.
+   */
+  private _registerCompositeAgent(name: string, description: string, subAgents: SubAgentDefinition[]) {
+    // Build the discriminated union schema for calls
+    // Each call is: { name: 'subAgentName', args: { ...subAgentArgs } }
+    const callSchemas = subAgents.map(subAgent => {
+      return z.object({
+        name: z.literal(subAgent.name).describe(`Delegate to the "${subAgent.name}" agent`),
+        args: subAgent.inputSchema.describe(subAgent.description)
+      });
+    });
+
+    // Create the composite input schema
+    const compositeSchema = z.object({
+      calls: z.array(z.union(callSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
+        .describe('Array of sub-agent calls to execute')
+    });
+
+    // Build enhanced description with sub-agent documentation
+    const subAgentDocs = subAgents.map(sa => `  - ${sa.name}: ${sa.description}`).join('\n');
+    const enhancedDescription = `${description}\n\nAvailable sub-agents:\n${subAgentDocs}`;
+
+    // Create the composite execute function
+    const compositeExecute = async (args: { calls: Array<{ name: string; args: any }> }) => {
+      const results: Array<{ name: string; response: string; steps?: any[] }> = [];
+
+      for (const call of args.calls) {
+        const subAgent = subAgents.find(sa => sa.name === call.name);
+        if (!subAgent) {
+          results.push({
+            name: call.name,
+            response: `Error: Unknown sub-agent: ${call.name}`
+          });
+          continue;
+        }
+
+        try {
+          const { model: agentModel, ...agentOptions } = subAgent.options || {};
+          const prompt = new Prompt(agentModel || this.getModel());
+          prompt.withOptions(agentOptions || this.getOptions());
+          await subAgent.execute(call.args, prompt);
+          const result = await prompt.run();
+          const lastResponse = await result.text;
+          results.push({ name: call.name, response: lastResponse, steps: prompt.steps });
+        } catch (error: any) {
+          results.push({
+            name: call.name,
+            response: `Error: ${error.message || String(error)}`
+          });
+        }
+      }
+
+      return { results };
+    };
+
+    this.addTool(name, {
+      description: enhancedDescription,
+      inputSchema: compositeSchema,
+      execute: compositeExecute
+    });
   }
   $(strings: TemplateStringsArray, ...values: any[]) {
     const content = strings.reduce((acc, str, i) => {

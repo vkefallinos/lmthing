@@ -400,6 +400,65 @@ prompt.defAgent(
 );
 ```
 
+### `defAgent(name: string, description: string, subAgents: SubAgentDefinition[])`
+
+**Composite Agents:** When an array of sub-agent definitions is provided, `defAgent` creates a single composite agent that allows the LLM to invoke multiple sub-agents in a single tool call. This is useful for grouping related specialized agents (e.g., research team, analysis pipeline) and enabling coordinated agent workflows.
+
+```typescript
+import { agent } from 'lmthing';
+
+prompt.defAgent('specialists', 'Specialist agents for research and analysis', [
+  agent('researcher', 'Research topics in depth', z.object({
+    topic: z.string().describe('Topic to research')
+  }), async ({ topic }, agentPrompt) => {
+    agentPrompt.defSystem('role', 'You are a research specialist.');
+    agentPrompt.$`Research: ${topic}`;
+  }, { model: 'openai:gpt-4o' }),
+  agent('analyst', 'Analyze data and provide insights', z.object({
+    data: z.string().describe('Data to analyze')
+  }), async ({ data }, agentPrompt) => {
+    agentPrompt.defSystem('role', 'You are a data analyst.');
+    agentPrompt.$`Analyze: ${data}`;
+  }, { model: 'anthropic:claude-3-5-sonnet-20241022' })
+]);
+```
+
+**How the LLM uses composite agents:**
+
+The model calls the composite agent with an array of sub-agent calls:
+```json
+{
+  "calls": [
+    { "name": "researcher", "args": { "topic": "quantum computing" } },
+    { "name": "analyst", "args": { "data": "research findings..." } }
+  ]
+}
+```
+
+**Return value:**
+
+The composite agent returns results for each sub-agent call, including the response text and execution steps:
+```json
+{
+  "results": [
+    { "name": "researcher", "response": "Quantum computing uses...", "steps": [...] },
+    { "name": "analyst", "response": "Analysis shows...", "steps": [...] }
+  ]
+}
+```
+
+**Error handling:**
+
+If a sub-agent throws an error, execution continues for remaining sub-agents, and the error is captured in the result:
+```json
+{
+  "results": [
+    { "name": "researcher", "response": "Research complete..." },
+    { "name": "failing", "response": "Error: Agent execution failed" }
+  ]
+}
+```
+
 ### `defHook(hookFn: (options) => DefHookResult)`
 
 Registers a hook that maps to the `prepareStep` parameter in `streamText`. The hook is called before each generation step and can modify the step configuration.
