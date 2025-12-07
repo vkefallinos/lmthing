@@ -141,7 +141,7 @@ export class Prompt extends StreamTextBuilder {
 
     // Create the composite input schema
     const compositeSchema = z.object({
-      calls: z.array(z.union(callSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
+      calls: z.array(z.union(callSchemas as any as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
         .describe('Array of sub-tool calls to execute')
     });
 
@@ -250,7 +250,7 @@ export class Prompt extends StreamTextBuilder {
 
     // Create the composite input schema
     const compositeSchema = z.object({
-      calls: z.array(z.union(callSchemas as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
+      calls: z.array(z.union(callSchemas as any as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
         .describe('Array of sub-agent calls to execute')
     });
 
