@@ -92,6 +92,7 @@ prompt.defSystem('rules', 'Always be polite.');
 Tools are registered via `StreamTextBuilder.addTool()` and passed to `streamText({ tools })`:
 
 ```typescript
+// Single tool
 prompt.defTool(
   'search',                    // name
   'Search the web',            // description
@@ -99,6 +100,39 @@ prompt.defTool(
   async (args) => { ... }      // execute function
 );
 ```
+
+**Composite Tools (Array Syntax):**
+
+When an array of sub-tool definitions is passed, `defTool` creates a single composite tool that allows the LLM to invoke multiple sub-tools in one tool call:
+
+```typescript
+import { tool } from 'lmthing';
+
+// Composite tool with multiple sub-tools
+prompt.defTool('file', 'File operations', [
+  tool('write', 'Write to file', z.object({ path: z.string(), content: z.string() }), writeFn),
+  tool('append', 'Append to file', z.object({ path: z.string(), content: z.string() }), appendFn),
+  tool('read', 'Read a file', z.object({ path: z.string() }), readFn),
+]);
+
+// LLM calls with:
+// { calls: [
+//   { name: 'write', args: { path: '/a.txt', content: 'hello' } },
+//   { name: 'read', args: { path: '/a.txt' } }
+// ]}
+
+// Returns:
+// { results: [
+//   { name: 'write', result: { success: true } },
+//   { name: 'read', result: { content: 'hello' } }
+// ]}
+```
+
+**Implementation details:**
+- Uses `z.union()` to create a discriminated union schema from sub-tool schemas
+- Automatically generates enhanced description listing available sub-tools
+- Executes sub-tools sequentially, collecting results
+- Handles errors gracefully per sub-tool (continues execution, returns error in result)
 
 ### 4. Agents (`defAgent`)
 
@@ -496,7 +530,7 @@ The package provides multiple entry points:
 ```json
 {
   "exports": {
-    ".": "./dist/index.js",           // Main entry: runPrompt, providers
+    ".": "./dist/index.js",           // Main entry: runPrompt, tool, providers
     "./test": "./dist/test/createMockModel.js"  // Test utilities
   },
   "bin": {
@@ -507,7 +541,7 @@ The package provides multiple entry points:
 
 Usage:
 ```typescript
-import { runPrompt } from 'lmthing';
+import { runPrompt, tool } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
 ```
 

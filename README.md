@@ -288,6 +288,76 @@ prompt.defTool(
 );
 ```
 
+### `defTool(name: string, description: string, subTools: SubToolDefinition[])`
+
+**Composite Tools:** When an array of sub-tool definitions is provided, `defTool` creates a single composite tool that allows the LLM to invoke multiple sub-tools in a single tool call. This is useful for grouping related operations (e.g., file operations, database queries) and reducing the number of round-trips.
+
+```typescript
+import { tool } from 'lmthing';
+
+prompt.defTool('file', 'File system operations', [
+  tool('write', 'Write content to a file', z.object({
+    path: z.string().describe('File path'),
+    content: z.string().describe('Content to write')
+  }), async ({ path, content }) => {
+    await fs.writeFile(path, content);
+    return { success: true };
+  }),
+  tool('append', 'Append content to a file', z.object({
+    path: z.string().describe('File path'),
+    content: z.string().describe('Content to append')
+  }), async ({ path, content }) => {
+    await fs.appendFile(path, content);
+    return { success: true };
+  }),
+  tool('read', 'Read content from a file', z.object({
+    path: z.string().describe('File path')
+  }), async ({ path }) => {
+    const content = await fs.readFile(path, 'utf-8');
+    return { content };
+  })
+]);
+```
+
+**How the LLM uses composite tools:**
+
+The model calls the composite tool with an array of sub-tool calls:
+```json
+{
+  "calls": [
+    { "name": "write", "args": { "path": "/tmp/test.txt", "content": "Hello" } },
+    { "name": "append", "args": { "path": "/tmp/test.txt", "content": " World" } },
+    { "name": "read", "args": { "path": "/tmp/test.txt" } }
+  ]
+}
+```
+
+**Return value:**
+
+The composite tool returns results for each sub-tool call:
+```json
+{
+  "results": [
+    { "name": "write", "result": { "success": true } },
+    { "name": "append", "result": { "success": true } },
+    { "name": "read", "result": { "content": "Hello World" } }
+  ]
+}
+```
+
+**Error handling:**
+
+If a sub-tool throws an error, execution continues for remaining sub-tools, and the error is captured in the result:
+```json
+{
+  "results": [
+    { "name": "write", "result": { "success": true } },
+    { "name": "fail", "result": { "error": "Permission denied" } },
+    { "name": "read", "result": { "content": "Hello" } }
+  ]
+}
+```
+
 ### `defAgent<T>(name: string, description: string, inputSchema: T, fn: Function, options?: AgentOptions)`
 
 Registers a sub-agent as a callable tool in the `tools` parameter. The agent runs its own `streamText` execution context with independent state. Supports custom configuration:
