@@ -806,4 +806,68 @@ describe('Prompt', () => {
 
     expect(steps).toMatchSnapshot();
   });
+
+  it('should reset filters between steps when hook does not return them', async () => {
+    // Create a mock model with multiple steps
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Step 1 response' },
+      {
+        type: 'tool-call',
+        toolCallId: 'call_1',
+        toolName: 'continue',
+        args: {}
+      },
+      { type: 'text', text: 'Step 2 response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defSystem('system1', 'First system part');
+    prompt.defSystem('system2', 'Second system part');
+    prompt.def('var1', 'value1');
+    prompt.def('var2', 'value2');
+
+    const continueFn = vi.fn().mockResolvedValue({ continued: true });
+    prompt.defTool('continue', 'Continue processing', z.object({}), continueFn);
+
+    // Hook that only sets filters for step 0, returns empty object for step 1
+    const hookSpy = vi.fn().mockImplementation(({ stepNumber }) => {
+      if (stepNumber === 0) {
+        // Set filters for first step only
+        return {
+          activeSystems: ['system1'],
+          activeVariables: ['var1']
+        };
+      }
+      // Return empty object - filters should reset, not persist
+      return {};
+    });
+
+    prompt.defHook(hookSpy);
+    prompt.defMessage('user', 'Process this');
+
+    const result = prompt.run();
+    await result.text;
+
+    const steps = prompt.steps;
+    expect(steps.length).toBe(2);
+
+    // Check step 0 - should have only system1 and var1 (filtered)
+    const step0SystemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    const step0Content = step0SystemMsg?.content as string;
+    expect(step0Content).toContain('system1');
+    expect(step0Content).not.toContain('system2');
+    expect(step0Content).toContain('var1');
+    expect(step0Content).not.toContain('var2');
+
+    // Check step 1 - should have ALL systems and variables (filters reset)
+    const step1SystemMsg = steps[1].input.prompt?.find((msg: any) => msg.role === 'system');
+    const step1Content = step1SystemMsg?.content as string;
+    expect(step1Content).toContain('system1');
+    expect(step1Content).toContain('system2'); // Should be included - filters reset!
+    expect(step1Content).toContain('var1');
+    expect(step1Content).toContain('var2'); // Should be included - filters reset!
+
+    expect(steps).toMatchSnapshot();
+  });
 });

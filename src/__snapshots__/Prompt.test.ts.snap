@@ -1199,6 +1199,124 @@ exports[`Prompt > should handle errors in composite tool sub-calls gracefully 1`
 ]
 `;
 
+exports[`Prompt > should reset filters between steps when hook does not return them 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "<system1>
+First system part
+</system1>
+<variables>
+  <var1>
+ value1
+  </var1>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Process this",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "call_1",
+          "toolName": "continue",
+          "type": "tool-call",
+        },
+        {
+          "text": "Step 1 response",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "<system1>
+First system part
+</system1>
+<system2>
+Second system part
+</system2>
+<variables>
+  <var1>
+ value1
+  </var1>
+  <var2>
+ value2
+  </var2>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Process this",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Step 1 response",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_1",
+              "toolName": "continue",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "continued": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "continue",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Step 2 response",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
 exports[`Prompt > should support activeSystems and activeVariables in defHook 1`] = `
 [
   {
