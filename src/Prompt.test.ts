@@ -662,15 +662,12 @@ describe('Prompt', () => {
     });
 
     // Track what the hook receives
-    const hookSpy = vi.fn().mockImplementation(({ system, variableValues }) => {
-      // Verify the hook receives the system and variables objects
+    const hookSpy = vi.fn().mockImplementation(({ system }) => {
+      // Verify the hook receives the system object
       expect(system).toBeDefined();
-      expect(variableValues).toBeDefined();
       expect(system.role).toBe('You are a helpful assistant.');
       expect(system.guidelines).toBe('Always be polite and professional.');
       expect(system.expertise).toBe('You are an expert in TypeScript and Node.js.');
-      expect(variableValues.userName).toEqual({ type: 'string', value: 'Alice' });
-      expect(variableValues.userRole).toEqual({ type: 'string', value: 'developer' });
 
       // Return only specific systems and variables to activate
       return {
@@ -902,42 +899,6 @@ describe('Prompt', () => {
       role: 'You are a helpful assistant.',
       guidelines: 'Be concise and clear.',
       expertise: 'Expert in TypeScript.'
-    });
-  });
-
-  it('should provide correct variables object to hooks', async () => {
-    const mockModel = createMockModel([
-      { type: 'text', text: 'Response' }
-    ]);
-
-    const prompt = new Prompt(mockModel);
-
-    // Define various types of variables
-    prompt.def('userName', 'Alice');
-    prompt.def('userRole', 'developer');
-    prompt.defData('config', { theme: 'dark', lang: 'en' });
-    prompt.defData('settings', { notifications: true });
-
-    let receivedVariables: Record<string, any> | undefined;
-
-    prompt.defHook(({ variableValues }) => {
-      // Capture the variables object
-      receivedVariables = variableValues;
-      return {};
-    });
-
-    prompt.defMessage('user', 'Hello');
-
-    const result = prompt.run();
-    await result.text;
-
-    // Verify the hook received the correct variables object
-    expect(receivedVariables).toBeDefined();
-    expect(receivedVariables).toEqual({
-      userName: { type: 'string', value: 'Alice' },
-      userRole: { type: 'string', value: 'developer' },
-      config: { type: 'data', value: { theme: 'dark', lang: 'en' } },
-      settings: { type: 'data', value: { notifications: true } }
     });
   });
 
@@ -1197,10 +1158,10 @@ describe('Prompt', () => {
       };
     });
 
-    // Second hook should see both variables
-    let secondHookVariables: Record<string, any> | undefined;
-    prompt.defHook(({ variableValues }) => {
-      secondHookVariables = variableValues;
+    // Second hook should see both variables in the name array
+    let secondHookVariables: string[] | undefined;
+    prompt.defHook(({ variables }) => {
+      secondHookVariables = variables;
       return {};
     });
 
@@ -1209,10 +1170,10 @@ describe('Prompt', () => {
     const result = prompt.run();
     await result.text;
 
-    // Second hook should have seen both variables
+    // Second hook should have seen both variable names
     expect(secondHookVariables).toBeDefined();
-    expect(secondHookVariables!.original).toEqual({ type: 'string', value: 'value1' });
-    expect(secondHookVariables!.added).toEqual({ type: 'string', value: 'value2' });
+    expect(secondHookVariables).toContain('original');
+    expect(secondHookVariables).toContain('added');
 
     // Both variables should appear in the system prompt
     const steps = prompt.steps;
