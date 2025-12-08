@@ -6,10 +6,12 @@ exports[`runPrompt > should execute a complete prompt workflow with all features
     "input": {
       "prompt": [
         {
-          "content": "role:
+          "content": "<role>
 You are a helpful weather and math assistant.
-guidelines:
+</role>
+<guidelines>
 Always be precise with temperature conversions.
+</guidelines>
 <variables>
   <city>
  San Francisco
@@ -69,10 +71,12 @@ preferredUnit: metric
     "input": {
       "prompt": [
         {
-          "content": "role:
+          "content": "<role>
 You are a helpful weather and math assistant.
-guidelines:
+</role>
+<guidelines>
 Always be precise with temperature conversions.
+</guidelines>
 <variables>
   <city>
  San Francisco
@@ -167,10 +171,12 @@ preferredUnit: metric
     "input": {
       "prompt": [
         {
-          "content": "role:
+          "content": "<role>
 You are a helpful weather and math assistant.
-guidelines:
+</role>
+<guidelines>
 Always be precise with temperature conversions.
+</guidelines>
 <variables>
   <city>
  San Francisco

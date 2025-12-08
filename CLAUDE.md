@@ -74,17 +74,19 @@ prompt.defData('CONFIG', { x: 1 });   // Returns '<CONFIG>' (YAML-formatted)
 
 ### 2. System Parts (`defSystem`)
 
-Named system prompt sections stored in `Prompt.systems`:
+Named system prompt sections stored in `Prompt.systems` and formatted as XML tags:
 
 ```typescript
 prompt.defSystem('role', 'You are a helpful assistant.');
 prompt.defSystem('rules', 'Always be polite.');
 
 // Results in:
-// role:
+// <role>
 // You are a helpful assistant.
-// rules:
+// </role>
+// <rules>
 // Always be polite.
+// </rules>
 ```
 
 ### 3. Tools (`defTool`)
@@ -192,18 +194,123 @@ prompt.defAgent('specialists', 'Specialist agents', [
 
 ### 5. Hooks (`defHook`)
 
-Hooks map to `streamText({ prepareStep })` for per-step modifications:
+Hooks map to `streamText({ prepareStep })` for per-step modifications. They provide access to the current context and allow dynamic filtering of systems, variables, and tools.
+
+**Hook Function Parameters:**
+
+The hook receives an options object containing:
+- `messages`: Current message history
+- `model`: The language model being used
+- `steps`: Array of previous step results
+- `stepNumber`: Current step number (0-indexed)
+- `systems`: Array of all system part names (e.g., `['role', 'guidelines', 'expertise']`)
+- `variables`: Array of all variable names (e.g., `['userName', 'config']`)
+- `tools`: Array of all tool names (e.g., `['search', 'calculator']`)
+
+**Return Value (DefHookResult):**
+
+The hook returns an object with optional properties:
+- `activeTools`: Array of tool names to limit which tools are available
+- `activeSystems`: Array of system part names to include (filters out others)
+- `activeVariables`: Array of variable names to include (filters out others)
+- `system`: Override the entire system prompt
+- `messages`: Override or modify the messages array
+- `variables`: Add or update variables (will be merged with existing)
+
+**Filter Behavior:**
+
+- Filters reset at the start of each step (no persistence across steps)
+- If `activeSystems` is not returned, all defined systems are included
+- If `activeVariables` is not returned, all defined variables are included
+- Empty arrays (`[]`) exclude all systems/variables respectively
+- Non-existent names in filter arrays are silently ignored
+- Multiple hooks execute sequentially; later hooks can override earlier ones
+
+**Examples:**
 
 ```typescript
-prompt.defHook(({ stepNumber, messages, variables }) => {
+// Use name arrays for dynamic filtering
+prompt.defHook(({ systems, variables, tools }) => {
+  console.log('Available systems:', systems);    // ['role', 'guidelines', 'expertise']
+  console.log('Available variables:', variables); // ['userName', 'config']
+  console.log('Available tools:', tools);         // ['search', 'calculator']
+
+  // Include only the first 2 systems
   return {
-    activeTools: ['search'],      // Limit available tools
-    system: 'Updated system...',  // Override system prompt
-    messages: messages.slice(-5), // Sliding window
-    variables: { ...variables }   // Modify variables
+    activeSystems: systems.slice(0, 2)
+  };
+});
+
+// Filter variables based on name patterns
+prompt.defHook(({ variables }) => {
+  // Only include variables that start with 'user'
+  const userVars = variables.filter(v => v.startsWith('user'));
+  return {
+    activeVariables: userVars, // e.g., ['userName', 'userRole']
+  };
+});
+
+// Limit tools by step
+prompt.defHook(({ stepNumber, tools }) => {
+  if (stepNumber === 0) {
+    return { activeTools: ['search'] };
+  }
+  return { activeTools: tools }; // All tools on subsequent steps
+});
+
+// Override system prompt completely
+prompt.defHook(({ stepNumber }) => {
+  return {
+    system: 'Updated system...',  // Override entire system prompt
+  };
+});
+
+// Implement sliding message window
+prompt.defHook(({ messages }) => {
+  return {
+    messages: messages.slice(-5), // Keep only last 5 messages
+  };
+});
+
+// Modify variables during execution
+prompt.defHook(({ stepNumber }) => {
+  return {
+    variables: {
+      currentStep: { type: 'string', value: 'processing' }
+    }
   };
 });
 ```
+
+**Type Safety:**
+
+The `DefHookResult` interface is exported from the main package for type-safe hook implementations:
+
+```typescript
+import { DefHookResult } from 'lmthing';
+
+const myHook = ({ systems, variables, tools }): DefHookResult => {
+  // systems, variables, and tools are name arrays
+  console.log('System names:', systems);     // ['role', 'guidelines']
+  console.log('Variable names:', variables); // ['userName', 'config']
+  console.log('Tool names:', tools);         // ['search', 'calculator']
+
+  return {
+    activeSystems: ['role'],
+    activeVariables: ['userName']
+  };
+};
+
+prompt.defHook(myHook);
+```
+
+**Implementation Details:**
+
+- Hooks are stored in `StreamTextBuilder._prepareStepHooks`
+- They execute sequentially via the `prepareStep` parameter
+- Each hook's results merge with previous hooks (later ones override)
+- The `_lastPrepareStep` (set by `Prompt.run()`) executes last to inject filtered systems/variables
+- Filter state is reset at the beginning of each step to prevent unintended persistence
 
 ### 6. Template Literal (`$`)
 

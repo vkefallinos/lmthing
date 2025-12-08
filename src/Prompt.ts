@@ -61,9 +61,21 @@ export function agent(
   return { name, description, inputSchema, execute, options };
 }
 
-interface DefHookResult {
+/**
+ * Result object returned by defHook callbacks to modify step behavior.
+ *
+ * @property system - Override the system prompt for this step
+ * @property activeTools - Limit which tools are available for this step
+ * @property activeSystems - Filter which system parts to include (by name)
+ * @property activeVariables - Filter which variables to include (by name)
+ * @property messages - Override or modify the messages array
+ * @property variables - Add or update variables (will be merged with existing)
+ */
+export interface DefHookResult {
   system ?: string;
   activeTools ?: string[];
+  activeSystems ?: string[];
+  activeVariables ?: string[];
   messages ?: any[];
   variables ?: Record<string, any>;
 }
@@ -74,6 +86,8 @@ export class Prompt extends StreamTextBuilder {
 
   }> = {};
   private systems: Record<string, string> = {};
+  private activeSystems?: string[];
+  private activeVariables?: string[];
   private addVariable(name: string, value: any, type: 'string' | 'data') {
     this.variables[name] = { type, value };
   }
@@ -183,11 +197,80 @@ export class Prompt extends StreamTextBuilder {
       execute: compositeExecute
     });
   }
-  defHook(hookFn: (opts: PrepareStepOptions<any> & {variables: Record<string, any>})=>DefHookResult) {
+  /**
+   * Define a hook that runs before each step, allowing dynamic modification of the prompt context.
+   *
+   * Hooks receive the current step context including messages, model, steps history, stepNumber,
+   * variables, system parts, and lists of available names. They can return modifications to apply for that step.
+   *
+   * @param hookFn - Function called before each step with context and returns modifications
+   *
+   * @example
+   * // Basic usage - limit tools per step
+   * prompt.defHook(({ stepNumber, tools }) => {
+   *   console.log('Available tools:', tools); // ['search', 'calculator']
+   *   if (stepNumber === 0) {
+   *     return { activeTools: ['search'] };
+   *   }
+   *   return { activeTools: ['format'] };
+   * });
+   *
+   * @example
+   * // Access system and variable names
+   * prompt.defHook(({ systems, variables }) => {
+   *   console.log('System names:', systems); // ['role', 'guidelines', 'expertise']
+   *   console.log('Variable names:', variables); // ['userName', 'config']
+   *
+   *   // Only include specific system parts for this step
+   *   return {
+   *     activeSystems: ['role', 'guidelines'] // Excludes 'expertise'
+   *   };
+   * });
+   *
+   * @example
+   * // Modify variables per step
+   * prompt.defHook(({ stepNumber }) => {
+   *   return {
+   *     variables: {
+   *       currentStep: { type: 'string', value: `Step ${stepNumber}` }
+   *     }
+   *   };
+   * });
+   *
+   * @remarks
+   * - Hook is called once per step (stepNumber starts at 0)
+   * - activeSystems/activeVariables filters reset each step (no persistence)
+   * - If activeSystems is not returned, all defined systems are included
+   * - If activeVariables is not returned, all defined variables are included
+   * - Multiple hooks can be defined and will execute sequentially
+   */
+  defHook(hookFn: (opts: PrepareStepOptions<any> & {
+    systems: string[],
+    variables: string[],
+    tools: string[]
+  })=>DefHookResult) {
     this.addPrepareStep(({messages, model, steps, stepNumber})=>{
-      const updates: DefHookResult = hookFn({ messages, model, steps, stepNumber, variables: this.variables });
+      // Reset filters at the start of each step to prevent persistence
+      this.activeSystems = undefined;
+      this.activeVariables = undefined;
+
+      const updates: DefHookResult = hookFn({
+        messages,
+        model,
+        steps,
+        stepNumber,
+        systems: Object.keys(this.systems),
+        variables: Object.keys(this.variables),
+        tools: Object.keys(this._tools)
+      });
       if (updates.variables) {
         this.variables = { ...this.variables, ...updates.variables };
+      }
+      if (updates.activeSystems !== undefined) {
+        this.activeSystems = updates.activeSystems;
+      }
+      if (updates.activeVariables !== undefined) {
+        this.activeVariables = updates.activeVariables;
       }
       return updates;
     })
@@ -308,12 +391,27 @@ export class Prompt extends StreamTextBuilder {
     this.setLastPrepareStep(()=>{
       // Final preparation before run
       let systemParts: string[] = [];
-      for (const [name, part] of Object.entries(this.systems)) {
+
+      // Filter systems based on activeSystems if provided
+      const systemEntries = Object.entries(this.systems);
+      const filteredSystems = this.activeSystems
+        ? systemEntries.filter(([name]) => this.activeSystems!.includes(name))
+        : systemEntries;
+
+      for (const [name, part] of filteredSystems) {
         systemParts.push(`<${name}>\n${part}\n</${name}>`);
       }
       const system = systemParts.length > 0 ? systemParts.join('\n') : undefined;
+
       let variableDefinitions: string[] = [];
-      for (const [name, varDef] of Object.entries(this.variables)) {
+
+      // Filter variables based on activeVariables if provided
+      const variableEntries = Object.entries(this.variables);
+      const filteredVariables = this.activeVariables
+        ? variableEntries.filter(([name]) => this.activeVariables!.includes(name))
+        : variableEntries;
+
+      for (const [name, varDef] of filteredVariables) {
         if (varDef.type === 'string') {
           variableDefinitions.push(`  <${name}>\n ${varDef.value}\n  </${name}>`);
         } else if (varDef.type === 'data') {
@@ -321,6 +419,7 @@ export class Prompt extends StreamTextBuilder {
           variableDefinitions.push(`  <${name}>\n${yamlData}\n  </${name}>`);
         }
       }
+      // Build the final system prompt
       if (variableDefinitions.length > 0) {
         const varsSystemPart = `<variables>\n${variableDefinitions.join('\n')}\n</variables>`;
         if (system) {
@@ -328,7 +427,12 @@ export class Prompt extends StreamTextBuilder {
         } else {
           return { system: varsSystemPart };
         }
+      } else if (system) {
+        // Return system parts even if there are no variables
+        return { system };
       }
+      // Return empty object if no system or variables
+      return {};
     });
     return this.execute();
   }
