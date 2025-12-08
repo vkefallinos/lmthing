@@ -309,7 +309,7 @@ export class Prompt extends StreamTextBuilder {
       // Final preparation before run
       let systemParts: string[] = [];
       for (const [name, part] of Object.entries(this.systems)) {
-        systemParts.push(`${name}:\n${part}`);
+        systemParts.push(`<${name}>\n${part}\n</${name}>`);
       }
       const system = systemParts.length > 0 ? systemParts.join('\n') : undefined;
       let variableDefinitions: string[] = [];
