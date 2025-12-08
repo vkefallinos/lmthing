@@ -201,13 +201,14 @@ export class Prompt extends StreamTextBuilder {
    * Define a hook that runs before each step, allowing dynamic modification of the prompt context.
    *
    * Hooks receive the current step context including messages, model, steps history, stepNumber,
-   * variables, and system parts. They can return modifications to apply for that step.
+   * variables, system parts, and lists of available names. They can return modifications to apply for that step.
    *
    * @param hookFn - Function called before each step with context and returns modifications
    *
    * @example
    * // Basic usage - limit tools per step
-   * prompt.defHook(({ stepNumber }) => {
+   * prompt.defHook(({ stepNumber, tools }) => {
+   *   console.log('Available tools:', tools); // ['search', 'calculator']
    *   if (stepNumber === 0) {
    *     return { activeTools: ['search'] };
    *   }
@@ -215,20 +216,22 @@ export class Prompt extends StreamTextBuilder {
    * });
    *
    * @example
-   * // Access and filter system parts
-   * prompt.defHook(({ system, stepNumber }) => {
-   *   console.log(system.role); // Access system parts by name
+   * // Access system and variable names
+   * prompt.defHook(({ systems, variables }) => {
+   *   console.log('System names:', systems); // ['role', 'guidelines', 'expertise']
+   *   console.log('Variable names:', variables); // ['userName', 'config']
    *
    *   // Only include specific system parts for this step
    *   return {
-   *     activeSystems: ['role', 'guidelines'] // Excludes other defined systems
+   *     activeSystems: ['role', 'guidelines'] // Excludes 'expertise'
    *   };
    * });
    *
    * @example
-   * // Access and filter variables
-   * prompt.defHook(({ variables, stepNumber }) => {
-   *   console.log(variables.userName); // { type: 'string', value: 'Alice' }
+   * // Access full system and variable values
+   * prompt.defHook(({ system, variableValues, stepNumber }) => {
+   *   console.log(system.role); // Access system parts by name
+   *   console.log(variableValues.userName); // { type: 'string', value: 'Alice' }
    *
    *   // Only include specific variables for this step
    *   return {
@@ -253,7 +256,13 @@ export class Prompt extends StreamTextBuilder {
    * - If activeVariables is not returned, all defined variables are included
    * - Multiple hooks can be defined and will execute sequentially
    */
-  defHook(hookFn: (opts: PrepareStepOptions<any> & {variables: Record<string, any>, system: Record<string, string>})=>DefHookResult) {
+  defHook(hookFn: (opts: PrepareStepOptions<any> & {
+    variableValues: Record<string, any>,
+    system: Record<string, string>,
+    systems: string[],
+    variables: string[],
+    tools: string[]
+  })=>DefHookResult) {
     this.addPrepareStep(({messages, model, steps, stepNumber})=>{
       // Reset filters at the start of each step to prevent persistence
       this.activeSystems = undefined;
@@ -264,8 +273,11 @@ export class Prompt extends StreamTextBuilder {
         model,
         steps,
         stepNumber,
-        variables: this.variables,
-        system: this.systems
+        variableValues: this.variables,
+        system: this.systems,
+        systems: Object.keys(this.systems),
+        variables: Object.keys(this.variables),
+        tools: Object.keys(this._tools)
       });
       if (updates.variables) {
         this.variables = { ...this.variables, ...updates.variables };

@@ -472,8 +472,11 @@ The hook receives an options object containing:
 - `model`: The language model being used
 - `steps`: Array of previous step results
 - `stepNumber`: Current step number (0-indexed)
-- `variables`: Record of all defined variables with structure `{ [name]: { type: 'string' | 'data', value: any } }`
+- `variableValues`: Record of all defined variables with structure `{ [name]: { type: 'string' | 'data', value: any } }`
 - `system`: Record of all defined system parts with structure `{ [name]: string }`
+- `systems`: Array of all system part names (e.g., `['role', 'guidelines', 'expertise']`)
+- `variables`: Array of all variable names (e.g., `['userName', 'config']`)
+- `tools`: Array of all tool names (e.g., `['search', 'calculator']`)
 
 **Return Value (DefHookResult):**
 
@@ -505,26 +508,39 @@ The hook should return an object with optional properties:
 **Examples:**
 
 ```typescript
-// Control tool availability by step
-prompt.defHook(({ stepNumber }) => {
-  if (stepNumber === 0) {
-    return { activeTools: ['search'] }; // Only search on first step
-  }
-  return {};
-});
+// Use name arrays for dynamic filtering
+prompt.defHook(({ systems, variables, tools }) => {
+  console.log('Available systems:', systems);    // ['role', 'guidelines']
+  console.log('Available variables:', variables); // ['userName', 'config']
+  console.log('Available tools:', tools);         // ['search', 'calculator']
 
-// Access and filter system parts
-prompt.defHook(({ system }) => {
-  console.log(system.role); // Access system parts by name
+  // Dynamically filter based on available names
   return {
-    activeSystems: ['role', 'guidelines'] // Only include specific systems
+    activeSystems: systems.slice(0, 2),
+    activeVariables: variables.filter(v => v.startsWith('user'))
   };
 });
 
-// Access and filter variables
-prompt.defHook(({ variables, stepNumber }) => {
-  console.log(variables.userName); // { type: 'string', value: 'Alice' }
+// Control tool availability by step
+prompt.defHook(({ stepNumber, tools }) => {
+  if (stepNumber === 0) {
+    return { activeTools: ['search'] }; // Only search on first step
+  }
+  return { activeTools: tools }; // All tools on subsequent steps
+});
 
+// Access full system and variable values
+prompt.defHook(({ system, variableValues }) => {
+  console.log(system.role);                // 'You are a helpful assistant.'
+  console.log(variableValues.userName);    // { type: 'string', value: 'Alice' }
+
+  return {
+    activeSystems: ['role', 'guidelines']  // Only include specific systems
+  };
+});
+
+// Filter variables based on step
+prompt.defHook(({ variables, stepNumber }) => {
   // Only include certain variables based on step
   if (stepNumber === 0) {
     return { activeVariables: ['userName'] };
@@ -547,7 +563,7 @@ prompt.defHook(({ stepNumber }) => {
 });
 
 // Modify variables during execution
-prompt.defHook(({ variables, stepNumber }) => {
+prompt.defHook(({ variableValues, stepNumber }) => {
   return {
     variables: {
       CURRENT_STEP: { type: 'string', value: String(stepNumber) }
@@ -563,7 +579,16 @@ prompt.defHook(() => {
 // Type-safe hooks using exported DefHookResult interface
 import { DefHookResult } from 'lmthing';
 
-const myHook = ({ system, variables }): DefHookResult => {
+const myHook = ({ systems, variables, system, variableValues, tools }): DefHookResult => {
+  // systems, variables, and tools are name arrays
+  console.log('System names:', systems);     // ['role', 'guidelines']
+  console.log('Variable names:', variables); // ['userName', 'config']
+  console.log('Tool names:', tools);         // ['search', 'calculator']
+
+  // system and variableValues are the full objects
+  console.log('Role:', system.role);                  // 'You are a helpful assistant.'
+  console.log('User:', variableValues.userName);      // { type: 'string', value: 'Alice' }
+
   return {
     activeSystems: ['role'],
     activeVariables: ['userName', 'config']
