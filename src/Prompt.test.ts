@@ -661,14 +661,8 @@ describe('Prompt', () => {
       autoSave: false
     });
 
-    // Track what the hook receives
-    const hookSpy = vi.fn().mockImplementation(({ system }) => {
-      // Verify the hook receives the system object
-      expect(system).toBeDefined();
-      expect(system.role).toBe('You are a helpful assistant.');
-      expect(system.guidelines).toBe('Always be polite and professional.');
-      expect(system.expertise).toBe('You are an expert in TypeScript and Node.js.');
-
+    // Track what the hook receives and return filters
+    const hookSpy = vi.fn().mockImplementation(() => {
       // Return only specific systems and variables to activate
       return {
         activeSystems: ['role', 'expertise'], // Exclude 'guidelines'
@@ -866,40 +860,6 @@ describe('Prompt', () => {
     expect(step1Content).toContain('var2'); // Should be included - filters reset!
 
     expect(steps).toMatchSnapshot();
-  });
-
-  it('should provide correct system object to hooks', async () => {
-    const mockModel = createMockModel([
-      { type: 'text', text: 'Response' }
-    ]);
-
-    const prompt = new Prompt(mockModel);
-
-    // Define multiple systems
-    prompt.defSystem('role', 'You are a helpful assistant.');
-    prompt.defSystem('guidelines', 'Be concise and clear.');
-    prompt.defSystem('expertise', 'Expert in TypeScript.');
-
-    let receivedSystem: Record<string, string> | undefined;
-
-    prompt.defHook(({ system }) => {
-      // Capture the system object
-      receivedSystem = system;
-      return {};
-    });
-
-    prompt.defMessage('user', 'Hello');
-
-    const result = prompt.run();
-    await result.text;
-
-    // Verify the hook received the correct system object
-    expect(receivedSystem).toBeDefined();
-    expect(receivedSystem).toEqual({
-      role: 'You are a helpful assistant.',
-      guidelines: 'Be concise and clear.',
-      expertise: 'Expert in TypeScript.'
-    });
   });
 
   it('should handle empty activeSystems array (exclude all systems)', async () => {

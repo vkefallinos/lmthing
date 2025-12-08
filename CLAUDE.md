@@ -203,7 +203,6 @@ The hook receives an options object containing:
 - `model`: The language model being used
 - `steps`: Array of previous step results
 - `stepNumber`: Current step number (0-indexed)
-- `system`: Record of all defined system parts with structure `{ [name]: string }`
 - `systems`: Array of all system part names (e.g., `['role', 'guidelines', 'expertise']`)
 - `variables`: Array of all variable names (e.g., `['userName', 'config']`)
 - `tools`: Array of all tool names (e.g., `['search', 'calculator']`)
@@ -239,14 +238,6 @@ prompt.defHook(({ systems, variables, tools }) => {
   // Include only the first 2 systems
   return {
     activeSystems: systems.slice(0, 2)
-  };
-});
-
-// Access full system values
-prompt.defHook(({ system }) => {
-  console.log(system.role);                 // Access system parts by name
-  return {
-    activeSystems: ['role', 'guidelines'],  // Only include specific systems
   };
 });
 
@@ -298,14 +289,11 @@ The `DefHookResult` interface is exported from the main package for type-safe ho
 ```typescript
 import { DefHookResult } from 'lmthing';
 
-const myHook = ({ system, systems, variables, tools }): DefHookResult => {
+const myHook = ({ systems, variables, tools }): DefHookResult => {
   // systems, variables, and tools are name arrays
   console.log('System names:', systems);     // ['role', 'guidelines']
   console.log('Variable names:', variables); // ['userName', 'config']
   console.log('Tool names:', tools);         // ['search', 'calculator']
-
-  // system is the full system object
-  console.log('Role content:', system.role);           // 'You are a helpful assistant.'
 
   return {
     activeSystems: ['role'],

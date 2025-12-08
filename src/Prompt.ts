@@ -228,17 +228,6 @@ export class Prompt extends StreamTextBuilder {
    * });
    *
    * @example
-   * // Access full system values
-   * prompt.defHook(({ system, stepNumber }) => {
-   *   console.log(system.role); // Access system parts by name
-   *
-   *   // Only include specific variables for this step
-   *   return {
-   *     activeVariables: ['userName', 'config'] // Excludes other defined variables
-   *   };
-   * });
-   *
-   * @example
    * // Modify variables per step
    * prompt.defHook(({ stepNumber }) => {
    *   return {
@@ -256,7 +245,6 @@ export class Prompt extends StreamTextBuilder {
    * - Multiple hooks can be defined and will execute sequentially
    */
   defHook(hookFn: (opts: PrepareStepOptions<any> & {
-    system: Record<string, string>,
     systems: string[],
     variables: string[],
     tools: string[]
@@ -271,7 +259,6 @@ export class Prompt extends StreamTextBuilder {
         model,
         steps,
         stepNumber,
-        system: this.systems,
         systems: Object.keys(this.systems),
         variables: Object.keys(this.variables),
         tools: Object.keys(this._tools)
