@@ -165,10 +165,12 @@ describe('Prompt', () => {
     const systemContent = systemMessage?.content as string;
     
     // Verify system parts were included
-    expect(systemContent).toContain('role:');
+    expect(systemContent).toContain('<role>');
     expect(systemContent).toContain('You are a professional database assistant.');
-    expect(systemContent).toContain('guidelines:');
+    expect(systemContent).toContain('</role>');
+    expect(systemContent).toContain('<guidelines>');
     expect(systemContent).toContain('Always verify data integrity');
+    expect(systemContent).toContain('</guidelines>');
     
     // Verify variables section was created
     expect(systemContent).toContain('<variables>');
@@ -632,5 +634,176 @@ describe('Prompt', () => {
     await result.text;
 
     expect(helperFn).toHaveBeenCalled();
+  });
+
+  it('should support activeSystems and activeVariables in defHook', async () => {
+    // Create a mock model
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Processing with filtered context...' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    // Define multiple system parts
+    prompt.defSystem('role', 'You are a helpful assistant.');
+    prompt.defSystem('guidelines', 'Always be polite and professional.');
+    prompt.defSystem('expertise', 'You are an expert in TypeScript and Node.js.');
+
+    // Define multiple variables
+    prompt.def('userName', 'Alice');
+    prompt.def('userRole', 'developer');
+    prompt.defData('config', {
+      theme: 'dark',
+      language: 'en'
+    });
+    prompt.defData('preferences', {
+      notifications: true,
+      autoSave: false
+    });
+
+    // Track what the hook receives
+    const hookSpy = vi.fn().mockImplementation(({ system, variables }) => {
+      // Verify the hook receives the system and variables objects
+      expect(system).toBeDefined();
+      expect(variables).toBeDefined();
+      expect(system.role).toBe('You are a helpful assistant.');
+      expect(system.guidelines).toBe('Always be polite and professional.');
+      expect(system.expertise).toBe('You are an expert in TypeScript and Node.js.');
+      expect(variables.userName).toEqual({ type: 'string', value: 'Alice' });
+      expect(variables.userRole).toEqual({ type: 'string', value: 'developer' });
+
+      // Return only specific systems and variables to activate
+      return {
+        activeSystems: ['role', 'expertise'], // Exclude 'guidelines'
+        activeVariables: ['userName', 'config'] // Exclude 'userRole' and 'preferences'
+      };
+    });
+
+    prompt.defHook(hookSpy);
+
+    prompt.defMessage('user', 'Hello!');
+
+    // Run the prompt
+    const result = prompt.run();
+    await result.text;
+
+    // Verify the hook was called
+    expect(hookSpy).toHaveBeenCalled();
+
+    // Get the first step to check the system prompt
+    const steps = prompt.steps;
+    expect(steps.length).toBeGreaterThan(0);
+
+    const firstStep = steps[0];
+    const systemMessage = firstStep.input.prompt?.find((msg: any) => msg.role === 'system');
+    expect(systemMessage).toBeDefined();
+
+    const systemContent = systemMessage?.content as string;
+
+    // Verify only the active systems are included
+    expect(systemContent).toContain('<role>');
+    expect(systemContent).toContain('You are a helpful assistant.');
+    expect(systemContent).toContain('</role>');
+    expect(systemContent).toContain('<expertise>');
+    expect(systemContent).toContain('You are an expert in TypeScript and Node.js.');
+    expect(systemContent).toContain('</expertise>');
+
+    // Verify the excluded system is NOT included
+    expect(systemContent).not.toContain('<guidelines>');
+    expect(systemContent).not.toContain('Always be polite and professional.');
+
+    // Verify only the active variables are included
+    expect(systemContent).toContain('<userName>');
+    expect(systemContent).toContain('Alice');
+    expect(systemContent).toContain('</userName>');
+    expect(systemContent).toContain('<config>');
+    expect(systemContent).toContain('theme: dark');
+    expect(systemContent).toContain('language: en');
+    expect(systemContent).toContain('</config>');
+
+    // Verify the excluded variables are NOT included
+    expect(systemContent).not.toContain('userRole');
+    expect(systemContent).not.toContain('developer');
+    expect(systemContent).not.toContain('preferences');
+    expect(systemContent).not.toContain('notifications');
+    expect(systemContent).not.toContain('autoSave');
+
+    expect(steps).toMatchSnapshot();
+  });
+
+  it('should allow defHook to filter different systems/variables per step', async () => {
+    // Create a mock model with multiple steps
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Step 1 response' },
+      {
+        type: 'tool-call',
+        toolCallId: 'call_1',
+        toolName: 'continue',
+        args: {}
+      },
+      { type: 'text', text: 'Step 2 response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defSystem('system1', 'First system part');
+    prompt.defSystem('system2', 'Second system part');
+    prompt.def('var1', 'value1');
+    prompt.def('var2', 'value2');
+
+    const continueFn = vi.fn().mockResolvedValue({ continued: true });
+    prompt.defTool('continue', 'Continue processing', z.object({}), continueFn);
+
+    // Hook that changes filtering based on step number
+    const hookSpy = vi.fn().mockImplementation(({ stepNumber }) => {
+      if (stepNumber === 0) {
+        // First step (steps[0])
+        return {
+          activeSystems: ['system1'],
+          activeVariables: ['var1']
+        };
+      } else if (stepNumber === 1) {
+        // Second step (steps[1])
+        return {
+          activeSystems: ['system2'],
+          activeVariables: ['var2']
+        };
+      }
+      return {};
+    });
+
+    prompt.defHook(hookSpy);
+    prompt.defMessage('user', 'Process this');
+
+    const result = prompt.run();
+    await result.text;
+
+    // Verify the hook was called multiple times
+    expect(hookSpy).toHaveBeenCalledTimes(2);
+
+    const steps = prompt.steps;
+    expect(steps.length).toBe(2);
+
+    // Check step 1 - should have system1 and var1
+    const step1SystemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    const step1Content = step1SystemMsg?.content as string;
+    expect(step1Content).toContain('system1');
+    expect(step1Content).toContain('First system part');
+    expect(step1Content).toContain('var1');
+    expect(step1Content).toContain('value1');
+    expect(step1Content).not.toContain('system2');
+    expect(step1Content).not.toContain('var2');
+
+    // Check step 2 - should have system2 and var2
+    const step2SystemMsg = steps[1].input.prompt?.find((msg: any) => msg.role === 'system');
+    const step2Content = step2SystemMsg?.content as string;
+    expect(step2Content).toContain('system2');
+    expect(step2Content).toContain('Second system part');
+    expect(step2Content).toContain('var2');
+    expect(step2Content).toContain('value2');
+    expect(step2Content).not.toContain('system1');
+    expect(step2Content).not.toContain('var1');
+
+    expect(steps).toMatchSnapshot();
   });
 });

@@ -1,15 +1,129 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`Prompt > should allow defHook to filter different systems/variables per step 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "<system1>
+First system part
+</system1>
+<variables>
+  <var1>
+ value1
+  </var1>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Process this",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "call_1",
+          "toolName": "continue",
+          "type": "tool-call",
+        },
+        {
+          "text": "Step 1 response",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "<system2>
+Second system part
+</system2>
+<variables>
+  <var2>
+ value2
+  </var2>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Process this",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Step 1 response",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_1",
+              "toolName": "continue",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "continued": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "continue",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Step 2 response",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
 exports[`Prompt > should handle a complete workflow testing all Prompt class features 1`] = `
 [
   {
     "input": {
       "prompt": [
         {
-          "content": "role:
+          "content": "<role>
 You are a professional database assistant.
-guidelines:
+</role>
+<guidelines>
 Always verify data integrity before returning results.
+</guidelines>
 <variables>
   <userId>
  123
@@ -72,10 +186,12 @@ permissions:
     "input": {
       "prompt": [
         {
-          "content": "role:
+          "content": "<role>
 You are a professional database assistant.
-guidelines:
+</role>
+<guidelines>
 Always verify data integrity before returning results.
+</guidelines>
 <variables>
   <userId>
  123
@@ -181,10 +297,12 @@ permissions:
     "input": {
       "prompt": [
         {
-          "content": "role:
+          "content": "<role>
 You are a professional database assistant.
-guidelines:
+</role>
+<guidelines>
 Always verify data integrity before returning results.
+</guidelines>
 <variables>
   <userId>
  123
@@ -1072,6 +1190,54 @@ exports[`Prompt > should handle errors in composite tool sub-calls gracefully 1`
       "content": [
         {
           "text": "Operations finished with some errors.",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Prompt > should support activeSystems and activeVariables in defHook 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+You are a helpful assistant.
+</role>
+<expertise>
+You are an expert in TypeScript and Node.js.
+</expertise>
+<variables>
+  <userName>
+ Alice
+  </userName>
+  <config>
+theme: dark
+language: en
+
+  </config>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Hello!",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Processing with filtered context...",
           "type": "text",
         },
       ],

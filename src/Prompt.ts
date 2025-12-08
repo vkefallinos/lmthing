@@ -64,6 +64,8 @@ export function agent(
 interface DefHookResult {
   system ?: string;
   activeTools ?: string[];
+  activeSystems ?: string[];
+  activeVariables ?: string[];
   messages ?: any[];
   variables ?: Record<string, any>;
 }
@@ -74,6 +76,8 @@ export class Prompt extends StreamTextBuilder {
 
   }> = {};
   private systems: Record<string, string> = {};
+  private activeSystems?: string[];
+  private activeVariables?: string[];
   private addVariable(name: string, value: any, type: 'string' | 'data') {
     this.variables[name] = { type, value };
   }
@@ -183,11 +187,24 @@ export class Prompt extends StreamTextBuilder {
       execute: compositeExecute
     });
   }
-  defHook(hookFn: (opts: PrepareStepOptions<any> & {variables: Record<string, any>})=>DefHookResult) {
+  defHook(hookFn: (opts: PrepareStepOptions<any> & {variables: Record<string, any>, system: Record<string, string>})=>DefHookResult) {
     this.addPrepareStep(({messages, model, steps, stepNumber})=>{
-      const updates: DefHookResult = hookFn({ messages, model, steps, stepNumber, variables: this.variables });
+      const updates: DefHookResult = hookFn({
+        messages,
+        model,
+        steps,
+        stepNumber,
+        variables: this.variables,
+        system: this.systems
+      });
       if (updates.variables) {
         this.variables = { ...this.variables, ...updates.variables };
+      }
+      if (updates.activeSystems !== undefined) {
+        this.activeSystems = updates.activeSystems;
+      }
+      if (updates.activeVariables !== undefined) {
+        this.activeVariables = updates.activeVariables;
       }
       return updates;
     })
@@ -308,12 +325,27 @@ export class Prompt extends StreamTextBuilder {
     this.setLastPrepareStep(()=>{
       // Final preparation before run
       let systemParts: string[] = [];
-      for (const [name, part] of Object.entries(this.systems)) {
+
+      // Filter systems based on activeSystems if provided
+      const systemEntries = Object.entries(this.systems);
+      const filteredSystems = this.activeSystems
+        ? systemEntries.filter(([name]) => this.activeSystems!.includes(name))
+        : systemEntries;
+
+      for (const [name, part] of filteredSystems) {
         systemParts.push(`<${name}>\n${part}\n</${name}>`);
       }
       const system = systemParts.length > 0 ? systemParts.join('\n') : undefined;
+
       let variableDefinitions: string[] = [];
-      for (const [name, varDef] of Object.entries(this.variables)) {
+
+      // Filter variables based on activeVariables if provided
+      const variableEntries = Object.entries(this.variables);
+      const filteredVariables = this.activeVariables
+        ? variableEntries.filter(([name]) => this.activeVariables!.includes(name))
+        : variableEntries;
+
+      for (const [name, varDef] of filteredVariables) {
         if (varDef.type === 'string') {
           variableDefinitions.push(`  <${name}>\n ${varDef.value}\n  </${name}>`);
         } else if (varDef.type === 'data') {
