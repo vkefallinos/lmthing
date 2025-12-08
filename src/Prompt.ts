@@ -423,6 +423,7 @@ export class Prompt extends StreamTextBuilder {
           variableDefinitions.push(`  <${name}>\n${yamlData}\n  </${name}>`);
         }
       }
+      // Build the final system prompt
       if (variableDefinitions.length > 0) {
         const varsSystemPart = `<variables>\n${variableDefinitions.join('\n')}\n</variables>`;
         if (system) {
@@ -430,7 +431,12 @@ export class Prompt extends StreamTextBuilder {
         } else {
           return { system: varsSystemPart };
         }
+      } else if (system) {
+        // Return system parts even if there are no variables
+        return { system };
       }
+      // Return empty object if no system or variables
+      return {};
     });
     return this.execute();
   }

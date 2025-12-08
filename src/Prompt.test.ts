@@ -870,4 +870,357 @@ describe('Prompt', () => {
 
     expect(steps).toMatchSnapshot();
   });
+
+  it('should provide correct system object to hooks', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    // Define multiple systems
+    prompt.defSystem('role', 'You are a helpful assistant.');
+    prompt.defSystem('guidelines', 'Be concise and clear.');
+    prompt.defSystem('expertise', 'Expert in TypeScript.');
+
+    let receivedSystem: Record<string, string> | undefined;
+
+    prompt.defHook(({ system }) => {
+      // Capture the system object
+      receivedSystem = system;
+      return {};
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    // Verify the hook received the correct system object
+    expect(receivedSystem).toBeDefined();
+    expect(receivedSystem).toEqual({
+      role: 'You are a helpful assistant.',
+      guidelines: 'Be concise and clear.',
+      expertise: 'Expert in TypeScript.'
+    });
+  });
+
+  it('should provide correct variables object to hooks', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    // Define various types of variables
+    prompt.def('userName', 'Alice');
+    prompt.def('userRole', 'developer');
+    prompt.defData('config', { theme: 'dark', lang: 'en' });
+    prompt.defData('settings', { notifications: true });
+
+    let receivedVariables: Record<string, any> | undefined;
+
+    prompt.defHook(({ variables }) => {
+      // Capture the variables object
+      receivedVariables = variables;
+      return {};
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    // Verify the hook received the correct variables object
+    expect(receivedVariables).toBeDefined();
+    expect(receivedVariables).toEqual({
+      userName: { type: 'string', value: 'Alice' },
+      userRole: { type: 'string', value: 'developer' },
+      config: { type: 'data', value: { theme: 'dark', lang: 'en' } },
+      settings: { type: 'data', value: { notifications: true } }
+    });
+  });
+
+  it('should handle empty activeSystems array (exclude all systems)', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defSystem('role', 'You are a helpful assistant.');
+    prompt.defSystem('guidelines', 'Be concise.');
+    prompt.def('userName', 'Alice');
+
+    prompt.defHook(() => {
+      return {
+        activeSystems: [] // Empty array should exclude all systems
+      };
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    const steps = prompt.steps;
+    const systemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    const systemContent = systemMsg?.content as string;
+
+    // No system parts should be included
+    expect(systemContent).not.toContain('<role>');
+    expect(systemContent).not.toContain('<guidelines>');
+    expect(systemContent).not.toContain('You are a helpful assistant');
+
+    // But variables should still be there
+    expect(systemContent).toContain('<userName>');
+    expect(systemContent).toContain('Alice');
+  });
+
+  it('should handle empty activeVariables array (exclude all variables)', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defSystem('role', 'You are a helpful assistant.');
+    prompt.def('userName', 'Alice');
+    prompt.def('userRole', 'developer');
+
+    prompt.defHook(() => {
+      return {
+        activeVariables: [] // Empty array should exclude all variables
+      };
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    const steps = prompt.steps;
+    const systemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    expect(systemMsg).toBeDefined();
+    const systemContent = systemMsg?.content as string;
+    expect(systemContent).toBeDefined();
+
+    // System parts should still be included
+    expect(systemContent).toContain('<role>');
+    expect(systemContent).toContain('You are a helpful assistant');
+
+    // But no variables should be there
+    expect(systemContent).not.toContain('<userName>');
+    expect(systemContent).not.toContain('<userRole>');
+    expect(systemContent).not.toContain('Alice');
+    expect(systemContent).not.toContain('developer');
+  });
+
+  it('should silently ignore non-existent system names in activeSystems', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defSystem('role', 'You are a helpful assistant.');
+    prompt.defSystem('guidelines', 'Be concise.');
+
+    prompt.defHook(() => {
+      return {
+        // Include valid and invalid system names
+        activeSystems: ['role', 'nonexistent', 'anotherFake']
+      };
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    const steps = prompt.steps;
+    const systemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    expect(systemMsg).toBeDefined();
+    const systemContent = systemMsg?.content as string;
+    expect(systemContent).toBeDefined();
+
+    // Only the valid system should be included
+    expect(systemContent).toContain('<role>');
+    expect(systemContent).toContain('You are a helpful assistant');
+    expect(systemContent).not.toContain('<guidelines>');
+    expect(systemContent).not.toContain('Be concise');
+
+    // Non-existent names should just be ignored (no error)
+    expect(systemContent).not.toContain('nonexistent');
+    expect(systemContent).not.toContain('anotherFake');
+  });
+
+  it('should silently ignore non-existent variable names in activeVariables', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.def('userName', 'Alice');
+    prompt.def('userRole', 'developer');
+
+    prompt.defHook(() => {
+      return {
+        // Include valid and invalid variable names
+        activeVariables: ['userName', 'nonexistent', 'fakeVar']
+      };
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    const steps = prompt.steps;
+    const systemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    const systemContent = systemMsg?.content as string;
+
+    // Only the valid variable should be included
+    expect(systemContent).toContain('<userName>');
+    expect(systemContent).toContain('Alice');
+    expect(systemContent).not.toContain('<userRole>');
+    expect(systemContent).not.toContain('developer');
+
+    // Non-existent names should just be ignored (no error)
+    expect(systemContent).not.toContain('nonexistent');
+    expect(systemContent).not.toContain('fakeVar');
+  });
+
+  it('should allow using DefHookResult type for type-safe hooks', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defSystem('role', 'You are a helpful assistant.');
+    prompt.def('userName', 'Alice');
+
+    // Type-safe hook function using DefHookResult
+    const typedHook = ({ stepNumber, system, variables }: {
+      stepNumber: number;
+      system: Record<string, string>;
+      variables: Record<string, any>;
+    }): import('./Prompt').DefHookResult => {
+      // TypeScript should validate this return type
+      return {
+        activeSystems: ['role'],
+        activeVariables: ['userName'],
+        activeTools: undefined, // Optional fields
+        system: undefined,
+        messages: undefined,
+        variables: undefined
+      };
+    };
+
+    prompt.defHook(typedHook);
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    const steps = prompt.steps;
+    expect(steps.length).toBeGreaterThan(0);
+
+    // Verify the hook was applied
+    const systemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    const systemContent = systemMsg?.content as string;
+    expect(systemContent).toContain('<role>');
+    expect(systemContent).toContain('<userName>');
+  });
+
+  it('should handle multiple hooks with conflicting filters (last one wins)', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.defSystem('system1', 'First system');
+    prompt.defSystem('system2', 'Second system');
+    prompt.defSystem('system3', 'Third system');
+
+    // First hook filters to system1 and system2
+    prompt.defHook(() => {
+      return {
+        activeSystems: ['system1', 'system2']
+      };
+    });
+
+    // Second hook filters to only system3
+    // This should override the first hook's activeSystems
+    prompt.defHook(() => {
+      return {
+        activeSystems: ['system3']
+      };
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    const steps = prompt.steps;
+    const systemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    expect(systemMsg).toBeDefined();
+    const systemContent = systemMsg?.content as string;
+    expect(systemContent).toBeDefined();
+
+    // Only system3 should be included (second hook wins)
+    expect(systemContent).not.toContain('system1');
+    expect(systemContent).not.toContain('system2');
+    expect(systemContent).toContain('system3');
+    expect(systemContent).toContain('Third system');
+  });
+
+  it('should preserve variable modifications across hooks in same step', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Response' }
+    ]);
+
+    const prompt = new Prompt(mockModel);
+
+    prompt.def('original', 'value1');
+
+    // First hook adds a variable
+    prompt.defHook(() => {
+      return {
+        variables: {
+          added: { type: 'string', value: 'value2' }
+        }
+      };
+    });
+
+    // Second hook should see both variables
+    let secondHookVariables: Record<string, any> | undefined;
+    prompt.defHook(({ variables }) => {
+      secondHookVariables = variables;
+      return {};
+    });
+
+    prompt.defMessage('user', 'Hello');
+
+    const result = prompt.run();
+    await result.text;
+
+    // Second hook should have seen both variables
+    expect(secondHookVariables).toBeDefined();
+    expect(secondHookVariables!.original).toEqual({ type: 'string', value: 'value1' });
+    expect(secondHookVariables!.added).toEqual({ type: 'string', value: 'value2' });
+
+    // Both variables should appear in the system prompt
+    const steps = prompt.steps;
+    const systemMsg = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
+    const systemContent = systemMsg?.content as string;
+    expect(systemContent).toContain('<original>');
+    expect(systemContent).toContain('value1');
+    expect(systemContent).toContain('<added>');
+    expect(systemContent).toContain('value2');
+  });
 });
