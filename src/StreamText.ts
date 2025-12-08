@@ -35,8 +35,8 @@ export class StreamTextBuilder {
     private _model?: LanguageModel;
     private _systemParts: Array<string> = [];
     private _messages: ModelMessage[] = [];
-    private _tools: ToolSet = {};
-    
+    protected _tools: ToolSet = {};
+
     // Store simple options (temperature, maxTokens, etc.)
     private _options: Partial<Omit<StreamTextOptions, 'model' | 'system' | 'messages' | 'tools' | 'onFinish' | 'onStepFinish' | 'prepareStep'>> = {};
 
