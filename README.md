@@ -205,17 +205,19 @@ prompt.defMessage('assistant', 'Hi there! How can I help?');
 
 ### `defSystem(name: string, value: string)`
 
-Adds a named system prompt part that will be prepended to the `system` prompt in `streamText`. Multiple system parts can be defined and will be joined together with labels.
+Adds a named system prompt part that will be prepended to the `system` prompt in `streamText`. Multiple system parts can be defined and will be formatted as XML tags. System parts can be dynamically filtered per-step using `defHook` with `activeSystems`.
 
 ```typescript
 prompt.defSystem('role', 'You are a helpful assistant.');
 prompt.defSystem('guidelines', 'Always be polite and professional.');
 
 // Results in a system prompt like:
-// role:
+// <role>
 // You are a helpful assistant.
-// guidelines:
+// </role>
+// <guidelines>
 // Always be polite and professional.
+// </guidelines>
 ```
 
 ### `def(variableName: string, content: string)`
@@ -461,7 +463,7 @@ If a sub-agent throws an error, execution continues for remaining sub-agents, an
 
 ### `defHook(hookFn: (options) => DefHookResult)`
 
-Registers a hook that maps to the `prepareStep` parameter in `streamText`. The hook is called before each generation step and can modify the step configuration.
+Registers a hook that maps to the `prepareStep` parameter in `streamText`. The hook is called before each generation step and can modify the step configuration, including filtering which systems and variables are included.
 
 **Hook Function Parameters:**
 
@@ -470,21 +472,37 @@ The hook receives an options object containing:
 - `model`: The language model being used
 - `steps`: Array of previous step results
 - `stepNumber`: Current step number (0-indexed)
-- `variables`: Record of defined variables (from `def` and `defData`)
+- `variables`: Record of all defined variables with structure `{ [name]: { type: 'string' | 'data', value: any } }`
+- `system`: Record of all defined system parts with structure `{ [name]: string }`
 
-**Return Value:**
+**Return Value (DefHookResult):**
 
 The hook should return an object with optional properties:
-- `system`: Override the system prompt
+- `system`: Override the entire system prompt
 - `activeTools`: Array of tool names to make available for this step
+- `activeSystems`: Array of system part names to include (filters out others)
+- `activeVariables`: Array of variable names to include (filters out others)
 - `messages`: Modified message history
-- `variables`: Updated variables
+- `variables`: Updated variables (will be merged with existing)
 
-Use cases:
+**Filter Behavior:**
+
+- **Filter Reset**: Filters reset at the start of each step (no persistence across steps)
+- **Default Behavior**: If `activeSystems`/`activeVariables` is not returned, all systems/variables are included
+- **Empty Arrays**: Using `[]` excludes all systems/variables respectively
+- **Invalid Names**: Non-existent names in filter arrays are silently ignored
+- **Multiple Hooks**: Later hooks can override earlier ones; they execute sequentially
+
+**Use Cases:**
+
 - Control which tools are available at each step
-- Filter or transform messages
+- Filter which system parts are included per step
+- Filter which variables are included per step
+- Transform or filter messages
 - Add dynamic context based on step number
 - Modify variables during execution
+
+**Examples:**
 
 ```typescript
 // Control tool availability by step
@@ -495,6 +513,25 @@ prompt.defHook(({ stepNumber }) => {
   return {};
 });
 
+// Access and filter system parts
+prompt.defHook(({ system }) => {
+  console.log(system.role); // Access system parts by name
+  return {
+    activeSystems: ['role', 'guidelines'] // Only include specific systems
+  };
+});
+
+// Access and filter variables
+prompt.defHook(({ variables, stepNumber }) => {
+  console.log(variables.userName); // { type: 'string', value: 'Alice' }
+
+  // Only include certain variables based on step
+  if (stepNumber === 0) {
+    return { activeVariables: ['userName'] };
+  }
+  return { activeVariables: ['userName', 'config'] };
+});
+
 // Filter messages to implement sliding window
 prompt.defHook(({ messages }) => {
   const systemMessages = messages.filter(m => m.role === 'system');
@@ -502,8 +539,8 @@ prompt.defHook(({ messages }) => {
   return { messages: [...systemMessages, ...otherMessages] };
 });
 
-// Add dynamic system prompt based on context
-prompt.defHook(({ stepNumber, variables }) => {
+// Override system prompt completely
+prompt.defHook(({ stepNumber }) => {
   return {
     system: `Step ${stepNumber}. Current time: ${new Date().toISOString()}`
   };
@@ -513,11 +550,27 @@ prompt.defHook(({ stepNumber, variables }) => {
 prompt.defHook(({ variables, stepNumber }) => {
   return {
     variables: {
-      ...variables,
       CURRENT_STEP: { type: 'string', value: String(stepNumber) }
     }
   };
 });
+
+// Exclude all systems temporarily
+prompt.defHook(() => {
+  return { activeSystems: [] }; // No system parts included
+});
+
+// Type-safe hooks using exported DefHookResult interface
+import { DefHookResult } from 'lmthing';
+
+const myHook = ({ system, variables }): DefHookResult => {
+  return {
+    activeSystems: ['role'],
+    activeVariables: ['userName', 'config']
+  };
+};
+
+prompt.defHook(myHook);
 ```
 
 ### `defTaskList(tasks: Task[])`
