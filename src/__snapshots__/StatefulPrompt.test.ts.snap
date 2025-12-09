@@ -1,0 +1,229 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`StatefulPrompt > should allow step modifications from effects 1`] = `
+{
+  "modifiedAspect": "messages",
+  "modifiedItems": [
+    {
+      "content": "Modified message",
+      "role": "system",
+    },
+  ],
+  "stepModifierCalled": true,
+  "steps": [
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": "Modified message",
+            "role": "system",
+          },
+        ],
+      },
+      "output": {
+        "content": [],
+        "finishReason": "stop",
+      },
+    },
+  ],
+}
+`;
+
+exports[`StatefulPrompt > should create state with defState 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Hello!",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Hello World",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`StatefulPrompt > should maintain state across re-executions 1`] = `
+[
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Current count: 0",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "value": 1,
+          },
+          "toolCallId": "1",
+          "toolName": "testTool",
+          "type": "tool-call",
+        },
+        {
+          "text": "First response",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Current count: 0",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "First response",
+              "type": "text",
+            },
+            {
+              "input": {
+                "value": 1,
+              },
+              "toolCallId": "1",
+              "toolName": "testTool",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "newCount": 2,
+                  "success": true,
+                },
+              },
+              "toolCallId": "1",
+              "toolName": "testTool",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Second response",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`StatefulPrompt > should provide prompt context to effects 1`] = `
+{
+  "hasMessages": true,
+  "hasSystems": true,
+  "hasTools": true,
+  "hasVariables": true,
+  "lastTool": null,
+  "stepNumber": 0,
+}
+`;
+
+exports[`StatefulPrompt > should run effects with dependencies 1`] = `
+{
+  "effectRuns": [
+    {
+      "runCount": 1,
+      "stateValue": [Function],
+      "stepNumber": 0,
+    },
+  ],
+  "finalDependency": [Function],
+  "steps": [
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": [
+              {
+                "text": "Starting with value: 0",
+                "type": "text",
+              },
+            ],
+            "role": "user",
+          },
+        ],
+      },
+      "output": {
+        "content": [],
+        "finishReason": "stop",
+      },
+    },
+  ],
+}
+`;
+
+exports[`StatefulPrompt > should run effects without dependencies on every step 1`] = `
+{
+  "runCount": 1,
+  "stepNumbers": [
+    0,
+  ],
+  "steps": [
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": [
+              {
+                "text": "Test message",
+                "type": "text",
+              },
+            ],
+            "role": "user",
+          },
+        ],
+      },
+      "output": {
+        "content": [],
+        "finishReason": "stop",
+      },
+    },
+  ],
+}
+`;

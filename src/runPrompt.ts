@@ -1,5 +1,5 @@
 import { StreamTextResult } from "ai";
-import { Prompt } from "./Prompt";
+import { StatefulPrompt } from "./StatefulPrompt";
 import { StreamTextOptions } from "./StreamText";
 import { type ModelInput } from "./providers/resolver";
 
@@ -10,18 +10,18 @@ interface PromptConfig {
 }
 
 interface RunPromptResult {
-  prompt: Prompt;
+  prompt: StatefulPrompt;
   result: StreamTextResult<any, any>;
 }
 
 /**
- * Creates a proxy around the Prompt instance that automatically binds methods
+ * Creates a proxy around the StatefulPrompt instance that automatically binds methods
  * so they can be destructured without losing 'this' context
  */
-function createPromptProxy(prompt: Prompt): Prompt {
+function createPromptProxy(prompt: StatefulPrompt): StatefulPrompt {
   return new Proxy(prompt, {
     get(target, prop) {
-      const value = target[prop as keyof Prompt];
+      const value = target[prop as keyof StatefulPrompt];
       // If it's a function, bind it to the target
       if (typeof value === 'function') {
         return value.bind(target);
@@ -32,20 +32,28 @@ function createPromptProxy(prompt: Prompt): Prompt {
 }
 
 export const runPrompt = async (
-  promptFn: (prompt: Prompt) => Promise<void>,
+  promptFn: (prompt: StatefulPrompt) => Promise<void>,
   config: PromptConfig
 ): Promise<RunPromptResult> => {
-  const prompt = new Prompt(config.model);
+  // Always create a StatefulPrompt
+  const prompt = new StatefulPrompt(config.model, true);
 
   // Apply any additional options if provided
   if (config.options) {
     prompt.withOptions(config.options);
   }
 
+  // Set the prompt function for re-execution
+  prompt.setPromptFn(promptFn);
+
   // Wrap prompt in a proxy that auto-binds methods
   const proxiedPrompt = createPromptProxy(prompt);
+
+  // Execute the prompt function once to set up initial state
   await promptFn(proxiedPrompt);
+
+  // Run with stateful re-execution (will re-execute promptFn on subsequent steps)
   const result = prompt.run();
-  // Return the actual prompt instance (not the proxy) for accessing properties like steps
+
   return { result, prompt };
 }

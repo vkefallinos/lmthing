@@ -301,6 +301,12 @@ exports[`runPrompt > should support defAgent for creating hierarchical agent wor
     "input": {
       "prompt": [
         {
+          "content": "<role>
+You are an orchestrator AI that coordinates multiple specialist agents.
+</role>",
+          "role": "system",
+        },
+        {
           "content": [
             {
               "text": "Please validate and process user data for the new signup.",
@@ -344,6 +350,12 @@ exports[`runPrompt > should support defAgent for creating hierarchical agent wor
   {
     "input": {
       "prompt": [
+        {
+          "content": "<role>
+You are an orchestrator AI that coordinates multiple specialist agents.
+</role>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -446,6 +458,12 @@ exports[`runPrompt > should support defAgent for creating hierarchical agent wor
   {
     "input": {
       "prompt": [
+        {
+          "content": "<role>
+You are an orchestrator AI that coordinates multiple specialist agents.
+</role>",
+          "role": "system",
+        },
         {
           "content": [
             {

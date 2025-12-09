@@ -80,15 +80,23 @@ export interface DefHookResult {
   variables ?: Record<string, any>;
 }
 export class Prompt extends StreamTextBuilder {
-  private variables: Record<string, {
+  protected variables: Record<string, {
     type: 'string' | 'data';
     value: any;
 
   }> = {};
-  private systems: Record<string, string> = {};
-  private activeSystems?: string[];
-  private activeVariables?: string[];
-  private _remindedItems: Array<{ type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string }> = [];
+  protected systems: Record<string, string> = {};
+  protected activeSystems?: string[];
+  protected activeVariables?: string[];
+  protected _remindedItems: Array<{ type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string }> = [];
+
+  /**
+   * Factory method to create a Prompt instance.
+   * This can be overridden by subclasses to return a different type.
+   */
+  static create(model: ModelInput): Prompt {
+    return new Prompt(model);
+  }
 
   private createProxy(tag: string, type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string) {
     const self = this;
@@ -133,11 +141,11 @@ export class Prompt extends StreamTextBuilder {
     return new Proxy({}, handler);
   }
 
-  private addVariable(name: string, value: any, type: 'string' | 'data') {
+  protected addVariable(name: string, value: any, type: 'string' | 'data') {
     this.variables[name] = { type, value };
   }
 
-  private addSystemPart(name: string, part: string): void {
+  protected addSystemPart(name: string, part: string): void {
     this.systems[name] = part;
   }
   def(name: string, value: string) {
@@ -194,7 +202,7 @@ export class Prompt extends StreamTextBuilder {
   /**
    * Creates and registers a composite tool from an array of sub-tool definitions.
    */
-  private _registerCompositeTool(name: string, description: string, subTools: SubToolDefinition[]) {
+  protected _registerCompositeTool(name: string, description: string, subTools: SubToolDefinition[]) {
     // Build the discriminated union schema for calls
     // Each call is: { name: 'subToolName', args: { ...subToolArgs } }
     const callSchemas = subTools.map(subTool => {
@@ -359,10 +367,10 @@ export class Prompt extends StreamTextBuilder {
     } else {
       // Standard single agent
       this.addTool(name, { description, inputSchema: inputSchemaOrSubAgents, execute: async (args:any)=>{
-        const prompt = new Prompt(model || this.getModel());
+        const prompt = Prompt.create(model || this.getModel() as ModelInput);
         prompt.withOptions(options || this.getOptions());
         await execute!({ ...args}, prompt);
-        const result = await prompt.run();
+        const result = prompt.run();
         const lastResponse = await result.text;
         return { response: lastResponse, steps: prompt.steps };
       }});
@@ -374,7 +382,7 @@ export class Prompt extends StreamTextBuilder {
   /**
    * Creates and registers a composite agent from an array of sub-agent definitions.
    */
-  private _registerCompositeAgent(name: string, description: string, subAgents: SubAgentDefinition[]) {
+  protected _registerCompositeAgent(name: string, description: string, subAgents: SubAgentDefinition[]) {
     // Build the discriminated union schema for calls
     // Each call is: { name: 'subAgentName', args: { ...subAgentArgs } }
     const callSchemas = subAgents.map(subAgent => {
@@ -410,7 +418,7 @@ export class Prompt extends StreamTextBuilder {
 
         try {
           const { model: agentModel, ...agentOptions } = subAgent.options || {};
-          const prompt = new Prompt(agentModel || this.getModel());
+          const prompt = Prompt.create(agentModel || this.getModel() as ModelInput);
           prompt.withOptions(agentOptions || this.getOptions());
           await subAgent.execute(call.args, prompt);
           const result = await prompt.run();
@@ -454,7 +462,7 @@ export class Prompt extends StreamTextBuilder {
       this._remindedItems = [];
     });
 
-    this.setLastPrepareStep((_options)=>{
+    this.setLastPrepareStep((_options: any)=>{
       // Final preparation before run
       let systemParts: string[] = [];
 
