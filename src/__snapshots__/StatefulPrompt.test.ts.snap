@@ -58,6 +58,2150 @@ exports[`StatefulPrompt > should create state with defState 1`] = `
 ]
 `;
 
+exports[`StatefulPrompt > should demonstrate all StatefulPrompt features with comprehensive state management 1`] = `
+{
+  "effectExecutions": [
+    {
+      "completedTasks": 0,
+      "hasTools": true,
+      "stepNumber": 0,
+      "taskCount": 0,
+    },
+    {
+      "messageCount": 1,
+      "stepNumber": 0,
+      "type": "always-run",
+    },
+    {
+      "messageCount": 3,
+      "stepNumber": 1,
+      "type": "always-run",
+    },
+    {
+      "completedTasks": 0,
+      "hasTools": true,
+      "stepNumber": 1,
+      "taskCount": 1,
+    },
+    {
+      "messageCount": 3,
+      "stepNumber": 1,
+      "type": "always-run",
+    },
+    {
+      "messageCount": 5,
+      "stepNumber": 2,
+      "type": "always-run",
+    },
+    {
+      "messageCount": 5,
+      "stepNumber": 2,
+      "type": "always-run",
+    },
+    {
+      "completedTasks": 0,
+      "hasTools": true,
+      "stepNumber": 2,
+      "taskCount": 1,
+    },
+    {
+      "messageCount": 5,
+      "stepNumber": 2,
+      "type": "always-run",
+    },
+    {
+      "messageCount": 7,
+      "stepNumber": 3,
+      "type": "always-run",
+    },
+    {
+      "messageCount": 7,
+      "stepNumber": 3,
+      "type": "always-run",
+    },
+    {
+      "messageCount": 7,
+      "stepNumber": 3,
+      "type": "always-run",
+    },
+    {
+      "completedTasks": 0,
+      "hasTools": true,
+      "stepNumber": 3,
+      "taskCount": 1,
+    },
+    {
+      "messageCount": 7,
+      "stepNumber": 3,
+      "type": "always-run",
+    },
+  ],
+  "finalState": {
+    "messageCount": 6,
+    "systems": {
+      "capabilities": "You can manage tasks, analyze progress, and coordinate specialists.",
+      "guidelines": "Always confirm actions and provide status updates.",
+      "role": "You are a project management AI assistant.",
+    },
+    "variables": {
+      "DEADLINE": {
+        "type": "string",
+        "value": "2025-12-31",
+      },
+      "PROJECT_NAME": {
+        "type": "string",
+        "value": "Next-Gen Dashboard",
+      },
+      "TEAM": {
+        "type": "data",
+        "value": {
+          "capacity": {
+            "utilization": 0.75,
+            "weekly_hours": 120,
+          },
+          "members": [
+            "Alice",
+            "Bob",
+            "Charlie",
+          ],
+          "roles": {
+            "Alice": "Designer",
+            "Bob": "Developer",
+            "Charlie": "QA",
+          },
+        },
+      },
+    },
+  },
+  "fullSteps": [
+    {
+      "input": {
+        "abortSignal": undefined,
+        "frequencyPenalty": undefined,
+        "headers": undefined,
+        "includeRawChunks": false,
+        "maxOutputTokens": undefined,
+        "presencePenalty": undefined,
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<guidelines>
+Always confirm actions and provide status updates.
+</guidelines>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+  <DEADLINE>
+ 2025-12-31
+  </DEADLINE>
+  <TEAM>
+members:
+  - Alice
+  - Bob
+  - Charlie
+roles:
+  Alice: Designer
+  Bob: Developer
+  Charlie: QA
+capacity:
+  weekly_hours: 120
+  utilization: 0.75
+
+  </TEAM>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": [
+              {
+                "text": "Hello! I need help managing <PROJECT_NAME> with team: <TEAM>. Deadline: <DEADLINE>.",
+                "type": "text",
+              },
+            ],
+            "providerOptions": undefined,
+            "role": "user",
+          },
+        ],
+        "providerOptions": undefined,
+        "responseFormat": undefined,
+        "seed": undefined,
+        "stopSequences": undefined,
+        "temperature": undefined,
+        "toolChoice": {
+          "type": "auto",
+        },
+        "tools": [
+          {
+            "description": "Manage project tasks",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "complete",
+                    "list",
+                  ],
+                  "type": "string",
+                },
+                "task": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+              ],
+              "type": "object",
+            },
+            "name": "taskManager",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "File operations
+
+Available sub-tools:
+  - write: Write to file
+  - read: Read file
+  - append: Append to file",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-tool calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Write to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "write",
+                            "description": "Call the "write" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Read file",
+                            "properties": {
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "read",
+                            "description": "Call the "read" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Append to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "append",
+                            "description": "Call the "append" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "fileOps",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Analyze project data",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "data": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "data",
+              ],
+              "type": "object",
+            },
+            "name": "analyst",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Team of specialist agents
+
+Available sub-agents:
+  - researcher: Research topics
+  - designer: Design solutions",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-agent calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Research topics",
+                            "properties": {
+                              "topic": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "topic",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "researcher",
+                            "description": "Delegate to the "researcher" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Design solutions",
+                            "properties": {
+                              "brief": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "brief",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "designer",
+                            "description": "Delegate to the "designer" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "specialists",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+        ],
+        "topK": undefined,
+        "topP": undefined,
+      },
+      "output": [
+        {
+          "id": "response-id",
+          "type": "response-metadata",
+        },
+        {
+          "id": "0",
+          "type": "text-start",
+        },
+        {
+          "delta": "I'll help you manage your project tasks. ",
+          "id": "0",
+          "type": "text-delta",
+        },
+        {
+          "input": "{"action":"add","task":"Design UI mockups"}",
+          "toolCallId": "call_1",
+          "toolName": "taskManager",
+          "type": "tool-call",
+        },
+        {
+          "finishReason": "tool-calls",
+          "type": "finish",
+          "usage": {
+            "inputTokens": 10,
+            "outputTokens": 20,
+            "totalTokens": 30,
+          },
+        },
+      ],
+    },
+    {
+      "input": {
+        "abortSignal": undefined,
+        "frequencyPenalty": undefined,
+        "headers": undefined,
+        "includeRawChunks": false,
+        "maxOutputTokens": undefined,
+        "presencePenalty": undefined,
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": "Progress update: 0/1 tasks completed",
+            "providerOptions": undefined,
+            "role": "system",
+          },
+        ],
+        "providerOptions": undefined,
+        "responseFormat": undefined,
+        "seed": undefined,
+        "stopSequences": undefined,
+        "temperature": undefined,
+        "toolChoice": {
+          "type": "auto",
+        },
+        "tools": [
+          {
+            "description": "Manage project tasks",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "complete",
+                    "list",
+                  ],
+                  "type": "string",
+                },
+                "task": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+              ],
+              "type": "object",
+            },
+            "name": "taskManager",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "File operations
+
+Available sub-tools:
+  - write: Write to file
+  - read: Read file
+  - append: Append to file",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-tool calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Write to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "write",
+                            "description": "Call the "write" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Read file",
+                            "properties": {
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "read",
+                            "description": "Call the "read" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Append to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "append",
+                            "description": "Call the "append" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "fileOps",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Analyze project data",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "data": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "data",
+              ],
+              "type": "object",
+            },
+            "name": "analyst",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Team of specialist agents
+
+Available sub-agents:
+  - researcher: Research topics
+  - designer: Design solutions",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-agent calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Research topics",
+                            "properties": {
+                              "topic": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "topic",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "researcher",
+                            "description": "Delegate to the "researcher" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Design solutions",
+                            "properties": {
+                              "brief": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "brief",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "designer",
+                            "description": "Delegate to the "designer" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "specialists",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+        ],
+        "topK": undefined,
+        "topP": undefined,
+      },
+      "output": [
+        {
+          "id": "response-id",
+          "type": "response-metadata",
+        },
+        {
+          "id": "0",
+          "type": "text-start",
+        },
+        {
+          "delta": "Task added! ",
+          "id": "0",
+          "type": "text-delta",
+        },
+        {
+          "input": "{"calls":[{"name":"write","args":{"path":"tasks.txt","content":"Design UI mockups\\n"}},{"name":"read","args":{"path":"tasks.txt"}}]}",
+          "toolCallId": "call_2",
+          "toolName": "fileOps",
+          "type": "tool-call",
+        },
+        {
+          "finishReason": "tool-calls",
+          "type": "finish",
+          "usage": {
+            "inputTokens": 10,
+            "outputTokens": 20,
+            "totalTokens": 30,
+          },
+        },
+      ],
+    },
+    {
+      "input": {
+        "abortSignal": undefined,
+        "frequencyPenalty": undefined,
+        "headers": undefined,
+        "includeRawChunks": false,
+        "maxOutputTokens": undefined,
+        "presencePenalty": undefined,
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<guidelines>
+Always confirm actions and provide status updates.
+</guidelines>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+  <DEADLINE>
+ 2025-12-31
+  </DEADLINE>
+  <TEAM>
+members:
+  - Alice
+  - Bob
+  - Charlie
+roles:
+  Alice: Designer
+  Bob: Developer
+  Charlie: QA
+capacity:
+  weekly_hours: 120
+  utilization: 0.75
+
+  </TEAM>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": "Progress update: 0/1 tasks completed",
+            "providerOptions": undefined,
+            "role": "system",
+          },
+        ],
+        "providerOptions": undefined,
+        "responseFormat": undefined,
+        "seed": undefined,
+        "stopSequences": undefined,
+        "temperature": undefined,
+        "toolChoice": {
+          "type": "auto",
+        },
+        "tools": [
+          {
+            "description": "Manage project tasks",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "complete",
+                    "list",
+                  ],
+                  "type": "string",
+                },
+                "task": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+              ],
+              "type": "object",
+            },
+            "name": "taskManager",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "File operations
+
+Available sub-tools:
+  - write: Write to file
+  - read: Read file
+  - append: Append to file",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-tool calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Write to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "write",
+                            "description": "Call the "write" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Read file",
+                            "properties": {
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "read",
+                            "description": "Call the "read" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Append to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "append",
+                            "description": "Call the "append" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "fileOps",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Analyze project data",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "data": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "data",
+              ],
+              "type": "object",
+            },
+            "name": "analyst",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Team of specialist agents
+
+Available sub-agents:
+  - researcher: Research topics
+  - designer: Design solutions",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-agent calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Research topics",
+                            "properties": {
+                              "topic": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "topic",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "researcher",
+                            "description": "Delegate to the "researcher" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Design solutions",
+                            "properties": {
+                              "brief": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "brief",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "designer",
+                            "description": "Delegate to the "designer" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "specialists",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+        ],
+        "topK": undefined,
+        "topP": undefined,
+      },
+      "output": [
+        {
+          "id": "response-id",
+          "type": "response-metadata",
+        },
+        {
+          "id": "0",
+          "type": "text-start",
+        },
+        {
+          "delta": "Saved tasks to file. ",
+          "id": "0",
+          "type": "text-delta",
+        },
+        {
+          "input": "{"data":"Task completion: 1/5"}",
+          "toolCallId": "call_3",
+          "toolName": "analyst",
+          "type": "tool-call",
+        },
+        {
+          "finishReason": "tool-calls",
+          "type": "finish",
+          "usage": {
+            "inputTokens": 10,
+            "outputTokens": 20,
+            "totalTokens": 30,
+          },
+        },
+      ],
+    },
+    {
+      "input": {
+        "abortSignal": undefined,
+        "frequencyPenalty": undefined,
+        "headers": undefined,
+        "includeRawChunks": false,
+        "maxOutputTokens": undefined,
+        "presencePenalty": undefined,
+        "prompt": [
+          {
+            "content": [
+              {
+                "text": "Analyze: Task completion: 1/5",
+                "type": "text",
+              },
+            ],
+            "providerOptions": undefined,
+            "role": "user",
+          },
+        ],
+        "providerOptions": undefined,
+        "responseFormat": undefined,
+        "seed": undefined,
+        "stopSequences": undefined,
+        "temperature": undefined,
+        "toolChoice": undefined,
+        "tools": undefined,
+        "topK": undefined,
+        "topP": undefined,
+      },
+      "output": [
+        {
+          "id": "response-id",
+          "type": "response-metadata",
+        },
+        {
+          "id": "0",
+          "type": "text-start",
+        },
+        {
+          "delta": "Analysis complete. ",
+          "id": "0",
+          "type": "text-delta",
+        },
+        {
+          "input": "{"calls":[{"name":"researcher","args":{"topic":"UI trends 2025"}},{"name":"designer","args":{"brief":"Modern dashboard"}}]}",
+          "toolCallId": "call_4",
+          "toolName": "specialists",
+          "type": "tool-call",
+        },
+        {
+          "finishReason": "tool-calls",
+          "type": "finish",
+          "usage": {
+            "inputTokens": 10,
+            "outputTokens": 20,
+            "totalTokens": 30,
+          },
+        },
+      ],
+    },
+    {
+      "input": {
+        "abortSignal": undefined,
+        "frequencyPenalty": undefined,
+        "headers": undefined,
+        "includeRawChunks": false,
+        "maxOutputTokens": undefined,
+        "presencePenalty": undefined,
+        "prompt": [
+          {
+            "content": [
+              {
+                "text": "Analyze: Task completion: 1/5",
+                "type": "text",
+              },
+            ],
+            "providerOptions": undefined,
+            "role": "user",
+          },
+          {
+            "content": [
+              {
+                "providerOptions": undefined,
+                "text": "Analysis complete. ",
+                "type": "text",
+              },
+              {
+                "input": {
+                  "calls": [
+                    {
+                      "args": {
+                        "topic": "UI trends 2025",
+                      },
+                      "name": "researcher",
+                    },
+                    {
+                      "args": {
+                        "brief": "Modern dashboard",
+                      },
+                      "name": "designer",
+                    },
+                  ],
+                },
+                "providerExecuted": undefined,
+                "providerOptions": undefined,
+                "toolCallId": "call_4",
+                "toolName": "specialists",
+                "type": "tool-call",
+              },
+            ],
+            "providerOptions": undefined,
+            "role": "assistant",
+          },
+          {
+            "content": [
+              {
+                "output": {
+                  "type": "error-text",
+                  "value": "Model tried to call unavailable tool 'specialists'. No tools are available.",
+                },
+                "providerOptions": undefined,
+                "toolCallId": "call_4",
+                "toolName": "specialists",
+                "type": "tool-result",
+              },
+            ],
+            "providerOptions": undefined,
+            "role": "tool",
+          },
+        ],
+        "providerOptions": undefined,
+        "responseFormat": undefined,
+        "seed": undefined,
+        "stopSequences": undefined,
+        "temperature": undefined,
+        "toolChoice": undefined,
+        "tools": undefined,
+        "topK": undefined,
+        "topP": undefined,
+      },
+      "output": [
+        {
+          "id": "response-id",
+          "type": "response-metadata",
+        },
+        {
+          "id": "0",
+          "type": "text-start",
+        },
+        {
+          "delta": "Specialist insights gathered. Project is on track!",
+          "id": "0",
+          "type": "text-delta",
+        },
+        {
+          "finishReason": "stop",
+          "type": "finish",
+          "usage": {
+            "inputTokens": 10,
+            "outputTokens": 20,
+            "totalTokens": 30,
+          },
+        },
+      ],
+    },
+    {
+      "input": {
+        "abortSignal": undefined,
+        "frequencyPenalty": undefined,
+        "headers": undefined,
+        "includeRawChunks": false,
+        "maxOutputTokens": undefined,
+        "presencePenalty": undefined,
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<guidelines>
+Always confirm actions and provide status updates.
+</guidelines>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+  <DEADLINE>
+ 2025-12-31
+  </DEADLINE>
+  <TEAM>
+members:
+  - Alice
+  - Bob
+  - Charlie
+roles:
+  Alice: Designer
+  Bob: Developer
+  Charlie: QA
+capacity:
+  weekly_hours: 120
+  utilization: 0.75
+
+  </TEAM>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": "Progress update: 0/1 tasks completed",
+            "providerOptions": undefined,
+            "role": "system",
+          },
+        ],
+        "providerOptions": undefined,
+        "responseFormat": undefined,
+        "seed": undefined,
+        "stopSequences": undefined,
+        "temperature": undefined,
+        "toolChoice": {
+          "type": "auto",
+        },
+        "tools": [
+          {
+            "description": "Manage project tasks",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "action": {
+                  "enum": [
+                    "add",
+                    "complete",
+                    "list",
+                  ],
+                  "type": "string",
+                },
+                "task": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "action",
+              ],
+              "type": "object",
+            },
+            "name": "taskManager",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "File operations
+
+Available sub-tools:
+  - write: Write to file
+  - read: Read file
+  - append: Append to file",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-tool calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Write to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "write",
+                            "description": "Call the "write" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Read file",
+                            "properties": {
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "read",
+                            "description": "Call the "read" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Append to file",
+                            "properties": {
+                              "content": {
+                                "type": "string",
+                              },
+                              "path": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "path",
+                              "content",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "append",
+                            "description": "Call the "append" sub-tool",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "fileOps",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Analyze project data",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "data": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "data",
+              ],
+              "type": "object",
+            },
+            "name": "analyst",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+          {
+            "description": "Team of specialist agents
+
+Available sub-agents:
+  - researcher: Research topics
+  - designer: Design solutions",
+            "inputSchema": {
+              "$schema": "http://json-schema.org/draft-07/schema#",
+              "additionalProperties": false,
+              "properties": {
+                "calls": {
+                  "description": "Array of sub-agent calls to execute",
+                  "items": {
+                    "anyOf": [
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Research topics",
+                            "properties": {
+                              "topic": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "topic",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "researcher",
+                            "description": "Delegate to the "researcher" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                      {
+                        "additionalProperties": false,
+                        "properties": {
+                          "args": {
+                            "additionalProperties": false,
+                            "description": "Design solutions",
+                            "properties": {
+                              "brief": {
+                                "type": "string",
+                              },
+                            },
+                            "required": [
+                              "brief",
+                            ],
+                            "type": "object",
+                          },
+                          "name": {
+                            "const": "designer",
+                            "description": "Delegate to the "designer" agent",
+                            "type": "string",
+                          },
+                        },
+                        "required": [
+                          "name",
+                          "args",
+                        ],
+                        "type": "object",
+                      },
+                    ],
+                  },
+                  "type": "array",
+                },
+              },
+              "required": [
+                "calls",
+              ],
+              "type": "object",
+            },
+            "name": "specialists",
+            "providerOptions": undefined,
+            "type": "function",
+          },
+        ],
+        "topK": undefined,
+        "topP": undefined,
+      },
+      "output": [
+        {
+          "id": "response-id",
+          "type": "response-metadata",
+        },
+        {
+          "id": "0",
+          "type": "text-start",
+        },
+        {
+          "finishReason": "stop",
+          "type": "finish",
+          "usage": {
+            "inputTokens": 10,
+            "outputTokens": 20,
+            "totalTokens": 30,
+          },
+        },
+      ],
+    },
+  ],
+  "hookExecutions": [
+    {
+      "availableSystems": [
+        "role",
+        "capabilities",
+        "guidelines",
+      ],
+      "availableTools": [
+        "taskManager",
+        "fileOps",
+        "analyst",
+        "specialists",
+      ],
+      "availableVariables": [
+        "PROJECT_NAME",
+        "DEADLINE",
+        "TEAM",
+      ],
+      "stepNumber": 0,
+    },
+    {
+      "availableSystems": [
+        "role",
+        "capabilities",
+        "guidelines",
+      ],
+      "availableTools": [
+        "taskManager",
+        "fileOps",
+        "analyst",
+        "specialists",
+      ],
+      "availableVariables": [
+        "PROJECT_NAME",
+        "DEADLINE",
+        "TEAM",
+      ],
+      "stepNumber": 1,
+    },
+    {
+      "availableSystems": [
+        "role",
+        "capabilities",
+        "guidelines",
+      ],
+      "availableTools": [
+        "taskManager",
+        "fileOps",
+        "analyst",
+        "specialists",
+      ],
+      "availableVariables": [
+        "PROJECT_NAME",
+        "DEADLINE",
+        "TEAM",
+      ],
+      "stepNumber": 2,
+    },
+    {
+      "availableSystems": [
+        "role",
+        "capabilities",
+        "guidelines",
+      ],
+      "availableTools": [
+        "taskManager",
+        "fileOps",
+        "analyst",
+        "specialists",
+      ],
+      "availableVariables": [
+        "PROJECT_NAME",
+        "DEADLINE",
+        "TEAM",
+      ],
+      "stepNumber": 2,
+    },
+    {
+      "availableSystems": [
+        "role",
+        "capabilities",
+        "guidelines",
+      ],
+      "availableTools": [
+        "taskManager",
+        "fileOps",
+        "analyst",
+        "specialists",
+      ],
+      "availableVariables": [
+        "PROJECT_NAME",
+        "DEADLINE",
+        "TEAM",
+      ],
+      "stepNumber": 3,
+    },
+    {
+      "availableSystems": [
+        "role",
+        "capabilities",
+        "guidelines",
+      ],
+      "availableTools": [
+        "taskManager",
+        "fileOps",
+        "analyst",
+        "specialists",
+      ],
+      "availableVariables": [
+        "PROJECT_NAME",
+        "DEADLINE",
+        "TEAM",
+      ],
+      "stepNumber": 3,
+    },
+    {
+      "availableSystems": [
+        "role",
+        "capabilities",
+        "guidelines",
+      ],
+      "availableTools": [
+        "taskManager",
+        "fileOps",
+        "analyst",
+        "specialists",
+      ],
+      "availableVariables": [
+        "PROJECT_NAME",
+        "DEADLINE",
+        "TEAM",
+      ],
+      "stepNumber": 3,
+    },
+  ],
+  "stateHistory": [
+    {
+      "analysisResults": [],
+      "completedTasks": 0,
+      "step": "execution",
+      "taskCount": 0,
+    },
+    {
+      "analysisResults": [],
+      "completedTasks": 0,
+      "step": "execution",
+      "taskCount": 1,
+    },
+    {
+      "analysisResults": [],
+      "completedTasks": 0,
+      "step": "execution",
+      "taskCount": 1,
+    },
+    {
+      "analysisResults": [],
+      "completedTasks": 0,
+      "step": "execution",
+      "taskCount": 1,
+    },
+  ],
+  "steps": [
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<guidelines>
+Always confirm actions and provide status updates.
+</guidelines>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+  <DEADLINE>
+ 2025-12-31
+  </DEADLINE>
+  <TEAM>
+members:
+  - Alice
+  - Bob
+  - Charlie
+roles:
+  Alice: Designer
+  Bob: Developer
+  Charlie: QA
+capacity:
+  weekly_hours: 120
+  utilization: 0.75
+
+  </TEAM>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": [
+              {
+                "text": "Hello! I need help managing <PROJECT_NAME> with team: <TEAM>. Deadline: <DEADLINE>.",
+                "type": "text",
+              },
+            ],
+            "role": "user",
+          },
+        ],
+      },
+      "output": {
+        "content": [
+          {
+            "input": {
+              "action": "add",
+              "task": "Design UI mockups",
+            },
+            "toolCallId": "call_1",
+            "toolName": "taskManager",
+            "type": "tool-call",
+          },
+          {
+            "text": "I'll help you manage your project tasks. ",
+            "type": "text",
+          },
+        ],
+        "finishReason": "tool-calls",
+      },
+    },
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": "Progress update: 0/1 tasks completed",
+            "role": "system",
+          },
+        ],
+      },
+      "output": {
+        "content": [
+          {
+            "input": {
+              "calls": [
+                {
+                  "args": {
+                    "content": "Design UI mockups
+",
+                    "path": "tasks.txt",
+                  },
+                  "name": "write",
+                },
+                {
+                  "args": {
+                    "path": "tasks.txt",
+                  },
+                  "name": "read",
+                },
+              ],
+            },
+            "toolCallId": "call_2",
+            "toolName": "fileOps",
+            "type": "tool-call",
+          },
+          {
+            "text": "Task added! ",
+            "type": "text",
+          },
+        ],
+        "finishReason": "tool-calls",
+      },
+    },
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<guidelines>
+Always confirm actions and provide status updates.
+</guidelines>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+  <DEADLINE>
+ 2025-12-31
+  </DEADLINE>
+  <TEAM>
+members:
+  - Alice
+  - Bob
+  - Charlie
+roles:
+  Alice: Designer
+  Bob: Developer
+  Charlie: QA
+capacity:
+  weekly_hours: 120
+  utilization: 0.75
+
+  </TEAM>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": "Progress update: 0/1 tasks completed",
+            "role": "system",
+          },
+        ],
+      },
+      "output": {
+        "content": [
+          {
+            "input": {
+              "data": "Task completion: 1/5",
+            },
+            "toolCallId": "call_3",
+            "toolName": "analyst",
+            "type": "tool-call",
+          },
+          {
+            "text": "Saved tasks to file. ",
+            "type": "text",
+          },
+        ],
+        "finishReason": "tool-calls",
+      },
+    },
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": [
+              {
+                "text": "Analyze: Task completion: 1/5",
+                "type": "text",
+              },
+            ],
+            "role": "user",
+          },
+        ],
+      },
+      "output": {
+        "content": [
+          {
+            "input": {
+              "calls": [
+                {
+                  "args": {
+                    "topic": "UI trends 2025",
+                  },
+                  "name": "researcher",
+                },
+                {
+                  "args": {
+                    "brief": "Modern dashboard",
+                  },
+                  "name": "designer",
+                },
+              ],
+            },
+            "toolCallId": "call_4",
+            "toolName": "specialists",
+            "type": "tool-call",
+          },
+          {
+            "text": "Analysis complete. ",
+            "type": "text",
+          },
+        ],
+        "finishReason": "tool-calls",
+      },
+    },
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": [
+              {
+                "text": "Analyze: Task completion: 1/5",
+                "type": "text",
+              },
+            ],
+            "role": "user",
+          },
+          {
+            "content": [
+              {
+                "text": "Analysis complete. ",
+                "type": "text",
+              },
+              {
+                "input": {
+                  "calls": [
+                    {
+                      "args": {
+                        "topic": "UI trends 2025",
+                      },
+                      "name": "researcher",
+                    },
+                    {
+                      "args": {
+                        "brief": "Modern dashboard",
+                      },
+                      "name": "designer",
+                    },
+                  ],
+                },
+                "toolCallId": "call_4",
+                "toolName": "specialists",
+                "type": "tool-call",
+              },
+            ],
+            "role": "assistant",
+          },
+          {
+            "content": [
+              {
+                "output": {
+                  "type": "error-text",
+                  "value": "Model tried to call unavailable tool 'specialists'. No tools are available.",
+                },
+                "toolCallId": "call_4",
+                "toolName": "specialists",
+                "type": "tool-result",
+              },
+            ],
+            "role": "tool",
+          },
+        ],
+      },
+      "output": {
+        "content": [
+          {
+            "text": "Specialist insights gathered. Project is on track!",
+            "type": "text",
+          },
+        ],
+        "finishReason": "stop",
+      },
+    },
+    {
+      "input": {
+        "prompt": [
+          {
+            "content": "<role>
+You are a project management AI assistant.
+</role>
+<capabilities>
+You can manage tasks, analyze progress, and coordinate specialists.
+</capabilities>
+<guidelines>
+Always confirm actions and provide status updates.
+</guidelines>
+<variables>
+  <PROJECT_NAME>
+ Next-Gen Dashboard
+  </PROJECT_NAME>
+  <DEADLINE>
+ 2025-12-31
+  </DEADLINE>
+  <TEAM>
+members:
+  - Alice
+  - Bob
+  - Charlie
+roles:
+  Alice: Designer
+  Bob: Developer
+  Charlie: QA
+capacity:
+  weekly_hours: 120
+  utilization: 0.75
+
+  </TEAM>
+</variables>",
+            "role": "system",
+          },
+          {
+            "content": "Progress update: 0/1 tasks completed",
+            "role": "system",
+          },
+        ],
+      },
+      "output": {
+        "content": [],
+        "finishReason": "stop",
+      },
+    },
+  ],
+}
+`;
+
 exports[`StatefulPrompt > should maintain state across re-executions 1`] = `
 [
   {
