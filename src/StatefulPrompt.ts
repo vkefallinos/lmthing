@@ -1,113 +1,16 @@
-import { PrepareStepOptions, StreamTextBuilder } from "./StreamText";
-import yaml from 'js-yaml';
-import { z } from 'zod';
+import { PrepareStepOptions } from "./StreamText";
 import { type ModelInput } from "./providers/resolver";
 import {
-  DefinitionProxy,
   PromptContext,
-  ToolCollection,
-  SystemCollection,
-  VariableCollection,
   LastToolInfo,
-  StepModifier
+  StepModifier,
+  StepModifications
 } from './types';
-import { Prompt } from './Prompt';
-
-/**
- * Definition for a sub-tool used within a composite tool.
- */
-export interface SubToolDefinition {
-  name: string;
-  description: string;
-  inputSchema: z.ZodType<any>;
-  execute: Function;
-}
-
-/**
- * Helper function to create a sub-tool definition for use with defTool arrays.
- *
- * @example
- * defTool('file', 'File operations', [
- *   tool('write', 'Write to file', z.object({ path: z.string(), content: z.string() }), writeFile),
- *   tool('append', 'Append to file', z.object({ path: z.string(), content: z.string() }), appendFile),
- * ]);
- */
-export function tool(
-  name: string,
-  description: string,
-  inputSchema: z.ZodType<any>,
-  execute: Function
-): SubToolDefinition {
-  return { name, description, inputSchema, execute };
-}
-
-/**
- * Definition for a sub-agent used within a composite agent.
- */
-export interface SubAgentDefinition {
-  name: string;
-  description: string;
-  inputSchema: z.ZodType<any>;
-  execute: Function;
-  options?: { model?: ModelInput } & Record<string, any>;
-}
-
-/**
- * Helper function to create a sub-agent definition for use with defAgent arrays.
- *
- * @example
- * defAgent('specialists', 'Specialist agents', [
- *   agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn, { model: 'openai:gpt-4o' }),
- *   agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn),
- * ]);
- */
-export function agent(
-  name: string,
-  description: string,
-  inputSchema: z.ZodType<any>,
-  execute: Function,
-  options?: { model?: ModelInput } & Record<string, any>
-): SubAgentDefinition {
-  return { name, description, inputSchema, execute, options };
-}
-
-/**
- * Result object returned by defHook callbacks to modify step behavior.
- *
- * @property system - Override the system prompt for this step
- * @property activeTools - Limit which tools are available for this step
- * @property activeSystems - Filter which system parts to include (by name)
- * @property activeVariables - Filter which variables to include (by name)
- * @property messages - Override or modify the messages array
- * @property variables - Add or update variables (will be merged with existing)
- */
-export interface DefHookResult {
-  system ?: string;
-  activeTools ?: string[];
-  activeSystems ?: string[];
-  activeVariables ?: string[];
-  messages ?: any[];
-  variables ?: Record<string, any>;
-}
-
-/**
- * Effect definition
- */
-interface Effect {
-  id: number;
-  callback: (prompt: PromptContext, step: StepModifier) => void;
-  dependencies?: any[];
-}
-
-/**
- * Step modifications accumulator
- */
-interface StepModifications {
-  messages?: any[];
-  tools?: any[];
-  systems?: { name: string; value: string }[];
-  variables?: { name: string; type: string; value: any }[];
-}
+import { Prompt, DefHookResult } from './Prompt';
+import { StateManager } from './state';
+import { EffectsManager } from './effects';
+import { DefinitionTracker } from './definitions';
+import { createToolCollection, createSystemCollection, createVariableCollection } from './collections';
 
 /**
  * StatefulPrompt extends Prompt with React-like hooks functionality
@@ -119,15 +22,13 @@ interface StepModifications {
  * - Definition reconciliation
  */
 export class StatefulPrompt extends Prompt {
-  private _stateStore: Map<string, any> = new Map();
-  private _effects: Effect[] = [];
-  private _effectDeps: Map<number, any[]> = new Map();
+  private _stateManager = new StateManager();
+  private _effectsManager = new EffectsManager();
+  private _definitionTracker = new DefinitionTracker();
   private _promptFn?: (args: any) => any;
   private _stateful: boolean = false;
-  private _effectIdCounter: number = 0;
   private _stepModifications: StepModifications = {};
   private _lastTool: LastToolInfo | null = null;
-  private _seenDefinitions: Set<string> = new Set();
   private _executedOnce: boolean = false;
 
   /**
@@ -157,53 +58,7 @@ export class StatefulPrompt extends Prompt {
    * @returns Tuple of [stateProxy, setterFunction]
    */
   defState<T>(key: string, initialValue: T): [T, (newValue: T | ((prev: T) => T)) => void] {
-    // Initialize state if not exists
-    if (!this._stateStore.has(key)) {
-      this._stateStore.set(key, initialValue);
-    }
-
-    // Create a getter function that returns the current value
-    const stateGetter = () => this._stateStore.get(key) as T;
-
-    // Create setter function
-    const setter = (newValue: T | ((prev: T) => T)) => {
-      const currentValue = this._stateStore.get(key);
-      const valueToSet = typeof newValue === 'function'
-        ? (newValue as (prev: T) => T)(currentValue)
-        : newValue;
-      this._stateStore.set(key, valueToSet);
-    };
-
-    // Return a wrapper that works in template literals
-    const stateWrapper = new Proxy(stateGetter, {
-      get(target, prop) {
-        if (prop === 'valueOf' || prop === 'toString' || prop === Symbol.toPrimitive) {
-          return () => target();
-        }
-        if (typeof prop === 'string' && !isNaN(Number(prop))) {
-          return undefined;
-        }
-        // For property access, try to get from the state value
-        const value = target();
-        if (value && typeof value === 'object' && prop in value) {
-          return (value as any)[prop];
-        }
-        return value;
-      },
-      has(_target, prop) {
-        const value = _target();
-        return value && typeof value === 'object' && prop in value;
-      },
-      ownKeys(_target) {
-        const value = _target();
-        return (value && typeof value === 'object' ? Object.keys(value) : []) as string[];
-      },
-      apply(_target, _thisArg, _argArray) {
-        return _target();
-      }
-    }) as unknown as T;
-
-    return [stateWrapper, setter];
+    return this._stateManager.createStateAccessor(key, initialValue);
   }
 
   /**
@@ -216,21 +71,14 @@ export class StatefulPrompt extends Prompt {
     callback: (prompt: PromptContext, step: StepModifier) => void,
     dependencies?: any[]
   ): void {
-    const effect: Effect = {
-      id: this._effectIdCounter++,
-      callback,
-      dependencies
-    };
-    this._effects.push(effect);
+    this._effectsManager.register(callback, dependencies);
   }
 
   /**
-   * Clear current definitions
+   * Clear current definitions tracking for a new execution cycle
    */
   private _clearDefinitions(): void {
-    // Note: We don't actually clear everything to maintain state across re-runs
-    // Instead, we track which definitions are seen in this re-run
-    this._seenDefinitions.clear();
+    this._definitionTracker.reset();
   }
 
   /**
@@ -238,37 +86,14 @@ export class StatefulPrompt extends Prompt {
    * Removes definitions that were not seen in the latest re-run
    */
   private _reconcileDefinitions(): void {
-    // Remove unseen variables
-    const variablesToRemove = Object.keys(this.variables).filter(
-      name => !this._seenDefinitions.has(`def:${name}`) && !this._seenDefinitions.has(`defData:${name}`)
-    );
-    for (const name of variablesToRemove) {
-      delete this.variables[name];
-    }
-
-    // Remove unseen systems
-    const systemsToRemove = Object.keys(this.systems).filter(
-      name => !this._seenDefinitions.has(`defSystem:${name}`)
-    );
-    for (const name of systemsToRemove) {
-      delete this.systems[name];
-    }
-
-    // Remove unseen tools (from base class)
-    const toolsToRemove = Object.keys(this._tools).filter(
-      name => !this._seenDefinitions.has(`defTool:${name}`) && !this._seenDefinitions.has(`defAgent:${name}`)
-    );
-    for (const name of toolsToRemove) {
-      delete this._tools[name];
-    }
+    this._definitionTracker.reconcile(this.variables, this.systems, this._tools);
   }
 
   /**
    * Get prompt methods for passing to promptFn
    */
   private _getPromptMethods() {
-    // Return the prompt methods (def, defTool, etc.) with proper binding
-    const methods = {
+    return {
       $: this.$.bind(this),
       def: this.def.bind(this),
       defData: this.defData.bind(this),
@@ -280,14 +105,6 @@ export class StatefulPrompt extends Prompt {
       defEffect: this.defEffect.bind(this),
       defMessage: this.defMessage.bind(this),
     };
-
-    // Wrap in a proxy for method access
-    return new Proxy(methods, {
-      get(target, prop) {
-        const value = target[prop as keyof typeof target];
-        return typeof value === 'function' ? value : value;
-      }
-    });
   }
 
   /**
@@ -300,95 +117,21 @@ export class StatefulPrompt extends Prompt {
     // Create step modifier function
     const stepModifier = this._createStepModifier();
 
-    // Process each effect
-    for (const effect of this._effects) {
-      if (this._shouldRunEffect(effect)) {
-        // Update stored dependencies
-        if (effect.dependencies) {
-          this._effectDeps.set(effect.id, effect.dependencies);
-        }
-
-        // Run the effect
-        effect.callback(context, stepModifier);
-      }
-    }
+    // Process effects via the manager
+    this._effectsManager.process(context, stepModifier);
   }
 
   /**
    * Create prompt context for effects
    */
   private _createPromptContext(options: PrepareStepOptions<any>): PromptContext {
-    const tools = this._createToolCollection();
-    const systems = this._createSystemCollection();
-    const variables = this._createVariableCollection();
-
     return {
       messages: options.messages,
-      tools,
-      systems,
-      variables,
+      tools: createToolCollection(this._tools),
+      systems: createSystemCollection(this.systems),
+      variables: createVariableCollection(this.variables),
       lastTool: this._lastTool,
       stepNumber: options.stepNumber
-    };
-  }
-
-  /**
-   * Create tool collection utility
-   */
-  private _createToolCollection(): ToolCollection {
-    // Get tools from base class
-    const tools = Object.entries(this._tools).map(([name, tool]) => ({ name, ...tool }));
-
-    return {
-      has(name: string): boolean {
-        return tools.some(t => t.name === name);
-      },
-      filter(predicate: (tool: any) => boolean): any[] {
-        return tools.filter(predicate);
-      },
-      [Symbol.iterator]() {
-        return tools[Symbol.iterator]();
-      }
-    };
-  }
-
-  /**
-   * Create system collection utility
-   */
-  private _createSystemCollection(): SystemCollection {
-    // Get systems from base class
-    const systems = Object.entries(this.systems).map(([name, value]) => ({ name, value }));
-
-    return {
-      has(name: string): boolean {
-        return systems.some(s => s.name === name);
-      },
-      filter(predicate: (system: { name: string; value: string }) => boolean): { name: string; value: string }[] {
-        return systems.filter(predicate);
-      },
-      [Symbol.iterator]() {
-        return systems[Symbol.iterator]();
-      }
-    };
-  }
-
-  /**
-   * Create variable collection utility
-   */
-  private _createVariableCollection(): VariableCollection {
-    // Get variables from base class
-    const variables = Object.entries(this.variables).map(([name, varDef]) => ({ name, type: varDef.type, value: varDef.value }));
-
-    return {
-      has(name: string): boolean {
-        return variables.some(v => v.name === name);
-      },
-      filter(predicate: (variable: { name: string; type: string; value: any }) => boolean): { name: string; type: string; value: any }[] {
-        return variables.filter(predicate);
-      },
-      [Symbol.iterator]() {
-        return variables[Symbol.iterator]();
-      }
     };
   }
 
@@ -402,39 +145,6 @@ export class StatefulPrompt extends Prompt {
       }
       this._stepModifications[aspect]!.push(...items);
     };
-  }
-
-  /**
-   * Check if effect should run based on dependencies
-   */
-  private _shouldRunEffect(effect: Effect): boolean {
-    // First run always executes
-    if (!this._effectDeps.has(effect.id)) {
-      return true;
-    }
-
-    // If no dependencies, run every time
-    if (!effect.dependencies) {
-      return true;
-    }
-
-    // Compare dependencies
-    const oldDeps = this._effectDeps.get(effect.id);
-    if (!oldDeps) {
-      return true;
-    }
-
-    if (oldDeps.length !== effect.dependencies.length) {
-      return true;
-    }
-
-    for (let i = 0; i < effect.dependencies.length; i++) {
-      if (oldDeps[i] !== effect.dependencies[i]) {
-        return true;
-      }
-    }
-
-    return false;
   }
 
   /**
@@ -495,15 +205,10 @@ export class StatefulPrompt extends Prompt {
    * Override the run method to support re-execution in stateful mode
    */
   run(): any {
+    // In non-stateful mode, just delegate to parent
     if (!this._stateful) {
       return super.run();
     }
-
-    // Add hook to track last tool call
-    this.addOnStepFinish(async (_result) => {
-      // Extract last tool call from result if exists
-      // This would need to be implemented based on the result structure
-    });
 
     return super.run();
   }
@@ -519,11 +224,8 @@ export class StatefulPrompt extends Prompt {
 
       // Only re-execute after the first step
       if (this._executedOnce) {
-        // Clear current definitions
+        // Clear definition tracking for new execution cycle
         this._clearDefinitions();
-
-        // Mark all definitions as unseen
-        this._seenDefinitions.clear();
 
         // Re-execute promptFn
         if (this._promptFn) {
@@ -555,7 +257,7 @@ export class StatefulPrompt extends Prompt {
    * Override def to mark definitions as seen
    */
   def(name: string, value: string) {
-    this._seenDefinitions.add(`def:${name}`);
+    this._definitionTracker.mark('def', name);
     return super.def(name, value);
   }
 
@@ -563,7 +265,7 @@ export class StatefulPrompt extends Prompt {
    * Override defData to mark definitions as seen
    */
   defData(name: string, value: any) {
-    this._seenDefinitions.add(`defData:${name}`);
+    this._definitionTracker.mark('defData', name);
     return super.defData(name, value);
   }
 
@@ -571,7 +273,7 @@ export class StatefulPrompt extends Prompt {
    * Override defSystem to mark definitions as seen
    */
   defSystem(name: string, value: string) {
-    this._seenDefinitions.add(`defSystem:${name}`);
+    this._definitionTracker.mark('defSystem', name);
     return super.defSystem(name, value);
   }
 
@@ -579,7 +281,7 @@ export class StatefulPrompt extends Prompt {
    * Override defTool to mark definitions as seen
    */
   defTool(name: string, description: string, inputSchemaOrSubTools: any, execute?: Function) {
-    this._seenDefinitions.add(`defTool:${name}`);
+    this._definitionTracker.mark('defTool', name);
     return super.defTool(name, description, inputSchemaOrSubTools, execute);
   }
 
@@ -587,7 +289,7 @@ export class StatefulPrompt extends Prompt {
    * Override defAgent to mark definitions as seen
    */
   defAgent(name: string, description: string, inputSchemaOrSubAgents: any, execute?: Function, options?: any) {
-    this._seenDefinitions.add(`defAgent:${name}`);
+    this._definitionTracker.mark('defAgent', name);
     return super.defAgent(name, description, inputSchemaOrSubAgents, execute, options);
   }
 
