@@ -10,6 +10,7 @@ import type {
     ModelMessage
 } from 'ai';
 import { resolveModel, type ModelInput } from './providers/resolver';
+import type { CompressedSteps, CompressedStep, ProcessedMessage, StepOutput } from './types';
 
 // Helper type for the options object
 export type StreamTextOptions = Parameters<typeof streamText>[0];
@@ -183,6 +184,168 @@ export class StreamTextBuilder {
           },
         };
       });
+    }
+
+    /**
+     * Returns a compressed representation of the steps.
+     *
+     * This format stores messages in a deduplicated pool, with each step
+     * referencing messages by index. Memory usage is reduced from O(n²)
+     * to O(n) for n steps.
+     *
+     * Use this for:
+     * - Serializing step history efficiently
+     * - Debugging/inspection with lower memory footprint
+     * - Transmitting step data over network
+     *
+     * @example
+     * const compressed = prompt.compressedSteps;
+     * console.log(compressed.getStats());
+     * // { uniqueMessages: 5, totalUncompressedMessages: 11, savingsRatio: 0.54 }
+     *
+     * // Reconstruct a specific step
+     * const step2 = compressed.getStep(2);
+     *
+     * // Get only new messages from step 2
+     * const delta = compressed.getDeltaMessages(2);
+     */
+    public get compressedSteps(): CompressedSteps {
+      return this._buildCompressedSteps(() => ({}));
+    }
+
+    /**
+     * Internal method to build compressed steps.
+     * Accepts a state getter function for StatefulPrompt override.
+     */
+    protected _buildCompressedSteps(
+      getStateAtStep: (stepIndex: number) => Record<string, any>
+    ): CompressedSteps {
+      const processedSteps = this.steps;
+      const messagePool: ProcessedMessage[] = [];
+      const messageHashToIndex = new Map<string, number>();
+      const compressedStepData: CompressedStep[] = [];
+
+      // Helper to get a stable hash for a message
+      const hashMessage = (msg: ProcessedMessage): string => {
+        return JSON.stringify(msg);
+      };
+
+      // Helper to add a message to the pool (deduplicates by content)
+      const addToPool = (msg: ProcessedMessage): number => {
+        const hash = hashMessage(msg);
+        if (messageHashToIndex.has(hash)) {
+          return messageHashToIndex.get(hash)!;
+        }
+        const index = messagePool.length;
+        messagePool.push(msg);
+        messageHashToIndex.set(hash, index);
+        return index;
+      };
+
+      // Track previous step's message refs for delta calculation
+      let prevMessageRefs: number[] = [];
+
+      for (let stepIndex = 0; stepIndex < processedSteps.length; stepIndex++) {
+        const step = processedSteps[stepIndex];
+        const messages: ProcessedMessage[] = step.input.prompt;
+        const messageRefs: number[] = [];
+
+        // Add each message to the pool and collect refs
+        for (const msg of messages) {
+          const ref = addToPool(msg as ProcessedMessage);
+          messageRefs.push(ref);
+        }
+
+        // Calculate deltaStart
+        // For step 0, all messages are new (deltaStart = 0)
+        // For subsequent steps, find where new messages start
+        let deltaStart = 0;
+        if (stepIndex > 0) {
+          // Find the first ref that differs from previous step
+          // Messages might change at any position (e.g., system prompt changes)
+          // so we need to find where the arrays diverge
+          deltaStart = 0;
+          for (let i = 0; i < Math.min(prevMessageRefs.length, messageRefs.length); i++) {
+            if (prevMessageRefs[i] === messageRefs[i]) {
+              deltaStart = i + 1;
+            } else {
+              break;
+            }
+          }
+          // If all previous refs match, new messages start after them
+          if (deltaStart === prevMessageRefs.length && messageRefs.length > prevMessageRefs.length) {
+            deltaStart = prevMessageRefs.length;
+          }
+        }
+
+        // Get state at this step
+        const state = getStateAtStep(stepIndex);
+
+        compressedStepData.push({
+          stepIndex,
+          messageRefs,
+          deltaStart,
+          state,
+          output: step.output as StepOutput,
+        });
+
+        prevMessageRefs = messageRefs;
+      }
+
+      // Create the CompressedSteps object with helper methods
+      const self = this;
+      return {
+        messagePool,
+        steps: compressedStepData,
+
+        getStep(index: number) {
+          if (index < 0 || index >= compressedStepData.length) {
+            throw new Error(`Step index ${index} out of range [0, ${compressedStepData.length - 1}]`);
+          }
+          const step = compressedStepData[index];
+          return {
+            input: {
+              prompt: step.messageRefs.map(ref => messagePool[ref]),
+            },
+            output: step.output,
+            state: step.state,
+          };
+        },
+
+        getDeltaMessages(index: number) {
+          if (index < 0 || index >= compressedStepData.length) {
+            throw new Error(`Step index ${index} out of range [0, ${compressedStepData.length - 1}]`);
+          }
+          const step = compressedStepData[index];
+          const deltaRefs = step.messageRefs.slice(step.deltaStart);
+          return deltaRefs.map(ref => messagePool[ref]);
+        },
+
+        getState(index: number) {
+          if (index < 0 || index >= compressedStepData.length) {
+            throw new Error(`Step index ${index} out of range [0, ${compressedStepData.length - 1}]`);
+          }
+          return compressedStepData[index].state;
+        },
+
+        getStats() {
+          const uniqueMessages = messagePool.length;
+          const totalUncompressedMessages = compressedStepData.reduce(
+            (sum, step) => sum + step.messageRefs.length,
+            0
+          );
+          const savingsRatio = totalUncompressedMessages > 0
+            ? 1 - (uniqueMessages / totalUncompressedMessages)
+            : 0;
+
+          return {
+            uniqueMessages,
+            totalUncompressedMessages,
+            savingsRatio,
+            stepCount: compressedStepData.length,
+          };
+        },
+      };
     }
     /**
      * Sets the language model.

@@ -180,4 +180,215 @@ describe('StreamTextBuilder', () => {
       }
     });
   });
+
+  describe('compressedSteps', () => {
+    it('should compress steps by deduplicating messages', async () => {
+      // Setup: Create a mock model with multi-step tool calls
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Let me search for that. ' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'search',
+          args: { query: 'test' }
+        },
+        { type: 'text', text: 'Found some results. ' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_2',
+          toolName: 'search',
+          args: { query: 'more info' }
+        },
+        { type: 'text', text: 'Here is the information you requested.' }
+      ]);
+
+      const searchTool = {
+        description: 'Searches for information',
+        inputSchema: z.object({
+          query: z.string(),
+        }),
+        execute: vi.fn().mockResolvedValue({ results: ['result1', 'result2'] }),
+      };
+
+      const builder = new StreamTextBuilder();
+      builder
+        .withModel(mockModel)
+        .addSystem('You are a helpful search assistant.')
+        .addMessage({ role: 'user', content: 'Search for test information' })
+        .addTool('search', searchTool);
+
+      const result = await builder.execute();
+      await result.text; // Wait for stream to complete
+
+      // Get compressed steps
+      const compressed = builder.compressedSteps;
+      const stats = compressed.getStats();
+
+      // Verify compression stats
+      expect(stats.stepCount).toBe(3);
+      expect(stats.uniqueMessages).toBeLessThan(stats.totalUncompressedMessages);
+      expect(stats.savingsRatio).toBeGreaterThan(0);
+
+      // Verify we can reconstruct full steps
+      for (let i = 0; i < stats.stepCount; i++) {
+        const reconstructed = compressed.getStep(i);
+        const original = builder.steps[i];
+
+        expect(reconstructed.input.prompt.length).toBe(original.input.prompt.length);
+        expect(reconstructed.output).toEqual(original.output);
+      }
+    });
+
+    it('should correctly track delta messages between steps', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Response 1 ' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'tool1',
+          args: { value: 1 }
+        },
+        { type: 'text', text: 'Response 2' }
+      ]);
+
+      const tool1 = {
+        description: 'Test tool',
+        inputSchema: z.object({ value: z.number() }),
+        execute: vi.fn().mockResolvedValue({ success: true }),
+      };
+
+      const builder = new StreamTextBuilder();
+      builder
+        .withModel(mockModel)
+        .addSystem('System prompt')
+        .addMessage({ role: 'user', content: 'User message' })
+        .addTool('tool1', tool1);
+
+      const result = await builder.execute();
+      await result.text; // Wait for stream to complete
+
+      const compressed = builder.compressedSteps;
+
+      // Step 0: all messages are new
+      const delta0 = compressed.getDeltaMessages(0);
+      expect(delta0.length).toBe(compressed.getStep(0).input.prompt.length);
+
+      // Step 1: should have new messages (assistant response + tool result)
+      const delta1 = compressed.getDeltaMessages(1);
+      expect(delta1.length).toBeGreaterThan(0);
+      expect(delta1.length).toBeLessThan(compressed.getStep(1).input.prompt.length);
+    });
+
+    it('should provide correct stats', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Hello!' }
+      ]);
+
+      const builder = new StreamTextBuilder();
+      builder
+        .withModel(mockModel)
+        .addSystem('System prompt')
+        .addMessage({ role: 'user', content: 'Hello' });
+
+      const result = await builder.execute();
+      await result.text; // Wait for stream to complete
+
+      const compressed = builder.compressedSteps;
+      const stats = compressed.getStats();
+
+      expect(stats.stepCount).toBe(1);
+      expect(stats.uniqueMessages).toBe(2); // system + user
+      expect(stats.totalUncompressedMessages).toBe(2);
+      expect(stats.savingsRatio).toBe(0); // No savings for single step
+    });
+
+    it('should handle system prompt changes between steps', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'First response ' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'tool1',
+          args: { value: 1 }
+        },
+        { type: 'text', text: 'Second response' }
+      ]);
+
+      const tool1 = {
+        description: 'Test tool',
+        inputSchema: z.object({ value: z.number() }),
+        execute: vi.fn().mockResolvedValue({ success: true }),
+      };
+
+      const prepareStepHook = vi.fn(({ stepNumber }) => {
+        if (stepNumber === 0) {
+          return { system: 'System prompt version 1' };
+        }
+        return { system: 'System prompt version 2' };
+      });
+
+      const builder = new StreamTextBuilder();
+      builder
+        .withModel(mockModel)
+        .addSystem('Default system')
+        .addMessage({ role: 'user', content: 'User message' })
+        .addTool('tool1', tool1)
+        .addPrepareStep(prepareStepHook);
+
+      const result = await builder.execute();
+      await result.text; // Wait for stream to complete
+
+      const compressed = builder.compressedSteps;
+
+      // System messages should be different, so they should be stored separately
+      const step0 = compressed.getStep(0);
+      const step1 = compressed.getStep(1);
+
+      // The system messages at index 0 should be different
+      expect(step0.input.prompt[0].content).not.toBe(step1.input.prompt[0].content);
+
+      // Both should still exist in the pool
+      expect(compressed.messagePool.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should throw error for invalid step index', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Hello!' }
+      ]);
+
+      const builder = new StreamTextBuilder();
+      builder
+        .withModel(mockModel)
+        .addMessage({ role: 'user', content: 'Hello' });
+
+      const result = await builder.execute();
+      await result.text; // Wait for stream to complete
+
+      const compressed = builder.compressedSteps;
+
+      expect(() => compressed.getStep(-1)).toThrow();
+      expect(() => compressed.getStep(10)).toThrow();
+      expect(() => compressed.getDeltaMessages(-1)).toThrow();
+      expect(() => compressed.getState(-1)).toThrow();
+    });
+
+    it('should return empty state for non-stateful prompts', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Hello!' }
+      ]);
+
+      const builder = new StreamTextBuilder();
+      builder
+        .withModel(mockModel)
+        .addMessage({ role: 'user', content: 'Hello' });
+
+      const result = await builder.execute();
+      await result.text; // Wait for stream to complete
+
+      const compressed = builder.compressedSteps;
+      const state = compressed.getState(0);
+
+      expect(state).toEqual({});
+    });
+  });
 });

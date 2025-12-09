@@ -129,6 +129,7 @@ export class StatefulPrompt extends Prompt {
   private _lastTool: LastToolInfo | null = null;
   private _seenDefinitions: Set<string> = new Set();
   private _executedOnce: boolean = false;
+  private _stateSnapshots: Array<Record<string, any>> = [];
 
   /**
    * Override factory method to always return StatefulPrompt
@@ -537,6 +538,9 @@ export class StatefulPrompt extends Prompt {
 
       this._executedOnce = true;
 
+      // Capture state snapshot for this step
+      this._captureStateSnapshot();
+
       // Process effects
       this._processEffects(options);
 
@@ -549,6 +553,91 @@ export class StatefulPrompt extends Prompt {
       // Merge results
       return { ...baseResult, ...modifications };
     });
+  }
+
+  /**
+   * Capture a snapshot of the current state for compressed steps.
+   */
+  private _captureStateSnapshot(): void {
+    const snapshot: Record<string, any> = {};
+    for (const [key, value] of this._stateStore.entries()) {
+      // Deep clone the value to prevent mutation issues
+      snapshot[key] = this._deepClone(value);
+    }
+    this._stateSnapshots.push(snapshot);
+  }
+
+  /**
+   * Deep clone a value to prevent mutation.
+   */
+  private _deepClone(value: any): any {
+    if (value === null || value === undefined) {
+      return value;
+    }
+    if (typeof value !== 'object') {
+      return value;
+    }
+    if (Array.isArray(value)) {
+      return value.map(item => this._deepClone(item));
+    }
+    if (value instanceof Date) {
+      return new Date(value.getTime());
+    }
+    if (value instanceof Map) {
+      const clone = new Map();
+      for (const [k, v] of value.entries()) {
+        clone.set(k, this._deepClone(v));
+      }
+      return clone;
+    }
+    if (value instanceof Set) {
+      const clone = new Set();
+      for (const v of value.values()) {
+        clone.add(this._deepClone(v));
+      }
+      return clone;
+    }
+    // Regular object
+    const clone: Record<string, any> = {};
+    for (const key of Object.keys(value)) {
+      clone[key] = this._deepClone(value[key]);
+    }
+    return clone;
+  }
+
+  /**
+   * Override compressedSteps to include state snapshots.
+   */
+  public get compressedSteps() {
+    return this._buildCompressedSteps((stepIndex: number) => {
+      // Return the captured state snapshot for this step
+      if (stepIndex < this._stateSnapshots.length) {
+        return this._stateSnapshots[stepIndex];
+      }
+      // Fallback to current state if snapshot not available
+      const snapshot: Record<string, any> = {};
+      for (const [key, value] of this._stateStore.entries()) {
+        snapshot[key] = this._deepClone(value);
+      }
+      return snapshot;
+    });
+  }
+
+  /**
+   * Get the state snapshot at a specific step index.
+   */
+  getStateAtStep(stepIndex: number): Record<string, any> {
+    if (stepIndex < 0 || stepIndex >= this._stateSnapshots.length) {
+      throw new Error(`Step index ${stepIndex} out of range [0, ${this._stateSnapshots.length - 1}]`);
+    }
+    return this._stateSnapshots[stepIndex];
+  }
+
+  /**
+   * Get all state snapshots.
+   */
+  getAllStateSnapshots(): Array<Record<string, any>> {
+    return [...this._stateSnapshots];
   }
 
   /**

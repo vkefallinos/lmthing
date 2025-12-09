@@ -14,7 +14,13 @@ export type {
   SystemCollection,
   VariableCollection,
   LastToolInfo,
-  StepModifier
+  StepModifier,
+  // Compressed steps types
+  CompressedSteps,
+  CompressedStep,
+  ProcessedMessage,
+  ProcessedMessagePart,
+  StepOutput
 } from './types';
 
 // Export all provider-related functionality
