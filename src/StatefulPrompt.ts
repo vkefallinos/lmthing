@@ -191,15 +191,15 @@ export class StatefulPrompt extends Prompt {
         return value;
       },
       has(_target, prop) {
-        const value = target();
+        const value = _target();
         return value && typeof value === 'object' && prop in value;
       },
       ownKeys(_target) {
-        const value = target();
+        const value = _target();
         return (value && typeof value === 'object' ? Object.keys(value) : []) as string[];
       },
       apply(_target, _thisArg, _argArray) {
-        return target();
+        return _target();
       }
     }) as unknown as T;
 
@@ -511,7 +511,7 @@ export class StatefulPrompt extends Prompt {
   /**
    * Override setLastPrepareStep to handle re-execution
    */
-  protected setLastPrepareStep(prepareStepFn: (options: any) => any): void {
+  setLastPrepareStep(prepareStepFn: (options: any) => any): void {
     // Stateful mode: re-execute promptFn on each step after the first
     this.addPrepareStep(async (options: PrepareStepOptions<any>) => {
       // Clear step modifications
