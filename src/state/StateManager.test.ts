@@ -17,7 +17,7 @@ describe('StateManager', () => {
 
   it('should create state accessor with initial value', () => {
     const manager = new StateManager();
-    const [value, setValue] = manager.createStateAccessor('count', 0);
+    const [value] = manager.createStateAccessor('count', 0);
 
     // Initial value should be accessible
     expect(String(value)).toBe('0');
