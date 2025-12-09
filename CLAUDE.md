@@ -20,7 +20,10 @@ StreamTextBuilder (src/StreamText.ts)
     Prompt (src/Prompt.ts)
        │
        ▼
-  runPrompt() (src/runPrompt.ts) - Main entry point
+  StatefulPrompt (src/StatefulPrompt.ts) - Extends Prompt with hooks
+       │
+       ▼
+  runPrompt() (src/runPrompt.ts) - Main entry point (uses StatefulPrompt)
 ```
 
 ### Key Components
@@ -29,28 +32,36 @@ StreamTextBuilder (src/StreamText.ts)
 |------|---------|
 | `src/StreamText.ts` | Low-level builder wrapping AI SDK's `streamText()` |
 | `src/Prompt.ts` | High-level API with `def*` methods for prompt construction |
-| `src/runPrompt.ts` | Entry point that orchestrates Prompt execution |
+| `src/StatefulPrompt.ts` | Stateful extension with React-like hooks (`defState`, `defEffect`) |
+| `src/runPrompt.ts` | Entry point that orchestrates StatefulPrompt execution |
 | `src/cli.ts` | CLI for running `.lmt.mjs` prompt files |
 | `src/providers/` | Provider adapters for OpenAI, Anthropic, Google, etc. |
 | `src/providers/resolver.ts` | Model string resolution (`provider:model_id` → LanguageModel) |
 | `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
+| `src/types.ts` | TypeScript interfaces for StatefulPrompt (PromptContext, StepModifier, etc.) |
 
 ## Data Flow
 
 ```
 runPrompt(fn, config)
     │
-    ├─► Create Prompt instance with model
+    ├─► Create StatefulPrompt instance with model
     │
-    ├─► Execute user's prompt function (fn)
-    │   └─► User calls def*, defTool, defAgent, $`...`, etc.
+    ├─► Execute user's prompt function (fn) - Initial execution
+    │   └─► User calls defState, defEffect, def*, defTool, defAgent, $`...`, etc.
     │
     ├─► prompt.run()
+    │   ├─► On each step after first:
+    │   │   ├─► Re-execute prompt function (fn) with current state
+    │   │   ├─► Reconcile definitions (remove unused ones)
+    │   │   ├─► Process effects based on dependencies
+    │   │   └─► Apply step modifications from effects
+    │   │
     │   ├─► setLastPrepareStep() - Build system prompt from variables
     │   └─► execute() - Call AI SDK streamText()
     │
-    └─► Return { result: StreamTextResult, prompt: Prompt }
+    └─► Return { result: StreamTextResult, prompt: StatefulPrompt }
 ```
 
 ## Key Concepts
@@ -321,6 +332,94 @@ prompt.$`Help ${userRef} with their question about ${topic}`;
 // Adds: { role: 'user', content: 'Help <USER> with their question about AI' }
 ```
 
+## StatefulPrompt (`src/StatefulPrompt.ts`)
+
+`StatefulPrompt` extends `Prompt` with React-like hooks functionality for managing state across prompt re-executions.
+
+### Key Features
+
+1. **State Persistence**: State values persist across re-executions using `defState`
+2. **Effects System**: Side effects run based on dependency changes using `defEffect`
+3. **Re-execution Model**: Prompt function re-executes on each step after the first
+4. **Definition Reconciliation**: Automatically removes unused definitions from previous executions
+
+### defState
+
+Similar to React's `useState`, creates state that persists across re-executions:
+
+```typescript
+// Create state with initial value
+const [count, setCount] = prompt.defState('counter', 0);
+const [user, setUser] = prompt.defState('user', { name: 'John' });
+
+// Access current value (proxy works in templates)
+prompt.$`Current count: ${count}`;
+
+// Update state
+setCount(5);                    // Direct value
+setCount(prev => prev + 1);     // Function update
+setUser(prev => ({ ...prev, age: 30 }));
+```
+
+### defEffect
+
+Similar to React's `useEffect`, runs effects based on dependencies:
+
+```typescript
+import { PromptContext, StepModifier } from 'lmthing';
+
+// Effect without dependencies - runs every step
+prompt.defEffect((context: PromptContext, stepModifier: StepModifier) => {
+  console.log('Step:', context.stepNumber);
+
+  // Modify the current step
+  stepModifier('messages', [{
+    role: 'system',
+    content: `Step ${context.stepNumber}`
+  }]);
+});
+
+// Effect with dependencies - runs only when dependencies change
+prompt.defEffect((context, stepModifier) => {
+  // Runs only when 'count' changes
+  console.log('Count changed to:', count);
+}, [count]);
+```
+
+### Re-execution Flow
+
+1. **Initial Execution**: Prompt function runs once to set up initial state
+2. **Step 1**: Executes with initial state
+3. **Re-execution**: For each subsequent step:
+   - Prompt function re-runs with current state
+   - Definitions are reconciled (unused ones removed)
+   - Effects are processed based on dependencies
+   - Step modifications are applied
+
+### Definition Reconciliation
+
+StatefulPrompt tracks which definitions are used in each execution and removes unused ones:
+
+```typescript
+// First execution
+const tool1 = prompt.defTool('tool1', ...);
+const tool2 = prompt.defTool('tool2', ...);
+
+// Second execution (only tool1 referenced)
+// tool2 is automatically removed
+const result = await tool1();
+```
+
+### Message Duplication Prevention
+
+StatefulPrompt prevents duplicate user messages during re-execution:
+
+```typescript
+// This message is only added once, even on re-execution
+prompt.$`Help me with this task`;
+prompt.defMessage('user', 'Additional context');
+```
+
 ## CLI (`src/cli.ts`)
 
 The CLI allows running `.lmt.mjs` prompt files directly without writing boilerplate code.
@@ -545,10 +644,11 @@ export const {Name}Models = { ... } as const;
 
 ### Adding a New Context Method (`def*`)
 
-1. Add method to `Prompt` class in `src/Prompt.ts`
-2. Store state in private instance variables
-3. Process in `run()` via `setLastPrepareStep()` if needed
-4. Add tests in `src/Prompt.test.ts`
+1. Add method to `Prompt` class in `src/Prompt.ts` for base functionality
+2. Override in `StatefulPrompt` class if needed for stateful behavior
+3. Store state in protected instance variables (changed from private to allow StatefulPrompt access)
+4. Process in `run()` via `setLastPrepareStep()` if needed
+5. Add tests in `src/Prompt.test.ts` and `src/StatefulPrompt.test.ts` for stateful features
 
 ### Adding Configuration Options
 
@@ -558,15 +658,19 @@ Options flow through `StreamTextBuilder.withOptions()` and merge into `streamTex
 
 ### Proxy in runPrompt
 
-`runPrompt` wraps the Prompt in a Proxy to auto-bind methods, allowing destructuring:
+`runPrompt` wraps the StatefulPrompt in a Proxy to auto-bind methods, allowing destructuring:
 
 ```typescript
-const { def, defTool, $ } = prompt; // Works due to proxy
+const { def, defState, defEffect, defTool, $ } = prompt; // Works due to proxy
 ```
 
 ### PrepareStep Hook Chain
 
-Multiple hooks registered via `addPrepareStep()` execute sequentially with merged results. The `_lastPrepareStep` (set by Prompt.run()) executes last to inject variables.
+Multiple hooks registered via `addPrepareStep()` execute sequentially with merged results:
+1. User-defined hooks via `defHook()`
+2. StatefulPrompt's re-execution hook (runs prompt function again)
+3. StatefulPrompt's effects hook (runs defEffect callbacks)
+4. The `_lastPrepareStep` (set by Prompt.run()) executes last to inject variables
 
 ### stopWhen Default
 
@@ -670,7 +774,7 @@ The package provides multiple entry points:
 ```json
 {
   "exports": {
-    ".": "./dist/index.js",           // Main entry: runPrompt, tool, agent, providers
+    ".": "./dist/index.js",           // Main entry: runPrompt, StatefulPrompt, tool, agent, providers
     "./test": "./dist/test/createMockModel.js"  // Test utilities
   },
   "bin": {
@@ -681,7 +785,7 @@ The package provides multiple entry points:
 
 Usage:
 ```typescript
-import { runPrompt, tool, agent } from 'lmthing';
+import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
 ```
 

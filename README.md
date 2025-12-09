@@ -1,21 +1,90 @@
 # Agent Executor
 
+## StatefulPrompt
+
+`StatefulPrompt` is an extension of the `Prompt` class that adds React-like hooks functionality for managing state across prompt re-executions. It provides state persistence and effects that run based on dependency changes.
+
+**Key Features:**
+- **State Management**: `defState` for managing state that persists across prompt re-executions
+- **Effects**: `defEffect` for running side effects based on dependency changes
+- **Re-execution Model**: The prompt function re-executes on each step after the first, allowing dynamic behavior
+- **Definition Reconciliation**: Automatically removes unused definitions from previous executions
+
+### `defState<T>(key: string, initialValue: T): [T, (newValue: T | ((prev: T) => T)) => void]`
+
+Creates state that persists across prompt re-executions, similar to React's `useState`.
+
+```typescript
+const [count, setCount] = prompt.defState('counter', 0);
+
+// Get the current value
+console.log(count); // 0
+
+// Update the value
+setCount(1); // Set to 1
+setCount(prev => prev + 1); // Increment from current value
+```
+
+The state proxy can be used directly in template literals:
+```typescript
+prompt.$`Current count: ${count}`; // Shows the current value
+```
+
+### `defEffect(callback: (context: PromptContext, stepModifier: StepModifier) => void, dependencies?: any[])`
+
+Registers an effect that runs when dependencies change, similar to React's `useEffect`.
+
+```typescript
+import { PromptContext, StepModifier } from 'lmthing';
+
+// Effect without dependencies - runs on every step
+prompt.defEffect((context, stepModifier) => {
+  console.log('Step:', context.stepNumber);
+
+  // Modify the current step
+  stepModifier('messages', [{
+    role: 'system',
+    content: `Step ${context.stepNumber}`
+  }]);
+});
+
+// Effect with dependencies - runs only when dependencies change
+prompt.defEffect((context, stepModifier) => {
+  // Run side effect when count changes
+  console.log('Count changed to:', count);
+}, [count]);
+```
+
+**PromptContext provides:**
+- `messages`: Current message history
+- `stepNumber`: Current step number (0-indexed)
+- `tools`: ToolCollection utility to check available tools
+- `systems`: SystemCollection utility to check available systems
+- `variables`: VariableCollection utility to check available variables
+- `lastTool`: Information about the last tool call
+
+**StepModifier allows modifying the current step:**
+- `stepModifier('messages', items)`: Add/modify messages
+- `stepModifier('tools', items)`: Add/modify tools
+- `stepModifier('systems', items)`: Add/modify system parts
+- `stepModifier('variables', items)`: Add/modify variables
+
 ## runPrompt
 
-The `runPrompt` function is the main entry point for executing agentic workflows. It creates a `Prompt` instance and executes a prompt configuration function, returning the execution result.
+The `runPrompt` function is the main entry point for executing agentic workflows. It creates a `StatefulPrompt` instance and executes a prompt configuration function, returning the execution result.
 
 **Signature:**
 
 ```typescript
 runPrompt(
-  fn: (prompt: Prompt) => Promise<void>,
+  fn: (prompt: StatefulPrompt) => Promise<void>,
   config: PromptConfig
 ): Promise<RunPromptResult>
 ```
 
 **Parameters:**
 
-- `fn`: A function that receives a `Prompt` instance and configures the prompt by calling context methods (`def`, `defTool`, `defAgent`, etc.)
+- `fn`: A function that receives a `StatefulPrompt` instance and configures the prompt by calling context methods (`def`, `defState`, `defEffect`, `defTool`, `defAgent`, etc.)
 - `config`: Configuration object with the following structure:
   - `model`: (required) The language model to use. Can be either:
     - A string in the format `provider:model_id` (e.g., `'openai:gpt-4o'`, `'anthropic:claude-3-5-sonnet'`). The provider is automatically resolved from the AI SDK.
@@ -54,41 +123,63 @@ Returns a `Promise<RunPromptResult>` which contains:
   - `toolCalls`: Promise resolving to tool calls
   - `toolResults`: Promise resolving to tool results
   - And all other `streamText` return properties
-- `prompt`: The `Prompt` instance used for execution
+- `prompt`: The `StatefulPrompt` instance used for execution
 
 **Example:**
 
 ```typescript
 import { runPrompt } from 'lmthing';
+import { PromptContext, StepModifier } from 'lmthing';
 
 const { result, prompt } = await runPrompt(
   async (prompt) => {
+    // Define state that persists across re-executions
+    const [count, setCount] = prompt.defState('counter', 0);
+    const [history, setHistory] = prompt.defState('history', []);
+
+    // Define an effect that runs on every step
+    prompt.defEffect((context: PromptContext, step: StepModifier) => {
+      // Add a system message with the current step number
+      step('messages', [{
+        role: 'system',
+        content: `Step ${context.stepNumber}: Current count is ${count}`
+      }]);
+    });
+
+    // Define an effect that runs when count changes
+    prompt.defEffect((context: PromptContext, step: StepModifier) => {
+      console.log(`Count changed to: ${count}`);
+    }, [count]);
+
+    // Define a tool that updates state
+    prompt.defTool(
+      'increment',
+      'Increment the counter by a given amount',
+      z.object({ amount: z.number() }),
+      async ({ amount }) => {
+        const newCount = count + amount;
+        setCount(newCount);
+        setHistory([...history, `Incremented to ${newCount}`]);
+        return { newCount, history };
+      }
+    );
+
     // Define variables that will be prepended to prompts
     const userName = prompt.def('USER_NAME', 'John Doe');
     const userData = prompt.defData('USER_DATA', { age: 30, city: 'NYC' });
-
-    // Register tools
-    prompt.defTool(
-      'getWeather',
-      'Get weather for a city',
-      z.object({ city: z.string() }),
-      async ({ city }) => {
-        return `Weather in ${city}: Sunny, 72°F`;
-      }
-    );
 
     // Register sub-agents
     prompt.defAgent(
       'researcher',
       'Research topics in depth',
       z.object({ topic: z.string() }),
-      async (args, prompt) => {
-        prompt.$`Research: ${args.topic}`;
+      async (args, agentPrompt) => {
+        agentPrompt.$`Research: ${args.topic}`;
       }
     );
 
     // Construct the final prompt and add as user message
-    prompt.$`Help ${userName} with their question about weather.`;
+    prompt.$`Help ${userName} with their question. The current count is ${count}.`;
   },
   {
     model: 'openai:gpt-4o', // Format: provider:model_id
@@ -111,6 +202,9 @@ console.log('Full response:', fullText);
 // Access usage statistics
 const usage = await result.usage;
 console.log('Tokens used:', usage.totalTokens);
+
+// Access the steps history
+console.log('Steps executed:', prompt.steps);
 ```
 
 **Supported Model Providers:**
@@ -192,7 +286,7 @@ Custom providers follow this pattern:
 
 ## Context Functions
 
-The `Prompt` object provides the following functions for building agentic workflows. These functions construct the arguments passed to the AI SDK's [`streamText`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text) function:
+The `StatefulPrompt` object provides the following functions for building agentic workflows. These functions construct the arguments passed to the AI SDK's [`streamText`](https://ai-sdk.dev/docs/reference/ai-sdk-core/stream-text) function:
 
 ### `defMessage(role: 'user' | 'assistant', content: string)`
 
@@ -202,6 +296,65 @@ Adds a message to the conversation history. Maps to the `messages` parameter in 
 prompt.defMessage('user', 'Hello!');
 prompt.defMessage('assistant', 'Hi there! How can I help?');
 ```
+
+### `defState<T>(key: string, initialValue: T): [T, (newValue: T | ((prev: T) => T)) => void]`
+
+Creates state that persists across prompt re-executions. Returns a tuple with the current state value and a setter function. The state is a proxy that can be used directly in template literals.
+
+```typescript
+const [count, setCount] = prompt.defState('counter', 0);
+const [user, setUser] = prompt.defState('user', { name: 'John', age: 30 });
+
+// Get current value
+console.log(count); // 0
+console.log(user.name); // 'John'
+
+// Update with value
+setCount(5);
+
+// Update with function
+setCount(prev => prev + 1);
+setUser(prev => ({ ...prev, age: prev.age + 1 }));
+
+// Use in templates
+prompt.$`The count is ${count} and user is ${user.name}`;
+```
+
+### `defEffect(callback: (context: PromptContext, stepModifier: StepModifier) => void, dependencies?: any[])`
+
+Registers an effect that runs based on dependency changes. Similar to React's useEffect.
+
+```typescript
+import { PromptContext, StepModifier } from 'lmthing';
+
+// Effect without dependencies - runs every step
+prompt.defEffect((context: PromptContext, stepModifier: StepModifier) => {
+  console.log('Current step:', context.stepNumber);
+});
+
+// Effect with dependencies - runs only when dependencies change
+prompt.defEffect((context: PromptContext, stepModifier: StepModifier) => {
+  // Only runs when 'count' changes
+  stepModifier('messages', [{
+    role: 'system',
+    content: `Count updated to ${count}`
+  }]);
+}, [count]);
+```
+
+**Context API:**
+- `context.messages`: Current message history
+- `context.stepNumber`: Current step (0-indexed)
+- `context.tools`: ToolCollection utility
+- `context.systems`: SystemCollection utility
+- `context.variables`: VariableCollection utility
+- `context.lastTool`: Info about last tool call
+
+**StepModifier API:**
+- `stepModifier('messages', items)`: Add/modify messages
+- `stepModifier('tools', items)`: Add/modify tools
+- `stepModifier('systems', items)`: Add/modify systems
+- `stepModifier('variables', items)`: Add/modify variables
 
 ### `defSystem(name: string, value: string)`
 
