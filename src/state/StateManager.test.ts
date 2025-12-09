@@ -33,7 +33,7 @@ describe('StateManager', () => {
 
   it('should update state via function setter', () => {
     const manager = new StateManager();
-    const [value, setValue] = manager.createStateAccessor('count', 10);
+    const [, setValue] = manager.createStateAccessor('count', 10);
 
     setValue((prev) => prev + 5);
     expect(manager.get('count')).toBe(15);
