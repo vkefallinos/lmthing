@@ -57,7 +57,6 @@ export class StreamTextBuilder {
         return {
             middlewareVersion: 'v2',
             transformParams: async ({ params }) => {
-              console.log(params);
               const lastMessage = params.prompt[params.prompt.length -1];
                 if(lastMessage.role === 'tool'){
                   // Modify behavior based on tool message

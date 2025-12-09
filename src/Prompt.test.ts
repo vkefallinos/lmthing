@@ -42,10 +42,10 @@ describe('Prompt', () => {
     
     // Test 2: def - Define string variables
     const userIdPlaceholder = prompt.def('userId', '123');
-    expect(userIdPlaceholder).toBe('<userId>');
-    
+    expect(userIdPlaceholder.value).toBe('<userId>');
+
     const envPlaceholder = prompt.def('environment', 'production');
-    expect(envPlaceholder).toBe('<environment>');
+    expect(envPlaceholder.value).toBe('<environment>');
     
     // Test 3: defData - Define structured data variables (will be serialized as YAML)
     const configPlaceholder = prompt.defData('config', {
@@ -60,13 +60,13 @@ describe('Prompt', () => {
         }
       }
     });
-    expect(configPlaceholder).toBe('<config>');
-    
+    expect(configPlaceholder.value).toBe('<config>');
+
     const userDataPlaceholder = prompt.defData('expectedUser', {
       id: 123,
       permissions: ['read', 'write']
     });
-    expect(userDataPlaceholder).toBe('<expectedUser>');
+    expect(userDataPlaceholder.value).toBe('<expectedUser>');
     
     // Test 4: defTool - Define multiple tools with schemas and executors
     prompt.defTool(

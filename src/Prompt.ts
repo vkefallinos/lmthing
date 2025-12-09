@@ -88,6 +88,51 @@ export class Prompt extends StreamTextBuilder {
   private systems: Record<string, string> = {};
   private activeSystems?: string[];
   private activeVariables?: string[];
+  private _remindedItems: Array<{ type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string }> = [];
+
+  private createProxy(tag: string, type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string) {
+    const self = this;
+    const handler = {
+      get(_target: any, prop: string | symbol) {
+        if (prop === 'value') {
+          return tag;
+        }
+        if (prop === 'remind') {
+          return () => {
+            self._remindedItems.push({ type, name });
+            return tag;
+          };
+        }
+        if (prop === 'toString' || prop === 'valueOf') {
+          return () => tag;
+        }
+        if (typeof prop === 'symbol' && prop === Symbol.toPrimitive) {
+          return () => tag;
+        }
+        return tag;
+      },
+      has(_target: any, prop: string | symbol) {
+        return prop === 'value' || prop === 'remind' || prop === 'toString' || prop === 'valueOf' || prop === Symbol.toPrimitive;
+      },
+      ownKeys() {
+        return ['value', 'remind'];
+      },
+      getOwnPropertyDescriptor(_target: any, prop: string) {
+        if (prop === 'value') {
+          return { enumerable: true, configurable: true, value: tag };
+        }
+        if (prop === 'remind') {
+          return { enumerable: true, configurable: true, value: () => {
+            self._remindedItems.push({ type, name });
+            return tag;
+          }};
+        }
+        return undefined;
+      }
+    };
+    return new Proxy({}, handler);
+  }
+
   private addVariable(name: string, value: any, type: 'string' | 'data') {
     this.variables[name] = { type, value };
   }
@@ -97,15 +142,19 @@ export class Prompt extends StreamTextBuilder {
   }
   def(name: string, value: string) {
     this.addVariable(name, value, 'string');
-    return `<${name}>`;
+    const tag = `<${name}>`;
+    return this.createProxy(tag, 'def', name);
   }
 
   defData(name: string, value: any) {
     this.addVariable(name, value, 'data');
-    return `<${name}>`;
+    const tag = `<${name}>`;
+    return this.createProxy(tag, 'defData', name);
   }
   defSystem(name: string, value: string) {
     this.addSystemPart(name, value);
+    const tag = `<${name}>`;
+    return this.createProxy(tag, 'defSystem', name);
   }
   defMessage(role: 'user' | 'assistant', content: string) {
     this.addMessage({ role, content });
@@ -138,6 +187,8 @@ export class Prompt extends StreamTextBuilder {
       // Standard single tool
       this.addTool(name, { description, inputSchema: inputSchemaOrSubTools, execute });
     }
+    const tag = `<${name}>`;
+    return this.createProxy(tag, 'defTool', name);
   }
 
   /**
@@ -316,6 +367,8 @@ export class Prompt extends StreamTextBuilder {
         return { response: lastResponse, steps: prompt.steps };
       }});
     }
+    const tag = `<${name}>`;
+    return this.createProxy(tag, 'defAgent', name);
   }
 
   /**
@@ -382,13 +435,26 @@ export class Prompt extends StreamTextBuilder {
   }
   $(strings: TemplateStringsArray, ...values: any[]) {
     const content = strings.reduce((acc, str, i) => {
-      return acc + str + (values[i] !== undefined ? values[i] : '');
+      if (values[i] !== undefined) {
+        // Check if value is a proxy with a 'value' property
+        if (values[i] && typeof values[i] === 'object' && 'value' in values[i]) {
+          return acc + str + values[i].value;
+        }
+        return acc + str + values[i];
+      }
+      return acc + str;
     }, '');
     this.addMessage({ role: 'user', content });
   }
 
   run() {
-    this.setLastPrepareStep(()=>{
+    // Add onStepFinish hook to reset reminded items after each step
+    this.addOnStepFinish(async () => {
+      // After each step, clear the reminded items
+      this._remindedItems = [];
+    });
+
+    this.setLastPrepareStep((_options)=>{
       // Final preparation before run
       let systemParts: string[] = [];
 
@@ -434,6 +500,37 @@ export class Prompt extends StreamTextBuilder {
       // Return empty object if no system or variables
       return {};
     });
+
+
+    // After all steps are done, add a final message with reminder if there are any reminded items
+    if (this._remindedItems.length > 0) {
+      const reminderText = this._remindedItems
+        .map(item => {
+          const tagMap = {
+            'def': 'variable',
+            'defData': 'data variable',
+            'defSystem': 'system part',
+            'defTool': 'tool',
+            'defAgent': 'agent'
+          };
+          return `- ${item.name} (${tagMap[item.type] || item.type})`;
+        })
+        .join('\n');
+
+      this.addMessage({
+        role: 'assistant',
+        content: `\n\n[Reminder: Remember to use the following items in your response:\n${reminderText}]`
+      });
+    }
     return this.execute();
+
+  }
+
+  /**
+   * Get the list of reminded items that had their .remind() method called.
+   * Returns an array of { type, name } objects where type is 'def', 'defData', 'defSystem', 'defTool', or 'defAgent'.
+   */
+  getRemindedItems() {
+    return [...this._remindedItems];
   }
 }
