@@ -237,6 +237,13 @@ describe('StreamTextBuilder', () => {
         expect(reconstructed.input.prompt.length).toBe(original.input.prompt.length);
         expect(reconstructed.output).toEqual(original.output);
       }
+
+      // Snapshot the compressed steps structure
+      expect({
+        messagePool: compressed.messagePool,
+        steps: compressed.steps,
+        stats: compressed.getStats()
+      }).toMatchSnapshot();
     });
 
     it('should correctly track delta messages between steps', async () => {
@@ -277,6 +284,18 @@ describe('StreamTextBuilder', () => {
       const delta1 = compressed.getDeltaMessages(1);
       expect(delta1.length).toBeGreaterThan(0);
       expect(delta1.length).toBeLessThan(compressed.getStep(1).input.prompt.length);
+
+      // Snapshot delta messages for each step
+      expect({
+        step0Delta: delta0,
+        step1Delta: delta1,
+        messagePool: compressed.messagePool,
+        steps: compressed.steps.map(s => ({
+          stepIndex: s.stepIndex,
+          messageRefs: s.messageRefs,
+          deltaStart: s.deltaStart
+        }))
+      }).toMatchSnapshot();
     });
 
     it('should provide correct stats', async () => {
@@ -349,6 +368,17 @@ describe('StreamTextBuilder', () => {
 
       // Both should still exist in the pool
       expect(compressed.messagePool.length).toBeGreaterThanOrEqual(2);
+
+      // Snapshot to show how system prompt changes are handled
+      expect({
+        messagePool: compressed.messagePool,
+        steps: compressed.steps.map(s => ({
+          stepIndex: s.stepIndex,
+          messageRefs: s.messageRefs,
+          deltaStart: s.deltaStart
+        })),
+        stats: compressed.getStats()
+      }).toMatchSnapshot();
     });
 
     it('should throw error for invalid step index', async () => {

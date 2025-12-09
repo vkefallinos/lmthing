@@ -1,5 +1,112 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`StatefulPrompt > compressedSteps with state > should include state snapshots in compressedSteps 1`] = `
+{
+  "messagePool": [
+    {
+      "content": [
+        {
+          "text": "Counter is 0, name is initial",
+          "type": "text",
+        },
+      ],
+      "role": "user",
+    },
+    {
+      "content": [
+        {
+          "text": "Response 1",
+          "type": "text",
+        },
+        {
+          "input": {
+            "increment": 5,
+          },
+          "toolCallId": "1",
+          "toolName": "updateCounter",
+          "type": "tool-call",
+        },
+      ],
+      "role": "assistant",
+    },
+    {
+      "content": [
+        {
+          "output": {
+            "type": "json",
+            "value": {
+              "newValue": 10,
+            },
+          },
+          "toolCallId": "1",
+          "toolName": "updateCounter",
+          "type": "tool-result",
+        },
+      ],
+      "role": "tool",
+    },
+  ],
+  "stats": {
+    "savingsRatio": 0.25,
+    "stepCount": 2,
+    "totalUncompressedMessages": 4,
+    "uniqueMessages": 3,
+  },
+  "steps": [
+    {
+      "deltaStart": 0,
+      "messageRefs": [
+        0,
+      ],
+      "output": {
+        "content": [
+          {
+            "input": {
+              "increment": 5,
+            },
+            "toolCallId": "1",
+            "toolName": "updateCounter",
+            "type": "tool-call",
+          },
+          {
+            "text": "Response 1",
+            "type": "text",
+          },
+        ],
+        "finishReason": "tool-calls",
+      },
+      "state": {
+        "counter": 0,
+        "name": "initial",
+      },
+      "stepIndex": 0,
+    },
+    {
+      "deltaStart": 1,
+      "messageRefs": [
+        0,
+        1,
+        2,
+      ],
+      "output": {
+        "content": [
+          {
+            "text": "Response 2",
+            "type": "text",
+          },
+        ],
+        "finishReason": "stop",
+      },
+      "state": {
+        "counter": 5,
+        "name": "updated",
+      },
+      "stepIndex": 1,
+    },
+  ],
+}
+`;
+
 exports[`StatefulPrompt > should allow step modifications from effects 1`] = `
 {
   "modifiedAspect": "messages",

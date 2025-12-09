@@ -245,6 +245,13 @@ describe('StatefulPrompt', () => {
       const state1 = compressed.getState(1);
       expect(state1.counter).toBe(5);
       expect(state1.name).toBe('updated');
+
+      // Snapshot the compressed steps with state
+      expect({
+        messagePool: compressed.messagePool,
+        steps: compressed.steps,
+        stats: compressed.getStats()
+      }).toMatchSnapshot();
     });
 
     it('should preserve state snapshots during compression', async () => {
