@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { Prompt, tool, agent } from './Prompt';
+import { Prompt, tool, agent } from './StatefulPrompt';
 import { createMockModel } from './test/createMockModel';
 import { z } from 'zod';
 import { runPrompt } from './runPrompt';

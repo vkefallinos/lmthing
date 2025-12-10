@@ -2,7 +2,7 @@
 
 ## StatefulPrompt
 
-`StatefulPrompt` is an extension of the `Prompt` class that adds React-like hooks functionality for managing state across prompt re-executions. It provides state persistence and effects that run based on dependency changes.
+`StatefulPrompt` is the main prompt class that provides all prompt-building functionality including React-like hooks for managing state across prompt re-executions. It provides state persistence and effects that run based on dependency changes.
 
 **Key Features:**
 - **State Management**: `defState` for managing state that persists across prompt re-executions

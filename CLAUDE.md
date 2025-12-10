@@ -17,10 +17,7 @@
 StreamTextBuilder (src/StreamText.ts)
        │
        ▼
-    Prompt (src/Prompt.ts)
-       │
-       ▼
-  StatefulPrompt (src/StatefulPrompt.ts) - Extends Prompt with hooks
+  StatefulPrompt (src/StatefulPrompt.ts) - Main prompt class with all features
        │
        ▼
   runPrompt() (src/runPrompt.ts) - Main entry point (uses StatefulPrompt)
@@ -31,8 +28,7 @@ StreamTextBuilder (src/StreamText.ts)
 | File | Purpose |
 |------|---------|
 | `src/StreamText.ts` | Low-level builder wrapping AI SDK's `streamText()` |
-| `src/Prompt.ts` | High-level API with `def*` methods for prompt construction |
-| `src/StatefulPrompt.ts` | Stateful extension with React-like hooks (`defState`, `defEffect`) |
+| `src/StatefulPrompt.ts` | Main prompt class with `def*` methods and React-like hooks (`defState`, `defEffect`) |
 | `src/runPrompt.ts` | Entry point that orchestrates StatefulPrompt execution |
 | `src/cli.ts` | CLI for running `.lmt.mjs` prompt files |
 | `src/types.ts` | TypeScript interfaces (PromptContext, StepModifier, Effect, etc.) |
@@ -556,15 +552,14 @@ export const {Name}Models = { ... } as const;
 
 ### Adding a New Context Method (`def*`)
 
-1. Add method to `Prompt` class in `src/Prompt.ts` for base functionality
-2. Override in `StatefulPrompt` class if needed for stateful behavior:
+1. Add method to `StatefulPrompt` class in `src/StatefulPrompt.ts`
+2. For specialized functionality:
    - For state-related features: extend `StateManager` in `src/state/`
    - For effect-related features: extend `EffectsManager` in `src/effects/`
    - For definition tracking: update `DefinitionTracker` in `src/definitions/`
-3. Store state in protected instance variables (changed from private to allow StatefulPrompt access)
+3. Store state in protected instance variables
 4. Process in `run()` via `setLastPrepareStep()` if needed
-5. Add tests in `src/Prompt.test.ts` and `src/StatefulPrompt.test.ts` for stateful features
-6. Add unit tests for any new manager functionality
+5. Add tests in `src/Prompt.test.ts` (which tests StatefulPrompt) and unit tests for any new manager functionality
 
 ### Adding Configuration Options
 

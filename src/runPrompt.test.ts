@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { runPrompt } from './runPrompt';
 import { createMockModel } from './test/createMockModel';
-import { Prompt } from './Prompt';
+import { Prompt } from './StatefulPrompt';
 import { z } from 'zod';
 import { stepCountIs } from 'ai';
 

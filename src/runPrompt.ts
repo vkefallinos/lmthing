@@ -36,7 +36,7 @@ export const runPrompt = async (
   config: PromptConfig
 ): Promise<RunPromptResult> => {
   // Always create a StatefulPrompt
-  const prompt = new StatefulPrompt(config.model, true);
+  const prompt = new StatefulPrompt(config.model);
 
   // Apply any additional options if provided
   if (config.options) {

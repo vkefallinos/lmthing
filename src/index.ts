@@ -1,10 +1,15 @@
 export { runPrompt } from './runPrompt';
 
-// Export tool and agent helpers for composite definitions
-export { tool, type SubToolDefinition, agent, type SubAgentDefinition, type DefHookResult } from './Prompt';
-
-// Export stateful prompt functionality
-export { StatefulPrompt } from './StatefulPrompt';
+// Export prompt functionality (StatefulPrompt is now the main Prompt class)
+export {
+  StatefulPrompt,
+  StatefulPrompt as Prompt,  // Export as Prompt for backward compatibility
+  tool,
+  type SubToolDefinition,
+  agent,
+  type SubAgentDefinition,
+  type DefHookResult
+} from './StatefulPrompt';
 
 // Export types for the stateful prompt system
 export type {
