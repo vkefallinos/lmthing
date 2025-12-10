@@ -6,10 +6,7 @@ exports[`Prompt > should handle a complete workflow testing all Prompt class fea
     "input": {
       "prompt": [
         {
-          "content": "<role>
-role prompt
-</role>
-<guidelines>
+          "content": "<guidelines>
 guidelines prompt
 </guidelines>
 <expertise>
@@ -473,6 +470,17 @@ Key applications in cryptography...",
     "input": {
       "prompt": [
         {
+          "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+          "role": "system",
+        },
+        {
           "content": [
             {
               "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
@@ -513,6 +521,17 @@ Key applications in cryptography...",
   {
     "input": {
       "prompt": [
+        {
+          "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -587,6 +606,17 @@ Key applications in cryptography...",
   {
     "input": {
       "prompt": [
+        {
+          "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -695,6 +725,17 @@ The workflow progressed through all phases successfully!",
   {
     "input": {
       "prompt": [
+        {
+          "content": "<role>
+You are a market analyst specializing in commercial trends.
+</role>
+<variables>
+  <MARKET_FOCUS>
+ enterprise
+  </MARKET_FOCUS>
+</variables>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -812,6 +853,17 @@ The workflow progressed through all phases successfully!",
                           "input": {
                             "prompt": [
                               {
+                                "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
+                              {
                                 "content": [
                                   {
                                     "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
@@ -852,6 +904,17 @@ The workflow progressed through all phases successfully!",
                         {
                           "input": {
                             "prompt": [
+                              {
+                                "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
                               {
                                 "content": [
                                   {
@@ -926,6 +989,17 @@ The workflow progressed through all phases successfully!",
                         {
                           "input": {
                             "prompt": [
+                              {
+                                "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
                               {
                                 "content": [
                                   {
@@ -1040,6 +1114,17 @@ The workflow progressed through all phases successfully!",
                         {
                           "input": {
                             "prompt": [
+                              {
+                                "content": "<role>
+You are a market analyst specializing in commercial trends.
+</role>
+<variables>
+  <MARKET_FOCUS>
+ enterprise
+  </MARKET_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
                               {
                                 "content": [
                                   {

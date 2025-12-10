@@ -402,6 +402,19 @@ You are an orchestrator AI that coordinates multiple specialist agents.
                   "input": {
                     "prompt": [
                       {
+                        "content": "<role>
+You are a data validation specialist.
+</role>
+<variables>
+  <inputData>
+email: test@example.com
+age: 25
+
+  </inputData>
+</variables>",
+                        "role": "system",
+                      },
+                      {
                         "content": [
                           {
                             "text": "Validate the following data: <inputData>",
@@ -510,6 +523,19 @@ You are an orchestrator AI that coordinates multiple specialist agents.
                   "input": {
                     "prompt": [
                       {
+                        "content": "<role>
+You are a data validation specialist.
+</role>
+<variables>
+  <inputData>
+email: test@example.com
+age: 25
+
+  </inputData>
+</variables>",
+                        "role": "system",
+                      },
+                      {
                         "content": [
                           {
                             "text": "Validate the following data: <inputData>",
@@ -567,6 +593,23 @@ You are an orchestrator AI that coordinates multiple specialist agents.
                 {
                   "input": {
                     "prompt": [
+                      {
+                        "content": "<role>
+You are a data processing specialist.
+</role>
+<capabilities>
+Transform, filter, and aggregate data.
+</capabilities>
+<variables>
+  <operation>
+ transform
+  </operation>
+  <inputSource>
+ validated_data
+  </inputSource>
+</variables>",
+                        "role": "system",
+                      },
                       {
                         "content": [
                           {

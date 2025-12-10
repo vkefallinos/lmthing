@@ -100,7 +100,6 @@ export class StatefulPrompt extends Prompt {
       defSystem: this.defSystem.bind(this),
       defTool: this.defTool.bind(this),
       defAgent: this.defAgent.bind(this),
-      defHook: this.defHook.bind(this),
       defState: this.defState.bind(this),
       defEffect: this.defEffect.bind(this),
       defMessage: this.defMessage.bind(this),
@@ -148,7 +147,8 @@ export class StatefulPrompt extends Prompt {
   }
 
   /**
-   * Apply step modifications to the prepare step result
+   * Apply step modifications to the prepare step result.
+   * Also updates instance properties (activeSystems, activeVariables) that are used by Prompt.run()
    */
   private _applyStepModifications(): DefHookResult {
     const result: DefHookResult = {};
@@ -158,11 +158,17 @@ export class StatefulPrompt extends Prompt {
     }
 
     if (this._stepModifications.tools) {
-      result.activeTools = this._stepModifications.tools.map((t: any) => t.name);
+      const toolNames = this._stepModifications.tools.map((t: any) => t.name);
+      result.activeTools = toolNames;
+      // Also set on instance for consistency
+      this.activeTools = toolNames;
     }
 
     if (this._stepModifications.systems) {
-      result.activeSystems = this._stepModifications.systems.map((s: any) => s.name);
+      const systemNames = this._stepModifications.systems.map((s: any) => s.name);
+      result.activeSystems = systemNames;
+      // Also set on instance for Prompt.run() to use
+      this.activeSystems = systemNames;
     }
 
     if (this._stepModifications.variables) {
@@ -173,6 +179,8 @@ export class StatefulPrompt extends Prompt {
           value: variable.value
         };
       }
+      // Also update instance variables
+      this.variables = { ...this.variables, ...result.variables };
     }
 
     return result;
@@ -242,6 +250,11 @@ export class StatefulPrompt extends Prompt {
   setLastPrepareStep(prepareStepFn: (options: any) => any): void {
     // Stateful mode: re-execute promptFn on each step after the first
     this.addPrepareStep(async (options: PrepareStepOptions<any>) => {
+      // Reset filters at the start of each step to prevent persistence
+      this.activeSystems = undefined;
+      this.activeVariables = undefined;
+      this.activeTools = undefined;
+
       // Clear step modifications
       this._stepModifications = {};
 
@@ -314,14 +327,6 @@ export class StatefulPrompt extends Prompt {
   defAgent(name: string, description: string, inputSchemaOrSubAgents: any, execute?: Function, options?: any) {
     this._definitionTracker.mark('defAgent', name);
     return super.defAgent(name, description, inputSchemaOrSubAgents, execute, options);
-  }
-
-  /**
-   * Override defHook
-   */
-  defHook(hookFn: (opts: any) => DefHookResult) {
-    // Hook function doesn't need to be tracked for reconciliation
-    return super.defHook(hookFn);
   }
 
   /**

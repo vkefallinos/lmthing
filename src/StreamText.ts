@@ -312,7 +312,7 @@ export class StreamTextBuilder {
             }
             : undefined;
 
-        const prepareStep: PrepareStepFunction<any> | undefined = this._prepareStepHooks.length > 0
+        const prepareStep: PrepareStepFunction<any> | undefined = (this._prepareStepHooks.length > 0 || this._lastPrepareStep)
             ? (async (options: PrepareStepOptions<any>): Promise<PrepareStepResult<any>> => {
                 let combinedResult: PrepareStepResult<any> = {};
                 

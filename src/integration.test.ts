@@ -116,7 +116,7 @@ describe('Prompt', () => {
 
     // Mock tool implementations
     const { result, prompt } = await runPrompt(
-      async ({ defState, defEffect, defSystem, def, defData, defTool, defAgent, defHook, $ }) => {
+      async ({ defState, defEffect, defSystem, def, defData, defTool, defAgent, $ }) => {
 
         // ========== STATE MANAGEMENT ==========
         const [phase, setPhase] = defState('phase', 'initialization');
@@ -129,8 +129,7 @@ describe('Prompt', () => {
         defEffect((context, stepModifier) => {
           console.log(`[Effect] Phase: ${phase}`);
           // Add phase information to system prompt
-          // Note: Use == (loose equality) for state proxy comparisons since === compares object references
-          if(phase == 'initialization') {
+          if (phase === 'initialization') {
             stepModifier('systems', context.systems.filter(s => s.name !== 'role'));
           }
         }, [phase]);
@@ -231,10 +230,9 @@ describe('Prompt', () => {
               timestamp: Date.now(),
               results: `Findings for ${args.query}`
             }]);
-            console.log('Phase before tool call:', String(phase));
+            console.log('Phase before tool call:', phase);
             // Advance phase if needed
-            // Note: Use == (loose equality) for state proxy comparisons
-            if (phase == 'initialization') {
+            if (phase === 'initialization') {
               console.log('[Tool] Advancing phase to research');
               setPhase('research');
             }

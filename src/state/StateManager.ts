@@ -27,8 +27,9 @@ export class StateManager {
   }
 
   /**
-   * Create a state accessor tuple [value, setter] with proxy support for template literals.
-   * The proxy ensures the state value works correctly in template strings.
+   * Create a state accessor tuple [value, setter].
+   * Returns the actual value (not a proxy) so that strict equality (===) works.
+   * Like React's useState, the value is a snapshot - updates are seen on re-execution.
    */
   createStateAccessor<T>(key: string, initialValue: T): [T, (newValue: T | ((prev: T) => T)) => void] {
     // Initialize state if not exists
@@ -36,22 +37,20 @@ export class StateManager {
       this.set(key, initialValue);
     }
 
-    // Create a getter function that returns the current value
-    const stateGetter = () => this.get<T>(key) as T;
+    // Get the current value (snapshot at time of creation)
+    const currentValue = this.get<T>(key) as T;
 
     // Create setter function
     const setter = (newValue: T | ((prev: T) => T)) => {
-      const currentValue = this.get<T>(key);
+      const prevValue = this.get<T>(key);
       const valueToSet = typeof newValue === 'function'
-        ? (newValue as (prev: T) => T)(currentValue as T)
+        ? (newValue as (prev: T) => T)(prevValue as T)
         : newValue;
       this.set(key, valueToSet);
     };
 
-    // Create a proxy wrapper that works in template literals
-    const stateWrapper = createStateProxy<T>(stateGetter);
-
-    return [stateWrapper, setter];
+    // Return the actual value, not a proxy - this allows === to work
+    return [currentValue, setter];
   }
 
   /**
@@ -60,41 +59,4 @@ export class StateManager {
   clear(): void {
     this.store.clear();
   }
-}
-
-/**
- * Creates a proxy that wraps a state getter function.
- * The proxy ensures proper coercion to string in template literals
- * and allows property access on object state values.
- */
-export function createStateProxy<T>(stateGetter: () => T): T {
-  const handler: ProxyHandler<() => T> = {
-    get(target, prop) {
-      if (prop === 'valueOf' || prop === 'toString' || prop === Symbol.toPrimitive) {
-        return () => target();
-      }
-      if (typeof prop === 'string' && !isNaN(Number(prop))) {
-        return undefined;
-      }
-      // For property access, try to get from the state value
-      const value = target();
-      if (value && typeof value === 'object' && prop in value) {
-        return (value as any)[prop];
-      }
-      return value;
-    },
-    has(_target, prop) {
-      const value = _target();
-      return value && typeof value === 'object' && prop in value;
-    },
-    ownKeys(_target) {
-      const value = _target();
-      return (value && typeof value === 'object' ? Object.keys(value) : []) as string[];
-    },
-    apply(_target, _thisArg, _argArray) {
-      return _target();
-    }
-  };
-
-  return new Proxy(stateGetter, handler) as unknown as T;
 }

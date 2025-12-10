@@ -88,6 +88,7 @@ export class Prompt extends StreamTextBuilder {
   protected systems: Record<string, string> = {};
   protected activeSystems?: string[];
   protected activeVariables?: string[];
+  protected activeTools?: string[];
   protected _remindedItems: Array<{ type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string }> = [];
 
   /**
@@ -255,84 +256,6 @@ export class Prompt extends StreamTextBuilder {
       inputSchema: compositeSchema,
       execute: compositeExecute
     });
-  }
-  /**
-   * Define a hook that runs before each step, allowing dynamic modification of the prompt context.
-   *
-   * Hooks receive the current step context including messages, model, steps history, stepNumber,
-   * variables, system parts, and lists of available names. They can return modifications to apply for that step.
-   *
-   * @param hookFn - Function called before each step with context and returns modifications
-   *
-   * @example
-   * // Basic usage - limit tools per step
-   * prompt.defHook(({ stepNumber, tools }) => {
-   *   console.log('Available tools:', tools); // ['search', 'calculator']
-   *   if (stepNumber === 0) {
-   *     return { activeTools: ['search'] };
-   *   }
-   *   return { activeTools: ['format'] };
-   * });
-   *
-   * @example
-   * // Access system and variable names
-   * prompt.defHook(({ systems, variables }) => {
-   *   console.log('System names:', systems); // ['role', 'guidelines', 'expertise']
-   *   console.log('Variable names:', variables); // ['userName', 'config']
-   *
-   *   // Only include specific system parts for this step
-   *   return {
-   *     activeSystems: ['role', 'guidelines'] // Excludes 'expertise'
-   *   };
-   * });
-   *
-   * @example
-   * // Modify variables per step
-   * prompt.defHook(({ stepNumber }) => {
-   *   return {
-   *     variables: {
-   *       currentStep: { type: 'string', value: `Step ${stepNumber}` }
-   *     }
-   *   };
-   * });
-   *
-   * @remarks
-   * - Hook is called once per step (stepNumber starts at 0)
-   * - activeSystems/activeVariables filters reset each step (no persistence)
-   * - If activeSystems is not returned, all defined systems are included
-   * - If activeVariables is not returned, all defined variables are included
-   * - Multiple hooks can be defined and will execute sequentially
-   */
-  defHook(hookFn: (opts: PrepareStepOptions<any> & {
-    systems: string[],
-    variables: string[],
-    tools: string[]
-  })=>DefHookResult) {
-    this.addPrepareStep(({messages, model, steps, stepNumber})=>{
-      // Reset filters at the start of each step to prevent persistence
-      this.activeSystems = undefined;
-      this.activeVariables = undefined;
-
-      const updates: DefHookResult = hookFn({
-        messages,
-        model,
-        steps,
-        stepNumber,
-        systems: Object.keys(this.systems),
-        variables: Object.keys(this.variables),
-        tools: Object.keys(this._tools)
-      });
-      if (updates.variables) {
-        this.variables = { ...this.variables, ...updates.variables };
-      }
-      if (updates.activeSystems !== undefined) {
-        this.activeSystems = updates.activeSystems;
-      }
-      if (updates.activeVariables !== undefined) {
-        this.activeVariables = updates.activeVariables;
-      }
-      return updates;
-    })
   }
   /**
    * Define an agent for the LLM to delegate tasks to.
