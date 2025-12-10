@@ -1,1 +1,1 @@
-export { StateManager, createStateProxy } from './StateManager';
+export { StateManager } from './StateManager';
