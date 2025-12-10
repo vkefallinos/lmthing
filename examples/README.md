@@ -69,5 +69,6 @@ The prompt function receives these methods:
 | `defMessage(role, content)` | Add a message |
 | `defTool(name, desc, schema, fn)` | Register a tool |
 | `defAgent(name, desc, schema, fn, opts)` | Register a sub-agent |
-| `defHook(fn)` | Add a prepareStep hook |
+| `defState(name, initial)` | Create state that persists across re-executions |
+| `defEffect(fn, deps)` | Run side effects based on dependencies |
 | `$(template)` | Add user message via template literal |

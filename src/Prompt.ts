@@ -62,7 +62,8 @@ export function agent(
 }
 
 /**
- * Result object returned by defHook callbacks to modify step behavior.
+ * Result object for step modifications via prepareStep hooks.
+ * Used by defEffect with stepModifier to modify step behavior.
  *
  * @property system - Override the system prompt for this step
  * @property activeTools - Limit which tools are available for this step

@@ -105,7 +105,7 @@ runPrompt(
     - `headers`: Additional HTTP headers
     - `toolChoice`: Tool selection strategy
     - `stopWhen`: Condition for stopping multi-step generation
-    - `prepareStep`: Function to modify settings for each step during multi-step generation. Receives step information and can return modified model, toolChoice, activeTools, system prompt, or messages for the current step. Is given access through defHook.
+    - `prepareStep`: Function to modify settings for each step during multi-step generation. Receives step information and can return modified model, toolChoice, activeTools, system prompt, or messages for the current step. Is given access through defEffect with stepModifier.
     - `onChunk`: Callback for each chunk
     - `onStepFinish`: Callback when a step finishes
     - `onFinish`: Callback when generation finishes
@@ -358,7 +358,7 @@ prompt.defEffect((context: PromptContext, stepModifier: StepModifier) => {
 
 ### `defSystem(name: string, value: string)`
 
-Adds a named system prompt part that will be prepended to the `system` prompt in `streamText`. Multiple system parts can be defined and will be formatted as XML tags. System parts can be dynamically filtered per-step using `defHook` with `activeSystems`.
+Adds a named system prompt part that will be prepended to the `system` prompt in `streamText`. Multiple system parts can be defined and will be formatted as XML tags. System parts can be dynamically filtered per-step using `defEffect` with `stepModifier('systems', ...)`.
 
 ```typescript
 prompt.defSystem('role', 'You are a helpful assistant.');
@@ -614,127 +614,6 @@ If a sub-agent throws an error, execution continues for remaining sub-agents, an
 }
 ```
 
-### `defHook(hookFn: (options) => DefHookResult)`
-
-Registers a hook that maps to the `prepareStep` parameter in `streamText`. The hook is called before each generation step and can modify the step configuration, including filtering which systems and variables are included.
-
-**Hook Function Parameters:**
-
-The hook receives an options object containing:
-- `messages`: Current message history
-- `model`: The language model being used
-- `steps`: Array of previous step results
-- `stepNumber`: Current step number (0-indexed)
-- `systems`: Array of all system part names (e.g., `['role', 'guidelines', 'expertise']`)
-- `variables`: Array of all variable names (e.g., `['userName', 'config']`)
-- `tools`: Array of all tool names (e.g., `['search', 'calculator']`)
-
-**Return Value (DefHookResult):**
-
-The hook should return an object with optional properties:
-- `system`: Override the entire system prompt
-- `activeTools`: Array of tool names to make available for this step
-- `activeSystems`: Array of system part names to include (filters out others)
-- `activeVariables`: Array of variable names to include (filters out others)
-- `messages`: Modified message history
-- `variables`: Updated variables (will be merged with existing)
-
-**Filter Behavior:**
-
-- **Filter Reset**: Filters reset at the start of each step (no persistence across steps)
-- **Default Behavior**: If `activeSystems`/`activeVariables` is not returned, all systems/variables are included
-- **Empty Arrays**: Using `[]` excludes all systems/variables respectively
-- **Invalid Names**: Non-existent names in filter arrays are silently ignored
-- **Multiple Hooks**: Later hooks can override earlier ones; they execute sequentially
-
-**Use Cases:**
-
-- Control which tools are available at each step
-- Filter which system parts are included per step
-- Filter which variables are included per step
-- Transform or filter messages
-- Add dynamic context based on step number
-- Modify variables during execution
-
-**Examples:**
-
-```typescript
-// Use name arrays for dynamic filtering
-prompt.defHook(({ systems, variables, tools }) => {
-  console.log('Available systems:', systems);    // ['role', 'guidelines']
-  console.log('Available variables:', variables); // ['userName', 'config']
-  console.log('Available tools:', tools);         // ['search', 'calculator']
-
-  // Dynamically filter based on available names
-  return {
-    activeSystems: systems.slice(0, 2),
-    activeVariables: variables.filter(v => v.startsWith('user'))
-  };
-});
-
-// Control tool availability by step
-prompt.defHook(({ stepNumber, tools }) => {
-  if (stepNumber === 0) {
-    return { activeTools: ['search'] }; // Only search on first step
-  }
-  return { activeTools: tools }; // All tools on subsequent steps
-});
-
-// Filter variables based on step
-prompt.defHook(({ variables, stepNumber }) => {
-  // Only include certain variables based on step
-  if (stepNumber === 0) {
-    return { activeVariables: ['userName'] };
-  }
-  return { activeVariables: ['userName', 'config'] };
-});
-
-// Filter messages to implement sliding window
-prompt.defHook(({ messages }) => {
-  const systemMessages = messages.filter(m => m.role === 'system');
-  const otherMessages = messages.filter(m => m.role !== 'system').slice(-10);
-  return { messages: [...systemMessages, ...otherMessages] };
-});
-
-// Override system prompt completely
-prompt.defHook(({ stepNumber }) => {
-  return {
-    system: `Step ${stepNumber}. Current time: ${new Date().toISOString()}`
-  };
-});
-
-// Modify variables during execution
-prompt.defHook(({ stepNumber }) => {
-  return {
-    variables: {
-      CURRENT_STEP: { type: 'string', value: String(stepNumber) }
-    }
-  };
-});
-
-// Exclude all systems temporarily
-prompt.defHook(() => {
-  return { activeSystems: [] }; // No system parts included
-});
-
-// Type-safe hooks using exported DefHookResult interface
-import { DefHookResult } from 'lmthing';
-
-const myHook = ({ systems, variables, tools }): DefHookResult => {
-  // systems, variables, and tools are name arrays
-  console.log('System names:', systems);     // ['role', 'guidelines']
-  console.log('Variable names:', variables); // ['userName', 'config']
-  console.log('Tool names:', tools);         // ['search', 'calculator']
-
-  return {
-    activeSystems: ['role'],
-    activeVariables: ['userName', 'config']
-  };
-};
-
-prompt.defHook(myHook);
-```
-
 ### `defTaskList(tasks: Task[])`
 
 Sets up a sequential task execution system with validation. Creates a workflow where:
@@ -743,7 +622,7 @@ Sets up a sequential task execution system with validation. Creates a workflow w
 - A `finishTask` tool is automatically registered via `tools` parameter
 - Each task result is validated before proceeding
 - Validation failures provide feedback for correction attempts
-- Uses `defHook` to manage message history, showing only:
+- Uses `defEffect` with `stepModifier` to manage message history, showing only:
   - Task summaries for completed tasks
   - Current task details
   - Upcoming tasks list
@@ -866,7 +745,7 @@ Sets up a dynamic task list system using `tools` parameter to register task mana
 
 **Message History Management:**
 
-Uses `defHook` (via `prepareStep`) to maintain focused context:
+Uses `defEffect` with `stepModifier` (via `prepareStep`) to maintain focused context:
 - Shows completed tasks as summaries
 - Highlights current in-progress task
 - Lists pending tasks for planning
