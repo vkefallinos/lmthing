@@ -129,7 +129,8 @@ describe('Prompt', () => {
         defEffect((context, stepModifier) => {
           console.log(`[Effect] Phase: ${phase}`);
           // Add phase information to system prompt
-          if(phase==='initialization') {
+          // Note: Use == (loose equality) for state proxy comparisons since === compares object references
+          if(phase == 'initialization') {
             stepModifier('systems', context.systems.filter(s => s.name !== 'role'));
           }
         }, [phase]);
@@ -230,9 +231,10 @@ describe('Prompt', () => {
               timestamp: Date.now(),
               results: `Findings for ${args.query}`
             }]);
-            console.log('Phase before tool call:', phase);
+            console.log('Phase before tool call:', String(phase));
             // Advance phase if needed
-            if (phase === 'initialization') {
+            // Note: Use == (loose equality) for state proxy comparisons
+            if (phase == 'initialization') {
               console.log('[Tool] Advancing phase to research');
               setPhase('research');
             }
@@ -285,8 +287,8 @@ describe('Prompt', () => {
 
               // Update parent state
               setPhase('analysis');
-            },
-            { model: 'mock' }
+            }
+            // Model inherited from parent
           ),
           agent(
             'market_analyst',
@@ -298,8 +300,8 @@ describe('Prompt', () => {
               childPrompt.defSystem('role', 'You are a market analyst specializing in commercial trends.');
               childPrompt.def('MARKET_FOCUS', args.market);
               childPrompt.$`Analyze the market potential of ${args.topic} in the ${args.market} market`;
-            },
-            { model: 'mock' }
+            }
+            // Model inherited from parent
           )
         ]);
 
@@ -321,8 +323,8 @@ describe('Prompt', () => {
             // Mark analysis as complete
             setAnalysisComplete(true);
             setPhase('synthesis');
-          },
-          { model: 'mock' }
+          }
+          // Model inherited from parent
         );
 
         // ========== HOOKS ==========

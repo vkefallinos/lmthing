@@ -36,9 +36,9 @@ export class EffectsManager {
   process(context: PromptContext, stepModifier: StepModifier): void {
     for (const effect of this.effects) {
       if (this.shouldRun(effect)) {
-        // Update stored dependencies before running
+        // Update stored dependencies before running - resolve proxy values
         if (effect.dependencies) {
-          this.previousDeps.set(effect.id, [...effect.dependencies]);
+          this.previousDeps.set(effect.id, effect.dependencies.map(d => this.resolveValue(d)));
         }
 
         // Run the effect
@@ -67,7 +67,29 @@ export class EffectsManager {
       return true;
     }
 
-    return !this.depsEqual(prevDeps, effect.dependencies);
+    // Resolve current dependency values for comparison
+    const currentDeps = effect.dependencies.map(d => this.resolveValue(d));
+    return !this.depsEqual(prevDeps, currentDeps);
+  }
+
+  /**
+   * Resolve a value that may be a state proxy to its actual value.
+   * State proxies implement valueOf() to return the underlying value.
+   */
+  private resolveValue(value: any): any {
+    if (value === null || value === undefined) {
+      return value;
+    }
+    // Check if it's an object with valueOf that returns something different
+    if (typeof value === 'object' && typeof value.valueOf === 'function') {
+      const resolved = value.valueOf();
+      // Only use valueOf result if it's different from the object itself
+      // (primitives return themselves from valueOf)
+      if (resolved !== value) {
+        return resolved;
+      }
+    }
+    return value;
   }
 
   /**

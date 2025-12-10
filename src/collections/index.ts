@@ -33,7 +33,11 @@ export function createToolCollection(tools: Record<string, any>): ToolCollection
  * Provides utility methods for querying system parts.
  */
 export function createSystemCollection(systems: Record<string, string>): SystemCollection {
-  return createCollection(systems);
+  // Wrap string values in objects with 'value' property for consistent spreading
+  const wrappedSystems = Object.fromEntries(
+    Object.entries(systems).map(([name, value]) => [name, { value }])
+  );
+  return createCollection(wrappedSystems);
 }
 
 /**
