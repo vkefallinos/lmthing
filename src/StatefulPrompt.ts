@@ -210,6 +210,29 @@ export class StatefulPrompt extends Prompt {
       return super.run();
     }
 
+    // Add hook to track last tool call for effects context
+    this.addOnStepFinish(async (result: any) => {
+      // Extract last tool call from result if exists
+      const toolCalls = result.toolCalls;
+      const toolResults = result.toolResults;
+
+      if (toolCalls && toolCalls.length > 0) {
+        const lastToolCall = toolCalls[toolCalls.length - 1];
+        const lastToolResult = toolResults?.find(
+          (r: any) => r.toolCallId === lastToolCall.toolCallId
+        );
+
+        this._lastTool = {
+          toolName: lastToolCall.toolName,
+          args: lastToolCall.input, // AI SDK uses 'input' for parsed args
+          output: lastToolResult?.output ?? null
+        };
+      } else {
+        // No tool calls in this step, keep previous value
+        // (don't reset to null so effects can still access the last tool from previous step)
+      }
+    });
+
     return super.run();
   }
 
