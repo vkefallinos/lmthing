@@ -201,4 +201,126 @@ describe('StatefulPrompt', () => {
       modifiedItems
     }).toMatchSnapshot();
   });
+
+  it('should track lastTool in effects context after tool call', async () => {
+    const mockModelWithTool = createMockModel([
+      { type: 'text', text: 'Let me search for that...' },
+      { type: 'tool-call', toolCallId: 'call_123', toolName: 'search', args: { query: 'test query' } },
+      { type: 'text', text: 'Found the results!' }
+    ]);
+
+    let capturedLastTool: any = undefined;
+    let effectCallCount = 0;
+
+    const { result } = await runPrompt(async ({ defTool, defEffect, $ }) => {
+      defTool('search', 'Search for information',
+        z.object({ query: z.string() }),
+        async ({ query }) => {
+          return { results: [`Result for: ${query}`] };
+        }
+      );
+
+      defEffect((context) => {
+        effectCallCount++;
+        // Capture lastTool on step 1 (after tool was called in step 0)
+        if (context.stepNumber === 1) {
+          capturedLastTool = context.lastTool;
+        }
+      });
+
+      $`Search for test`;
+    }, {
+      model: mockModelWithTool,
+    });
+
+    await result.text;
+
+    // Effect should have run multiple times
+    expect(effectCallCount).toBeGreaterThan(1);
+
+    // lastTool should be populated after the tool call
+    expect(capturedLastTool).toBeDefined();
+    expect(capturedLastTool).not.toBeNull();
+    expect(capturedLastTool.toolName).toBe('search');
+    expect(capturedLastTool.args).toEqual({ query: 'test query' });
+    expect(capturedLastTool.output).toEqual({ results: ['Result for: test query'] });
+  });
+
+  it('should have null lastTool before any tool is called', async () => {
+    let capturedLastTool: any = 'not-set';
+
+    const { result } = await runPrompt(async ({ defEffect, $ }) => {
+      defEffect((context) => {
+        // Capture on first step before any tool calls
+        if (context.stepNumber === 0) {
+          capturedLastTool = context.lastTool;
+        }
+      });
+
+      $`Just a simple message`;
+    }, {
+      model: mockModel,
+    });
+
+    await result.text;
+
+    // lastTool should be null before any tool is called
+    expect(capturedLastTool).toBeNull();
+  });
+
+  it('should track the last tool when multiple tools are called in sequence', async () => {
+    // Mock model that calls two tools in separate steps
+    const mockModelWithMultipleTools = createMockModel([
+      { type: 'text', text: 'First I will search...' },
+      { type: 'tool-call', toolCallId: 'call_1', toolName: 'search', args: { query: 'first search' } },
+      { type: 'text', text: 'Now I will calculate...' },
+      { type: 'tool-call', toolCallId: 'call_2', toolName: 'calculate', args: { a: 5, b: 3 } },
+      { type: 'text', text: 'Done!' }
+    ]);
+
+    let capturedLastTools: any[] = [];
+
+    const { result } = await runPrompt(async ({ defTool, defEffect, $ }) => {
+      defTool('search', 'Search',
+        z.object({ query: z.string() }),
+        async ({ query }) => ({ results: [query] })
+      );
+
+      defTool('calculate', 'Calculate',
+        z.object({ a: z.number(), b: z.number() }),
+        async ({ a, b }) => ({ sum: a + b })
+      );
+
+      defEffect((context) => {
+        // Capture lastTool on each step
+        capturedLastTools.push({
+          stepNumber: context.stepNumber,
+          lastTool: context.lastTool ? { ...context.lastTool } : null
+        });
+      });
+
+      $`Search and calculate`;
+    }, {
+      model: mockModelWithMultipleTools,
+    });
+
+    await result.text;
+
+    // Should have captured multiple steps
+    expect(capturedLastTools.length).toBeGreaterThan(1);
+
+    // Step 0: no tool called yet
+    expect(capturedLastTools[0].lastTool).toBeNull();
+
+    // Step 1: after search was called, lastTool should be 'search'
+    const step1 = capturedLastTools.find(s => s.stepNumber === 1);
+    expect(step1?.lastTool?.toolName).toBe('search');
+    expect(step1?.lastTool?.args).toEqual({ query: 'first search' });
+
+    // Step 2: after calculate was called, lastTool should be 'calculate'
+    const step2 = capturedLastTools.find(s => s.stepNumber === 2);
+    expect(step2?.lastTool?.toolName).toBe('calculate');
+    expect(step2?.lastTool?.args).toEqual({ a: 5, b: 3 });
+    expect(step2?.lastTool?.output).toEqual({ sum: 8 });
+  });
 });

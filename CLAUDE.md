@@ -35,11 +35,20 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/StatefulPrompt.ts` | Stateful extension with React-like hooks (`defState`, `defEffect`) |
 | `src/runPrompt.ts` | Entry point that orchestrates StatefulPrompt execution |
 | `src/cli.ts` | CLI for running `.lmt.mjs` prompt files |
+| `src/types.ts` | TypeScript interfaces (PromptContext, StepModifier, Effect, etc.) |
 | `src/providers/` | Provider adapters for OpenAI, Anthropic, Google, etc. |
 | `src/providers/resolver.ts` | Model string resolution (`provider:model_id` → LanguageModel) |
 | `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
-| `src/types.ts` | TypeScript interfaces for StatefulPrompt (PromptContext, StepModifier, etc.) |
+
+### Internal Modules (StatefulPrompt Implementation)
+
+| Module | Purpose |
+|--------|---------|
+| `src/state/StateManager.ts` | State persistence with proxy support for `defState` |
+| `src/effects/EffectsManager.ts` | Effect registration & dependency tracking for `defEffect` |
+| `src/definitions/DefinitionTracker.ts` | Tracks definitions for reconciliation across re-executions |
+| `src/collections/index.ts` | Factory functions for ToolCollection, SystemCollection, VariableCollection |
 
 ## Data Flow
 
@@ -343,6 +352,25 @@ prompt.$`Help ${userRef} with their question about ${topic}`;
 3. **Re-execution Model**: Prompt function re-executes on each step after the first
 4. **Definition Reconciliation**: Automatically removes unused definitions from previous executions
 
+### Internal Architecture
+
+StatefulPrompt delegates to specialized managers for separation of concerns:
+
+```
+StatefulPrompt
+    ├── _stateManager: StateManager
+    │   └── Handles defState(), state storage, proxy creation
+    │
+    ├── _effectsManager: EffectsManager
+    │   └── Handles defEffect(), dependency tracking, effect execution
+    │
+    ├── _definitionTracker: DefinitionTracker
+    │   └── Tracks seen definitions, reconciles after re-execution
+    │
+    └── Uses collection utilities from src/collections/
+        └── createToolCollection, createSystemCollection, createVariableCollection
+```
+
 ### defState
 
 Similar to React's `useState`, creates state that persists across re-executions:
@@ -596,6 +624,10 @@ const mockModel = createMockModel([
 ### Test File Locations
 
 - `src/*.test.ts` - Unit tests for main classes
+- `src/state/*.test.ts` - StateManager tests
+- `src/effects/*.test.ts` - EffectsManager tests
+- `src/definitions/*.test.ts` - DefinitionTracker tests
+- `src/collections/*.test.ts` - Collection utility tests
 - `src/providers/*.test.ts` - Provider-specific tests
 - `src/test/` - Test utilities
 
@@ -645,10 +677,14 @@ export const {Name}Models = { ... } as const;
 ### Adding a New Context Method (`def*`)
 
 1. Add method to `Prompt` class in `src/Prompt.ts` for base functionality
-2. Override in `StatefulPrompt` class if needed for stateful behavior
+2. Override in `StatefulPrompt` class if needed for stateful behavior:
+   - For state-related features: extend `StateManager` in `src/state/`
+   - For effect-related features: extend `EffectsManager` in `src/effects/`
+   - For definition tracking: update `DefinitionTracker` in `src/definitions/`
 3. Store state in protected instance variables (changed from private to allow StatefulPrompt access)
 4. Process in `run()` via `setLastPrepareStep()` if needed
 5. Add tests in `src/Prompt.test.ts` and `src/StatefulPrompt.test.ts` for stateful features
+6. Add unit tests for any new manager functionality
 
 ### Adding Configuration Options
 
