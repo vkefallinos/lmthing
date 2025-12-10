@@ -56,10 +56,10 @@ Successfully created and ran a complex `.lmt.mjs` CLI file that demonstrates **a
 9. **defAgent - Single** (1 instance)
    - `synthesizer`: Synthesize findings into report
 
-10. **defHook** (3 instances)
-    - Hook 1: Filters systems based on workflow phase
-    - Hook 2: Limits tools based on step number
-    - Hook 3: Injects phase-specific variables (CURRENT_STEP, PROGRESS)
+10. **defEffect** (3 instances)
+    - Effect 1: Filters systems based on workflow phase
+    - Effect 2: Limits tools based on step number
+    - Effect 3: Injects phase-specific variables (CURRENT_STEP, PROGRESS)
 
 11. **Template Literals ($)** (1 instance)
     - Initial user message with research instructions
@@ -80,7 +80,7 @@ Step 6: Final response generation
 
 ### State Changes Tracked
 
-- **Hooks executed**: 37 times across all steps (multiple per step due to re-execution)
+- **Effects executed**: 37 times across all steps (multiple per step due to re-execution)
 - **Effects executed**: Tracked phase changes and research progress
 - **Research count**: Incremented from 0 → 3
 - **Findings**: Accumulated 2 research finding objects
@@ -154,7 +154,7 @@ All 11 feature categories were successfully used:
 - ✅ defTool (composite)
 - ✅ defAgent (composite)
 - ✅ defAgent (single)
-- ✅ defHook
+- ✅ defEffect (with stepModifier)
 - ✅ Template literals ($)
 
 ## Running the Demo
@@ -177,9 +177,9 @@ node examples/check-steps.mjs
 
 This complex example successfully demonstrates the full power of lmthing's stateful prompt system, including:
 - React-like hooks (defState, defEffect)
-- All definition methods (def, defData, defSystem, defTool, defAgent, defHook)
+- All definition methods (def, defData, defSystem, defTool, defAgent, defState, defEffect)
 - Composite tools and agents
-- Dynamic hook-based filtering
+- Dynamic effect-based filtering with stepModifier
 - State-driven workflow management
 - Multi-step agent orchestration
 

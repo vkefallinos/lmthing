@@ -43,7 +43,7 @@ describe('runPrompt', () => {
 
     // Execute the prompt with options
     const { result, prompt } = await runPrompt(
-      async ({ defSystem, def, defData, defTool, defMessage, defHook, $ }) => {
+      async ({ defSystem, def, defData, defTool, defMessage, $ }) => {
 
       // 1. Define system instructions
       defSystem('role', 'You are a helpful weather and math assistant.');
@@ -87,20 +87,8 @@ describe('runPrompt', () => {
         `Convert it to the other unit. My config is ${configPlaceholder}.`
       );
 
-      // 6. Define a hook to modify behavior during execution
-      defHook(({ messages, stepNumber, variables }) => {
-        // Log or modify based on step
-        if (stepNumber === 1) {
-          // Could add a message or modify tools on first step
-          return {
-            activeTools: ['getWeather', 'convertTemperature']
-          };
-        }
-
-        return {};
-      });
       $`Please provide the weather details and conversion.`;
-    }, 
+    },
     {
       model: mockModel,
       options: {

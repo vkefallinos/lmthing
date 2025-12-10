@@ -127,7 +127,7 @@ exports[`StatefulPrompt > should maintain state across re-executions 1`] = `
               "output": {
                 "type": "json",
                 "value": {
-                  "newCount": 2,
+                  "newCount": 1,
                   "success": true,
                 },
               },
@@ -169,11 +169,11 @@ exports[`StatefulPrompt > should run effects with dependencies 1`] = `
   "effectRuns": [
     {
       "runCount": 1,
-      "stateValue": [Function],
+      "stateValue": 0,
       "stepNumber": 0,
     },
   ],
-  "finalDependency": [Function],
+  "finalDependency": 0,
   "steps": [
     {
       "input": {

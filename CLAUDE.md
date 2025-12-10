@@ -212,127 +212,7 @@ prompt.defAgent('specialists', 'Specialist agents', [
 - Executes sub-agents sequentially, collecting responses and steps
 - Handles errors gracefully per sub-agent (continues execution, returns error message)
 
-### 5. Hooks (`defHook`)
-
-Hooks map to `streamText({ prepareStep })` for per-step modifications. They provide access to the current context and allow dynamic filtering of systems, variables, and tools.
-
-**Hook Function Parameters:**
-
-The hook receives an options object containing:
-- `messages`: Current message history
-- `model`: The language model being used
-- `steps`: Array of previous step results
-- `stepNumber`: Current step number (0-indexed)
-- `systems`: Array of all system part names (e.g., `['role', 'guidelines', 'expertise']`)
-- `variables`: Array of all variable names (e.g., `['userName', 'config']`)
-- `tools`: Array of all tool names (e.g., `['search', 'calculator']`)
-
-**Return Value (DefHookResult):**
-
-The hook returns an object with optional properties:
-- `activeTools`: Array of tool names to limit which tools are available
-- `activeSystems`: Array of system part names to include (filters out others)
-- `activeVariables`: Array of variable names to include (filters out others)
-- `system`: Override the entire system prompt
-- `messages`: Override or modify the messages array
-- `variables`: Add or update variables (will be merged with existing)
-
-**Filter Behavior:**
-
-- Filters reset at the start of each step (no persistence across steps)
-- If `activeSystems` is not returned, all defined systems are included
-- If `activeVariables` is not returned, all defined variables are included
-- Empty arrays (`[]`) exclude all systems/variables respectively
-- Non-existent names in filter arrays are silently ignored
-- Multiple hooks execute sequentially; later hooks can override earlier ones
-
-**Examples:**
-
-```typescript
-// Use name arrays for dynamic filtering
-prompt.defHook(({ systems, variables, tools }) => {
-  console.log('Available systems:', systems);    // ['role', 'guidelines', 'expertise']
-  console.log('Available variables:', variables); // ['userName', 'config']
-  console.log('Available tools:', tools);         // ['search', 'calculator']
-
-  // Include only the first 2 systems
-  return {
-    activeSystems: systems.slice(0, 2)
-  };
-});
-
-// Filter variables based on name patterns
-prompt.defHook(({ variables }) => {
-  // Only include variables that start with 'user'
-  const userVars = variables.filter(v => v.startsWith('user'));
-  return {
-    activeVariables: userVars, // e.g., ['userName', 'userRole']
-  };
-});
-
-// Limit tools by step
-prompt.defHook(({ stepNumber, tools }) => {
-  if (stepNumber === 0) {
-    return { activeTools: ['search'] };
-  }
-  return { activeTools: tools }; // All tools on subsequent steps
-});
-
-// Override system prompt completely
-prompt.defHook(({ stepNumber }) => {
-  return {
-    system: 'Updated system...',  // Override entire system prompt
-  };
-});
-
-// Implement sliding message window
-prompt.defHook(({ messages }) => {
-  return {
-    messages: messages.slice(-5), // Keep only last 5 messages
-  };
-});
-
-// Modify variables during execution
-prompt.defHook(({ stepNumber }) => {
-  return {
-    variables: {
-      currentStep: { type: 'string', value: 'processing' }
-    }
-  };
-});
-```
-
-**Type Safety:**
-
-The `DefHookResult` interface is exported from the main package for type-safe hook implementations:
-
-```typescript
-import { DefHookResult } from 'lmthing';
-
-const myHook = ({ systems, variables, tools }): DefHookResult => {
-  // systems, variables, and tools are name arrays
-  console.log('System names:', systems);     // ['role', 'guidelines']
-  console.log('Variable names:', variables); // ['userName', 'config']
-  console.log('Tool names:', tools);         // ['search', 'calculator']
-
-  return {
-    activeSystems: ['role'],
-    activeVariables: ['userName']
-  };
-};
-
-prompt.defHook(myHook);
-```
-
-**Implementation Details:**
-
-- Hooks are stored in `StreamTextBuilder._prepareStepHooks`
-- They execute sequentially via the `prepareStep` parameter
-- Each hook's results merge with previous hooks (later ones override)
-- The `_lastPrepareStep` (set by `Prompt.run()`) executes last to inject filtered systems/variables
-- Filter state is reset at the beginning of each step to prevent unintended persistence
-
-### 6. Template Literal (`$`)
+### 5. Template Literal (`$`)
 
 Adds user messages to the conversation:
 
@@ -529,7 +409,7 @@ Examples are in `examples/` directory:
 - `hello.lmt.mjs` - Real model example (requires API key)
 - `weather.lmt.mjs` - Tool example with real model
 - `multi-agent.lmt.mjs` - Agent orchestration example
-- `data-analysis.lmt.mjs` - Data analysis with defData/defHook
+- `data-analysis.lmt.mjs` - Data analysis with defData/defEffect
 
 ## Provider System
 
@@ -703,10 +583,9 @@ const { def, defState, defEffect, defTool, $ } = prompt; // Works due to proxy
 ### PrepareStep Hook Chain
 
 Multiple hooks registered via `addPrepareStep()` execute sequentially with merged results:
-1. User-defined hooks via `defHook()`
-2. StatefulPrompt's re-execution hook (runs prompt function again)
-3. StatefulPrompt's effects hook (runs defEffect callbacks)
-4. The `_lastPrepareStep` (set by Prompt.run()) executes last to inject variables
+1. StatefulPrompt's re-execution hook (runs prompt function again)
+2. StatefulPrompt's effects hook (runs defEffect callbacks with stepModifier)
+3. The `_lastPrepareStep` (set by Prompt.run()) executes last to inject variables
 
 ### stopWhen Default
 
@@ -745,7 +624,6 @@ Middleware in `_getMiddleware()` transforms agent responses:
 The README documents several features that may not be fully implemented:
 - `defTaskList` - Sequential task execution with validation
 - `defDynamicTaskList` - Dynamic task management
-- `defHook` variable modifications
 - Plugin system
 
 **When implementing these, ensure:**

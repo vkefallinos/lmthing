@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { StateManager, createStateProxy } from './StateManager';
+import { StateManager } from './StateManager';
 
 describe('StateManager', () => {
   it('should store and retrieve state', () => {
@@ -19,8 +19,8 @@ describe('StateManager', () => {
     const manager = new StateManager();
     const [value, setValue] = manager.createStateAccessor('count', 0);
 
-    // Initial value should be accessible
-    expect(String(value)).toBe('0');
+    // Value should be the actual value, not a proxy
+    expect(value).toBe(0);
   });
 
   it('should update state via setter', () => {
@@ -57,33 +57,20 @@ describe('StateManager', () => {
     expect(manager.has('a')).toBe(false);
     expect(manager.has('b')).toBe(false);
   });
-});
 
-describe('createStateProxy', () => {
-  it('should convert to string via toString', () => {
-    const proxy = createStateProxy(() => 'hello');
-    expect(proxy.toString()).toBe('hello');
-  });
+  it('should work with strict equality for state values', () => {
+    const manager = new StateManager();
+    const [value, setValue] = manager.createStateAccessor('phase', 'initialization');
 
-  it('should convert to primitive via valueOf', () => {
-    const proxy = createStateProxy(() => 42);
-    expect(proxy.valueOf()).toBe(42);
+    // Strict equality should work since we return actual values
+    expect(value === 'initialization').toBe(true);
+    expect(value).toBe('initialization');
   });
 
   it('should work in template literals', () => {
-    const proxy = createStateProxy(() => 'world');
-    expect(`Hello ${proxy}`).toBe('Hello world');
-  });
+    const manager = new StateManager();
+    const [value, setValue] = manager.createStateAccessor('name', 'world');
 
-  it('should allow property access on object state', () => {
-    const proxy = createStateProxy(() => ({ name: 'test', value: 123 }));
-    expect((proxy as any).name).toBe('test');
-    expect((proxy as any).value).toBe(123);
-  });
-
-  it('should support has check for object properties', () => {
-    const proxy = createStateProxy(() => ({ name: 'test' }));
-    expect('name' in proxy).toBe(true);
-    expect('missing' in proxy).toBe(false);
+    expect(`Hello ${value}`).toBe('Hello world');
   });
 });

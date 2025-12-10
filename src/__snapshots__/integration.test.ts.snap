@@ -8,11 +8,9 @@ exports[`Prompt > should handle a complete workflow testing all Prompt class fea
         {
           "content": "<guidelines>
 guidelines prompt
-
 </guidelines>
 <expertise>
 expertise prompt
-
 </expertise>
 <variables>
   <RESEARCH_TOPIC>
@@ -78,13 +76,14 @@ completion: Finalize and save results
     "input": {
       "prompt": [
         {
-          "content": "<guidelines>
+          "content": "<role>
+role prompt
+</role>
+<guidelines>
 guidelines prompt
-
 </guidelines>
 <expertise>
 expertise prompt
-
 </expertise>
 <variables>
   <RESEARCH_TOPIC>
@@ -190,13 +189,14 @@ completion: Finalize and save results
     "input": {
       "prompt": [
         {
-          "content": "<guidelines>
+          "content": "<role>
+role prompt
+</role>
+<guidelines>
 guidelines prompt
-
 </guidelines>
 <expertise>
 expertise prompt
-
 </expertise>
 <variables>
   <RESEARCH_TOPIC>
@@ -345,13 +345,14 @@ Key applications in cryptography...",
     "input": {
       "prompt": [
         {
-          "content": "<guidelines>
+          "content": "<role>
+role prompt
+</role>
+<guidelines>
 guidelines prompt
-
 </guidelines>
 <expertise>
 expertise prompt
-
 </expertise>
 <variables>
   <RESEARCH_TOPIC>
@@ -380,95 +381,6 @@ completion: Finalize and save results
   </WORKFLOW_PHASES>
 </variables>",
           "role": "system",
-        },
-        {
-          "content": [
-            {
-              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>.Maximum research depth is <MAX_RESEARCH_DEPTH>.",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
-        {
-          "content": [
-            {
-              "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "depth": "deep",
-                "query": "Quantum Computing Applications overview",
-              },
-              "toolCallId": "call_1",
-              "toolName": "research",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "confidence": 0.85,
-                  "results": [
-                    "Key finding 1 about Quantum Computing Applications overview",
-                  ],
-                  "sources": 3,
-                },
-              },
-              "toolCallId": "call_1",
-              "toolName": "research",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "Great! Now let me research specific applications and save the findings.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "depth": "medium",
-                "query": "Quantum Computing in cryptography",
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "confidence": 0.85,
-                  "results": [
-                    "Key finding 1 about Quantum Computing in cryptography",
-                  ],
-                  "sources": 3,
-                },
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
         },
         {
           "content": [
@@ -558,236 +470,24 @@ Key applications in cryptography...",
     "input": {
       "prompt": [
         {
-          "content": "<guidelines>
-guidelines prompt
-
-</guidelines>
-<expertise>
-expertise prompt
-
-</expertise>
+          "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
 <variables>
-  <RESEARCH_TOPIC>
- Quantum Computing Applications
-  </RESEARCH_TOPIC>
-  <MAX_RESEARCH_DEPTH>
- 3
-  </MAX_RESEARCH_DEPTH>
-  <CONFIG>
-timeout: 30000
-maxRetries: 3
-analysisMode: comprehensive
-priorities:
-  - accuracy
-  - depth
-  - novelty
-
-  </CONFIG>
-  <WORKFLOW_PHASES>
-initialization: Set up research parameters
-research: Gather information from multiple sources
-analysis: Deep analysis by specialist agents
-synthesis: Combine findings into final report
-completion: Finalize and save results
-
-  </WORKFLOW_PHASES>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
 </variables>",
           "role": "system",
         },
         {
           "content": [
             {
-              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>.Maximum research depth is <MAX_RESEARCH_DEPTH>.",
+              "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
               "type": "text",
             },
           ],
           "role": "user",
-        },
-        {
-          "content": [
-            {
-              "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "depth": "deep",
-                "query": "Quantum Computing Applications overview",
-              },
-              "toolCallId": "call_1",
-              "toolName": "research",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "confidence": 0.85,
-                  "results": [
-                    "Key finding 1 about Quantum Computing Applications overview",
-                  ],
-                  "sources": 3,
-                },
-              },
-              "toolCallId": "call_1",
-              "toolName": "research",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "Great! Now let me research specific applications and save the findings.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "depth": "medium",
-                "query": "Quantum Computing in cryptography",
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "confidence": 0.85,
-                  "results": [
-                    "Key finding 1 about Quantum Computing in cryptography",
-                  ],
-                  "sources": 3,
-                },
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "input": {
-                "calls": [
-                  {
-                    "args": {
-                      "content": "Quantum Computing Research Findings
-
-Key applications in cryptography...",
-                      "path": "/tmp/research.txt",
-                    },
-                    "name": "write",
-                  },
-                ],
-              },
-              "toolCallId": "call_3",
-              "toolName": "file",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "results": [
-                    {
-                      "name": "write",
-                      "result": {
-                        "bytesWritten": 72,
-                        "success": true,
-                      },
-                    },
-                  ],
-                },
-              },
-              "toolCallId": "call_3",
-              "toolName": "file",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "Now I need deep analysis from specialists.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "calls": [
-                  {
-                    "args": {
-                      "focus": "algorithm complexity",
-                      "topic": "Quantum Computing",
-                    },
-                    "name": "technical_analyst",
-                  },
-                  {
-                    "args": {
-                      "market": "enterprise",
-                      "topic": "Quantum Computing",
-                    },
-                    "name": "market_analyst",
-                  },
-                ],
-              },
-              "toolCallId": "call_4",
-              "toolName": "specialists",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "results": [
-                    {
-                      "name": "technical_analyst",
-                      "response": "Error: Model alias "mock" not found. Please set the environment variable LM_MODEL_MOCK (e.g., LM_MODEL_MOCK=openai:gpt-4o)",
-                    },
-                    {
-                      "name": "market_analyst",
-                      "response": "Error: Model alias "mock" not found. Please set the environment variable LM_MODEL_MOCK (e.g., LM_MODEL_MOCK=openai:gpt-4o)",
-                    },
-                  ],
-                },
-              },
-              "toolCallId": "call_4",
-              "toolName": "specialists",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
         },
       ],
     },
@@ -822,227 +522,24 @@ Key applications in cryptography...",
     "input": {
       "prompt": [
         {
-          "content": "<guidelines>
-guidelines prompt
-
-</guidelines>
-<expertise>
-expertise prompt
-
-</expertise>
+          "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
 <variables>
-  <RESEARCH_TOPIC>
- Quantum Computing Applications
-  </RESEARCH_TOPIC>
-  <MAX_RESEARCH_DEPTH>
- 3
-  </MAX_RESEARCH_DEPTH>
-  <CONFIG>
-timeout: 30000
-maxRetries: 3
-analysisMode: comprehensive
-priorities:
-  - accuracy
-  - depth
-  - novelty
-
-  </CONFIG>
-  <WORKFLOW_PHASES>
-initialization: Set up research parameters
-research: Gather information from multiple sources
-analysis: Deep analysis by specialist agents
-synthesis: Combine findings into final report
-completion: Finalize and save results
-
-  </WORKFLOW_PHASES>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
 </variables>",
           "role": "system",
         },
         {
           "content": [
             {
-              "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
-
-",
+              "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
               "type": "text",
             },
-            {
-              "input": {
-                "depth": "deep",
-                "query": "Quantum Computing Applications overview",
-              },
-              "toolCallId": "call_1",
-              "toolName": "research",
-              "type": "tool-call",
-            },
           ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "confidence": 0.85,
-                  "results": [
-                    "Key finding 1 about Quantum Computing Applications overview",
-                  ],
-                  "sources": 3,
-                },
-              },
-              "toolCallId": "call_1",
-              "toolName": "research",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "Great! Now let me research specific applications and save the findings.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "depth": "medium",
-                "query": "Quantum Computing in cryptography",
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "confidence": 0.85,
-                  "results": [
-                    "Key finding 1 about Quantum Computing in cryptography",
-                  ],
-                  "sources": 3,
-                },
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "input": {
-                "calls": [
-                  {
-                    "args": {
-                      "content": "Quantum Computing Research Findings
-
-Key applications in cryptography...",
-                      "path": "/tmp/research.txt",
-                    },
-                    "name": "write",
-                  },
-                ],
-              },
-              "toolCallId": "call_3",
-              "toolName": "file",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "results": [
-                    {
-                      "name": "write",
-                      "result": {
-                        "bytesWritten": 72,
-                        "success": true,
-                      },
-                    },
-                  ],
-                },
-              },
-              "toolCallId": "call_3",
-              "toolName": "file",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "Now I need deep analysis from specialists.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "calls": [
-                  {
-                    "args": {
-                      "focus": "algorithm complexity",
-                      "topic": "Quantum Computing",
-                    },
-                    "name": "technical_analyst",
-                  },
-                  {
-                    "args": {
-                      "market": "enterprise",
-                      "topic": "Quantum Computing",
-                    },
-                    "name": "market_analyst",
-                  },
-                ],
-              },
-              "toolCallId": "call_4",
-              "toolName": "specialists",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "results": [
-                    {
-                      "name": "technical_analyst",
-                      "response": "Error: Model alias "mock" not found. Please set the environment variable LM_MODEL_MOCK (e.g., LM_MODEL_MOCK=openai:gpt-4o)",
-                    },
-                    {
-                      "name": "market_analyst",
-                      "response": "Error: Model alias "mock" not found. Please set the environment variable LM_MODEL_MOCK (e.g., LM_MODEL_MOCK=openai:gpt-4o)",
-                    },
-                  ],
-                },
-              },
-              "toolCallId": "call_4",
-              "toolName": "specialists",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
+          "role": "user",
         },
         {
           "content": [
@@ -1074,11 +571,8 @@ Key applications in cryptography...",
           "content": [
             {
               "output": {
-                "type": "json",
-                "value": {
-                  "operation": "analyze",
-                  "result": 87.6,
-                },
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
               },
               "toolCallId": "call_5",
               "toolName": "calculator",
@@ -1113,13 +607,163 @@ Key applications in cryptography...",
     "input": {
       "prompt": [
         {
-          "content": "<guidelines>
-guidelines prompt
+          "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me calculate some metrics and synthesize the findings.
 
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "operation": "analyze",
+                "values": [
+                  85,
+                  92,
+                  78,
+                  88,
+                  95,
+                ],
+              },
+              "toolCallId": "call_5",
+              "toolName": "calculator",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
+              },
+              "toolCallId": "call_5",
+              "toolName": "calculator",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "findings": [
+                  "Quantum computing shows promise in cryptography",
+                  "Technical feasibility is high with current algorithms",
+                  "Market adoption expected to grow in enterprise sector",
+                  "Average confidence score: 87.6%",
+                ],
+                "format": "executive",
+              },
+              "toolCallId": "call_6",
+              "toolName": "synthesizer",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'synthesizer'. No tools are available.",
+              },
+              "toolCallId": "call_6",
+              "toolName": "synthesizer",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+
+**Research Complete!**
+
+I have conducted a comprehensive analysis of Quantum Computing Applications through multiple phases:
+
+1. ✅ Initial research gathered key findings
+2. ✅ Specialized agents provided deep technical and market analysis
+3. ✅ Metrics calculated and findings synthesized
+4. ✅ Executive report generated
+
+The workflow progressed through all phases successfully!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+You are a market analyst specializing in commercial trends.
+</role>
+<variables>
+  <MARKET_FOCUS>
+ enterprise
+  </MARKET_FOCUS>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze the market potential of Quantum Computing in the enterprise market",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [],
+      "finishReason": "stop",
+    },
+  },
+  {
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+role prompt
+</role>
+<guidelines>
+guidelines prompt
 </guidelines>
 <expertise>
 expertise prompt
-
 </expertise>
 <variables>
   <RESEARCH_TOPIC>
@@ -1148,93 +792,6 @@ completion: Finalize and save results
   </WORKFLOW_PHASES>
 </variables>",
           "role": "system",
-        },
-        {
-          "content": [
-            {
-              "text": "Great! Now let me research specific applications and save the findings.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "depth": "medium",
-                "query": "Quantum Computing in cryptography",
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "confidence": 0.85,
-                  "results": [
-                    "Key finding 1 about Quantum Computing in cryptography",
-                  ],
-                  "sources": 3,
-                },
-              },
-              "toolCallId": "call_2",
-              "toolName": "research",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "input": {
-                "calls": [
-                  {
-                    "args": {
-                      "content": "Quantum Computing Research Findings
-
-Key applications in cryptography...",
-                      "path": "/tmp/research.txt",
-                    },
-                    "name": "write",
-                  },
-                ],
-              },
-              "toolCallId": "call_3",
-              "toolName": "file",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "results": [
-                    {
-                      "name": "write",
-                      "result": {
-                        "bytesWritten": 72,
-                        "success": true,
-                      },
-                    },
-                  ],
-                },
-              },
-              "toolCallId": "call_3",
-              "toolName": "file",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
         },
         {
           "content": [
@@ -1279,104 +836,7 @@ Key applications in cryptography...",
                   "results": [
                     {
                       "name": "technical_analyst",
-                      "response": "Error: Model alias "mock" not found. Please set the environment variable LM_MODEL_MOCK (e.g., LM_MODEL_MOCK=openai:gpt-4o)",
-                    },
-                    {
-                      "name": "market_analyst",
-                      "response": "Error: Model alias "mock" not found. Please set the environment variable LM_MODEL_MOCK (e.g., LM_MODEL_MOCK=openai:gpt-4o)",
-                    },
-                  ],
-                },
-              },
-              "toolCallId": "call_4",
-              "toolName": "specialists",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "Let me calculate some metrics and synthesize the findings.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "operation": "analyze",
-                "values": [
-                  85,
-                  92,
-                  78,
-                  88,
-                  95,
-                ],
-              },
-              "toolCallId": "call_5",
-              "toolName": "calculator",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "json",
-                "value": {
-                  "operation": "analyze",
-                  "result": 87.6,
-                },
-              },
-              "toolCallId": "call_5",
-              "toolName": "calculator",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "input": {
-                "findings": [
-                  "Quantum computing shows promise in cryptography",
-                  "Technical feasibility is high with current algorithms",
-                  "Market adoption expected to grow in enterprise sector",
-                  "Average confidence score: 87.6%",
-                ],
-                "format": "executive",
-              },
-              "toolCallId": "call_6",
-              "toolName": "synthesizer",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "error-text",
-                "value": "Model alias "mock" not found. Please set the environment variable LM_MODEL_MOCK (e.g., LM_MODEL_MOCK=openai:gpt-4o)",
-              },
-              "toolCallId": "call_6",
-              "toolName": "synthesizer",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-      ],
-    },
-    "output": {
-      "content": [
-        {
-          "text": "
+                      "response": "
 
 **Research Complete!**
 
@@ -1388,9 +848,315 @@ I have conducted a comprehensive analysis of Quantum Computing Applications thro
 4. ✅ Executive report generated
 
 The workflow progressed through all phases successfully!",
-          "type": "text",
+                      "steps": [
+                        {
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "input": {
+                                  "operation": "analyze",
+                                  "values": [
+                                    85,
+                                    92,
+                                    78,
+                                    88,
+                                    95,
+                                  ],
+                                },
+                                "toolCallId": "call_5",
+                                "toolName": "calculator",
+                                "type": "tool-call",
+                              },
+                              {
+                                "text": "Let me calculate some metrics and synthesize the findings.
+
+",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "tool-calls",
+                          },
+                        },
+                        {
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Let me calculate some metrics and synthesize the findings.
+
+",
+                                    "type": "text",
+                                  },
+                                  {
+                                    "input": {
+                                      "operation": "analyze",
+                                      "values": [
+                                        85,
+                                        92,
+                                        78,
+                                        88,
+                                        95,
+                                      ],
+                                    },
+                                    "toolCallId": "call_5",
+                                    "toolName": "calculator",
+                                    "type": "tool-call",
+                                  },
+                                ],
+                                "role": "assistant",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "output": {
+                                      "type": "error-text",
+                                      "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
+                                    },
+                                    "toolCallId": "call_5",
+                                    "toolName": "calculator",
+                                    "type": "tool-result",
+                                  },
+                                ],
+                                "role": "tool",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "input": {
+                                  "findings": [
+                                    "Quantum computing shows promise in cryptography",
+                                    "Technical feasibility is high with current algorithms",
+                                    "Market adoption expected to grow in enterprise sector",
+                                    "Average confidence score: 87.6%",
+                                  ],
+                                  "format": "executive",
+                                },
+                                "toolCallId": "call_6",
+                                "toolName": "synthesizer",
+                                "type": "tool-call",
+                              },
+                            ],
+                            "finishReason": "tool-calls",
+                          },
+                        },
+                        {
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": "<role>
+You are a technical analyst specializing in deep technical evaluation.
+</role>
+<variables>
+  <ANALYSIS_FOCUS>
+ algorithm complexity
+  </ANALYSIS_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Let me calculate some metrics and synthesize the findings.
+
+",
+                                    "type": "text",
+                                  },
+                                  {
+                                    "input": {
+                                      "operation": "analyze",
+                                      "values": [
+                                        85,
+                                        92,
+                                        78,
+                                        88,
+                                        95,
+                                      ],
+                                    },
+                                    "toolCallId": "call_5",
+                                    "toolName": "calculator",
+                                    "type": "tool-call",
+                                  },
+                                ],
+                                "role": "assistant",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "output": {
+                                      "type": "error-text",
+                                      "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
+                                    },
+                                    "toolCallId": "call_5",
+                                    "toolName": "calculator",
+                                    "type": "tool-result",
+                                  },
+                                ],
+                                "role": "tool",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "input": {
+                                      "findings": [
+                                        "Quantum computing shows promise in cryptography",
+                                        "Technical feasibility is high with current algorithms",
+                                        "Market adoption expected to grow in enterprise sector",
+                                        "Average confidence score: 87.6%",
+                                      ],
+                                      "format": "executive",
+                                    },
+                                    "toolCallId": "call_6",
+                                    "toolName": "synthesizer",
+                                    "type": "tool-call",
+                                  },
+                                ],
+                                "role": "assistant",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "output": {
+                                      "type": "error-text",
+                                      "value": "Model tried to call unavailable tool 'synthesizer'. No tools are available.",
+                                    },
+                                    "toolCallId": "call_6",
+                                    "toolName": "synthesizer",
+                                    "type": "tool-result",
+                                  },
+                                ],
+                                "role": "tool",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "
+
+**Research Complete!**
+
+I have conducted a comprehensive analysis of Quantum Computing Applications through multiple phases:
+
+1. ✅ Initial research gathered key findings
+2. ✅ Specialized agents provided deep technical and market analysis
+3. ✅ Metrics calculated and findings synthesized
+4. ✅ Executive report generated
+
+The workflow progressed through all phases successfully!",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      "name": "market_analyst",
+                      "response": "",
+                      "steps": [
+                        {
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": "<role>
+You are a market analyst specializing in commercial trends.
+</role>
+<variables>
+  <MARKET_FOCUS>
+ enterprise
+  </MARKET_FOCUS>
+</variables>",
+                                "role": "system",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Analyze the market potential of Quantum Computing in the enterprise market",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_4",
+              "toolName": "specialists",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
         },
       ],
+    },
+    "output": {
+      "content": [],
       "finishReason": "stop",
     },
   },
