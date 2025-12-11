@@ -1,0 +1,446 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defTool() > composite tool > calls sub-tools when model uses composite tool 1`] = `
+[
+  {
+    "activeTools": [
+      "file",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use file",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "path": "/a.txt",
+                },
+                "name": "write",
+              },
+              {
+                "args": {
+                  "path": "/a.txt",
+                },
+                "name": "read",
+              },
+            ],
+          },
+          "toolCallId": "c1",
+          "toolName": "file",
+          "type": "tool-call",
+        },
+        {
+          "text": "Using file",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "file",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use file",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Using file",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "path": "/a.txt",
+                    },
+                    "name": "write",
+                  },
+                  {
+                    "args": {
+                      "path": "/a.txt",
+                    },
+                    "name": "read",
+                  },
+                ],
+              },
+              "toolCallId": "c1",
+              "toolName": "file",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "write",
+                      "result": {
+                        "written": true,
+                      },
+                    },
+                    {
+                      "name": "read",
+                      "result": {
+                        "content": "data",
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "c1",
+              "toolName": "file",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defTool() > composite tool > defines composite tool with sub-tools 1`] = `
+[
+  {
+    "activeTools": [
+      "file",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defTool() > composite tool > handles sub-tool errors gracefully 1`] = `
+[
+  {
+    "activeTools": [
+      "ops",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {},
+                "name": "bad",
+              },
+              {
+                "args": {},
+                "name": "good",
+              },
+            ],
+          },
+          "toolCallId": "c1",
+          "toolName": "ops",
+          "type": "tool-call",
+        },
+        {
+          "text": "Try",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "ops",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Try",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {},
+                    "name": "bad",
+                  },
+                  {
+                    "args": {},
+                    "name": "good",
+                  },
+                ],
+              },
+              "toolCallId": "c1",
+              "toolName": "ops",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "bad",
+                      "result": {
+                        "error": "fail",
+                      },
+                    },
+                    {
+                      "name": "good",
+                      "result": {
+                        "ok": true,
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "c1",
+              "toolName": "ops",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defTool() > single tool > calls tool when model uses it 1`] = `
+[
+  {
+    "activeTools": [
+      "add",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Add 1 + 2",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "a": 1,
+            "b": 2,
+          },
+          "toolCallId": "c1",
+          "toolName": "add",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me calc",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "add",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Add 1 + 2",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me calc",
+              "type": "text",
+            },
+            {
+              "input": {
+                "a": 1,
+                "b": 2,
+              },
+              "toolCallId": "c1",
+              "toolName": "add",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "sum": 3,
+                },
+              },
+              "toolCallId": "c1",
+              "toolName": "add",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Result is 3",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defTool() > single tool > defines a basic tool 1`] = `
+[
+  {
+    "activeTools": [
+      "calc",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defTool() > single tool > supports .remind() method 1`] = `
+[
+  {
+    "name": "t",
+    "type": "defTool",
+  },
+]
+`;

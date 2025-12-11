@@ -1,0 +1,171 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`def() > defines a string variable 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <NAME>
+ Alice
+  </NAME>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Hi <NAME>",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`def() > handles multiple variables 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <A>
+ 1
+  </A>
+  <B>
+ 2
+  </B>
+  <C>
+ 3
+  </C>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "<A> <B> <C>",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`def() > supports .remind() method 1`] = `
+[
+  {
+    "name": "V",
+    "type": "def",
+  },
+]
+`;
+
+exports[`def() > supports .remind() method 2`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <V>
+ x
+  </V>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`def() > supports template literal interpolation 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <X>
+ val1
+  </X>
+  <Y>
+ val2
+  </Y>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Use <X> and <Y>",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;

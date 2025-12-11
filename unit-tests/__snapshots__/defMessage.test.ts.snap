@@ -1,0 +1,267 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defMessage() > adds assistant message 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Hi there",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defMessage() > adds multiple messages 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "First",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Second",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "text": "Third",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defMessage() > adds user message 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Hello",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defMessage() > handles empty content 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defMessage() > handles multiline content 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Line 1
+Line 2
+Line 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defMessage() > integrates with $() template 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "First msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Second msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defMessage() > maintains message order 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "A",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "B",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "text": "C",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "D",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;

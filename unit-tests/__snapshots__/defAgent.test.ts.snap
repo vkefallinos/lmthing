@@ -1,0 +1,1046 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defAgent() > composite agent > calls sub-agents when model uses composite agent 1`] = `
+[
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use team",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "topic": "AI",
+                },
+                "name": "researcher",
+              },
+              {
+                "args": {
+                  "data": "x",
+                },
+                "name": "analyst",
+              },
+            ],
+          },
+          "toolCallId": "c1",
+          "toolName": "team",
+          "type": "tool-call",
+        },
+        {
+          "text": "Using team",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Research AI",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Analyze data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [],
+      "finishReason": "stop",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use team",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Using team",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "topic": "AI",
+                    },
+                    "name": "researcher",
+                  },
+                  {
+                    "args": {
+                      "data": "x",
+                    },
+                    "name": "analyst",
+                  },
+                ],
+              },
+              "toolCallId": "c1",
+              "toolName": "team",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "researcher",
+                      "response": "Done",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "Research AI",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "Done",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      "name": "analyst",
+                      "response": "",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "Analyze data",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "c1",
+              "toolName": "team",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defAgent() > composite agent > defines composite agent with sub-agents 1`] = `
+[
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defAgent() > composite agent > handles sub-agent errors gracefully 1`] = `
+[
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {},
+                "name": "bad",
+              },
+              {
+                "args": {},
+                "name": "good",
+              },
+            ],
+          },
+          "toolCallId": "c1",
+          "toolName": "team",
+          "type": "tool-call",
+        },
+        {
+          "text": "Try",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "ok",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Try",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {},
+                    "name": "bad",
+                  },
+                  {
+                    "args": {},
+                    "name": "good",
+                  },
+                ],
+              },
+              "toolCallId": "c1",
+              "toolName": "team",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "bad",
+                      "response": "Error: fail",
+                    },
+                    {
+                      "name": "good",
+                      "response": "Done",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "ok",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "Done",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "c1",
+              "toolName": "team",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defAgent() > composite agent > supports custom models per sub-agent 1`] = `
+[
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {},
+                "name": "a1",
+              },
+              {
+                "args": {},
+                "name": "a2",
+              },
+            ],
+          },
+          "toolCallId": "c1",
+          "toolName": "team",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {},
+                    "name": "a1",
+                  },
+                  {
+                    "args": {},
+                    "name": "a2",
+                  },
+                ],
+              },
+              "toolCallId": "c1",
+              "toolName": "team",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "a1",
+                      "response": "m1",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "a",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "m1",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      "name": "a2",
+                      "response": "m2",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "b",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "m2",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "c1",
+              "toolName": "team",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defAgent() > single agent > calls agent when model uses it 1`] = `
+[
+  {
+    "activeTools": [
+      "worker",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Delegate",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "task": "do it",
+          },
+          "toolCallId": "c1",
+          "toolName": "worker",
+          "type": "tool-call",
+        },
+        {
+          "text": "Delegating",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "worker",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Hi",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+  {
+    "activeTools": [
+      "worker",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Delegate",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Delegating",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "Hi",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "Done",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "Done",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defAgent() > single agent > defines a basic agent 1`] = `
+[
+  {
+    "activeTools": [
+      "worker",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defAgent() > single agent > returns agent response 1`] = `
+[
+  {
+    "activeTools": [
+      "agent",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "c1",
+          "toolName": "agent",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "agent",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+  {
+    "activeTools": [
+      "agent",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {},
+              "toolCallId": "c1",
+              "toolName": "agent",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "Task",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "ok",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "ok",
+              },
+              "toolCallId": "c1",
+              "toolName": "agent",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defAgent() > single agent > supports .remind() method 1`] = `
+[
+  {
+    "name": "a",
+    "type": "defAgent",
+  },
+]
+`;
+
+exports[`defAgent() > single agent > supports custom model per agent 1`] = `
+[
+  {
+    "activeTools": [
+      "agent",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "c1",
+          "toolName": "agent",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "agent",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {},
+              "toolCallId": "c1",
+              "toolName": "agent",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "msg",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "child",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "child",
+              },
+              "toolCallId": "c1",
+              "toolName": "agent",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "parent",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;

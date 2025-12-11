@@ -1,0 +1,198 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defSystem() > defines a system prompt part 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+You are helpful.
+</role>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defSystem() > defines multiple system parts 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+You are helpful.
+</role>
+<rules>
+Be polite.
+</rules>
+<context>
+User is new.
+</context>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defSystem() > handles multiline system content 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<instructions>
+Line 1
+Line 2
+Line 3
+</instructions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defSystem() > overwrites when same name used twice 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+Second
+</role>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`defSystem() > supports .remind() method 1`] = `
+[
+  {
+    "name": "role",
+    "type": "defSystem",
+  },
+]
+`;
+
+exports[`defSystem() > supports .remind() method 2`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+AI
+</role>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "ok",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
