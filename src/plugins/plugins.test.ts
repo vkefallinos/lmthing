@@ -29,7 +29,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [greetingPlugin] as const
+          plugins: [greetingPlugin]
         }
       );
 
@@ -71,7 +71,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [pluginA, pluginB] as const
+          plugins: [pluginA, pluginB]
         }
       );
 
@@ -110,7 +110,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [counterPlugin] as const
+          plugins: [counterPlugin]
         }
       );
 
@@ -159,7 +159,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [calculatorPlugin] as const,
+          plugins: [calculatorPlugin],
           options: { stopWhen: stepCountIs(10) }
         }
       );
@@ -205,7 +205,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [loggerPlugin] as const,
+          plugins: [loggerPlugin],
           options: { stopWhen: stepCountIs(10) }
         }
       );
@@ -252,7 +252,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [trackingPlugin] as const,
+          plugins: [trackingPlugin],
           options: { stopWhen: stepCountIs(10) }
         }
       );
@@ -302,7 +302,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [taskListPlugin] as const,
+          plugins: [taskListPlugin],
           options: { stopWhen: stepCountIs(10) }
         }
       );
@@ -340,7 +340,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [taskListPlugin] as const,
+          plugins: [taskListPlugin],
           options: { stopWhen: stepCountIs(10) }
         }
       );
@@ -378,7 +378,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [taskListPlugin] as const
+          plugins: [taskListPlugin]
         }
       );
 
@@ -424,7 +424,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [myPlugin] as const
+          plugins: [myPlugin]
         }
       );
 
@@ -500,7 +500,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [voidPlugin] as const
+          plugins: [voidPlugin]
         }
       );
 
@@ -531,7 +531,7 @@ describe('Plugin System', () => {
         },
         {
           model: mockModel,
-          plugins: [asyncPlugin] as const
+          plugins: [asyncPlugin]
         }
       );
 

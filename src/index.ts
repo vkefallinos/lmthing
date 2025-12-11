@@ -1,4 +1,4 @@
-export { runPrompt } from './runPrompt';
+export { runPrompt, createPluginArray } from './runPrompt';
 
 // Export prompt functionality (StatefulPrompt is now the main Prompt class)
 export {

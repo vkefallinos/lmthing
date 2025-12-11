@@ -5,9 +5,28 @@ import { type ModelInput } from "./providers/resolver";
 import type { Plugin, MergePlugins, PromptWithPlugins } from "./types";
 
 /**
+ * Helper function to create a plugin array without requiring 'as const'.
+ * This preserves the tuple type for better TypeScript inference.
+ *
+ * @example
+ * import { taskListPlugin, greetingPlugin } from 'lmthing/plugins';
+ *
+ * const plugins = createPluginArray(taskListPlugin, greetingPlugin);
+ *
+ * runPrompt(({ defTaskList, defGreeting }) => {
+ *   // Plugin methods are properly typed
+ * }, { model: 'openai:gpt-4o', plugins });
+ */
+export function createPluginArray<P extends Plugin[]>(...plugins: P): P {
+  return plugins;
+}
+
+/**
  * Configuration options for runPrompt
  */
-export interface PromptConfig<P extends Plugin[] = Plugin[]> {
+export interface PromptConfig<
+  const P extends readonly Plugin[] = []
+> {
   model: ModelInput;
   // Allow passing any streamText options except the ones we handle internally
   options?: Partial<Omit<StreamTextOptions, 'model' | 'system' | 'messages' | 'tools' | 'onFinish' | 'onStepFinish' | 'prepareStep'>>;
@@ -15,10 +34,12 @@ export interface PromptConfig<P extends Plugin[] = Plugin[]> {
    * Array of plugins to extend the prompt context with additional methods.
    * Each plugin is an object containing methods that receive StatefulPrompt as `this`.
    *
-   * @example
-   * import { taskListPlugin } from './plugins/taskList';
+   * You can now pass plugins directly without requiring 'as const':
    *
-   * runPrompt(({ def, defTaskList }) => {
+   * @example
+   * import { taskListPlugin } from 'lmthing/plugins';
+   *
+   * runPrompt(({ defTaskList }) => {
    *   defTaskList([{ id: '1', name: 'Task 1' }]);
    * }, { model: 'openai:gpt-4o', plugins: [taskListPlugin] });
    */
@@ -38,7 +59,7 @@ interface RunPromptResult {
  * @param plugins - Array of plugins whose methods will be bound to the prompt
  * @returns A proxy that provides auto-bound methods from both StatefulPrompt and plugins
  */
-function createPromptProxyWithPlugins<P extends Plugin[]>(
+function createPromptProxyWithPlugins<P extends readonly Plugin[]>(
   prompt: StatefulPrompt,
   plugins: P
 ): PromptWithPlugins<P> {
@@ -100,7 +121,9 @@ function createPromptProxyWithPlugins<P extends Plugin[]>(
  *   $`Complete the tasks`;
  * }, { model: 'openai:gpt-4o', plugins: [taskListPlugin] });
  */
-export const runPrompt = async <P extends Plugin[] = []>(
+export const runPrompt = async <
+  const P extends readonly Plugin[] = []
+>(
   promptFn: (prompt: PromptWithPlugins<P>) => Promise<void>,
   config: PromptConfig<P>
 ): Promise<RunPromptResult> => {

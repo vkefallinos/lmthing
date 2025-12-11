@@ -143,14 +143,18 @@ type BoundPlugin<P extends Plugin> = {
  * Used to combine methods from multiple plugins into one extended prompt type.
  * The 'this' parameter is removed from all plugin methods since they are pre-bound.
  */
-export type MergePlugins<P extends Plugin[]> =
-  P extends [infer First extends Plugin, ...infer Rest extends Plugin[]]
+export type MergePlugins<P extends readonly Plugin[]> =
+  P extends readonly [infer First extends Plugin, ...infer Rest extends readonly Plugin[]]
     ? BoundPlugin<First> & MergePlugins<Rest>
-    : {};
+    : P extends readonly Plugin[]
+      ? P[number] extends Plugin
+        ? { [K in keyof P[number]]: P[number][K] extends PluginMethod ? OmitThisParameter<P[number][K]> : never }
+        : {}
+      : {};
 
 /**
  * Extended StatefulPrompt type with plugin methods merged in.
  * This type is what the user's prompt function receives.
  * Plugin methods have their 'this' parameter removed since they are pre-bound.
  */
-export type PromptWithPlugins<P extends Plugin[]> = StatefulPrompt & MergePlugins<P>;
+export type PromptWithPlugins<P extends readonly Plugin[]> = StatefulPrompt & MergePlugins<P>;

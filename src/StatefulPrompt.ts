@@ -124,7 +124,7 @@ export class StatefulPrompt extends StreamTextBuilder {
   private _executedOnce: boolean = false;
 
   // Plugin support
-  private _plugins: Plugin[] = [];
+  private _plugins: readonly Plugin[] = [];
   private _boundPluginMethods: Record<string, Function> = {};
 
   /**
@@ -151,7 +151,7 @@ export class StatefulPrompt extends StreamTextBuilder {
    *
    * @param plugins - Array of plugin objects containing methods to bind
    */
-  setPlugins(plugins: Plugin[]): void {
+  setPlugins(plugins: readonly Plugin[]): void {
     this._plugins = plugins;
     this._boundPluginMethods = {};
 
