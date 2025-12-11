@@ -57,6 +57,14 @@ exports[`defEffect() > filters tools via stepModifier 1`] = `
     "input": {
       "prompt": [
         {
+          "content": "<variables>
+  <data>
+ initial
+  </data>
+</variables>",
+          "role": "system",
+        },
+        {
           "content": [
             {
               "text": "msg",
@@ -99,6 +107,123 @@ exports[`defEffect() > filters tools via stepModifier 1`] = `
         {
           "content": [
             {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- data (variable)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "task": "do it",
+          },
+          "toolCallId": "c2",
+          "toolName": "worker",
+          "type": "tool-call",
+        },
+        {
+          "text": "b",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "t1",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <data>
+ initial
+  </data>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "a",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "b",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c2",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
+              },
+              "toolCallId": "c2",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
               "text": "add message",
               "type": "text",
             },
@@ -110,7 +235,144 @@ exports[`defEffect() > filters tools via stepModifier 1`] = `
     "output": {
       "content": [
         {
-          "text": "b",
+          "input": {
+            "task": "do it",
+          },
+          "toolCallId": "c3",
+          "toolName": "worker",
+          "type": "tool-call",
+        },
+        {
+          "text": "c",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "t1",
+      "t2",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <data>
+ initial
+  </data>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "a",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "b",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c2",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
+              },
+              "toolCallId": "c2",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "c",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c3",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
+              },
+              "toolCallId": "c3",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "done",
           "type": "text",
         },
       ],
