@@ -641,7 +641,10 @@ export class StatefulPrompt extends StreamTextBuilder {
     // Create step modifier function
     const stepModifier = this._createStepModifier();
 
-    // Apply disabled definitions if any
+    // Process effects FIRST - effects may call disable() which adds to _definitionsToDisable
+    this._effectsManager.process(context, stepModifier);
+
+    // Apply disabled definitions AFTER effects run so disable() takes effect immediately
     if (this._definitionsToDisable && this._definitionsToDisable.size > 0) {
       const disabledSystems: string[] = [];
       const disabledVariables: string[] = [];
@@ -692,9 +695,6 @@ export class StatefulPrompt extends StreamTextBuilder {
       // Clear disabled definitions after applying
       this._definitionsToDisable.clear();
     }
-
-    // Process effects via the manager
-    this._effectsManager.process(context, stepModifier);
   }
 
   /**
@@ -739,6 +739,9 @@ export class StatefulPrompt extends StreamTextBuilder {
       result.activeTools = toolNames;
       // Also set on instance for consistency
       this.activeTools = toolNames;
+    } else if (this.activeTools) {
+      // Include activeTools set by disable() in _processEffects
+      result.activeTools = this.activeTools;
     }
 
     if (this._stepModifications.systems) {
@@ -746,6 +749,9 @@ export class StatefulPrompt extends StreamTextBuilder {
       result.activeSystems = systemNames;
       // Also set on instance for Prompt.run() to use
       this.activeSystems = systemNames;
+    } else if (this.activeSystems) {
+      // Include activeSystems set by disable() in _processEffects
+      result.activeSystems = this.activeSystems;
     }
 
     if (this._stepModifications.variables) {
@@ -758,6 +764,9 @@ export class StatefulPrompt extends StreamTextBuilder {
       }
       // Also update instance variables
       this.variables = { ...this.variables, ...result.variables };
+    } else if (this.activeVariables) {
+      // Include activeVariables set by disable() in _processEffects
+      // Note: This sets filter, not the variables themselves
     }
 
     return result;
@@ -782,6 +791,9 @@ export class StatefulPrompt extends StreamTextBuilder {
         if (this._executedOnce) {
           // Clear definition tracking for new execution cycle
           this._clearDefinitions();
+
+          // Clear effects so they can be re-registered during re-execution
+          this._effectsManager.clear();
 
           // Re-execute promptFn
           const promptMethods = this._getPromptMethods();

@@ -16,9 +16,6 @@ exports[`Prompt > should handle a complete workflow testing all Prompt class fea
           "content": "<role>
 role prompt
 </role>
-<guidelines>
-guidelines prompt
-</guidelines>
 <expertise>
 expertise prompt
 </expertise>
@@ -106,9 +103,9 @@ completion: Finalize and save results
     "input": {
       "prompt": [
         {
-          "content": "<role>
-role prompt
-</role>
+          "content": "<guidelines>
+guidelines prompt
+</guidelines>
 <expertise>
 expertise prompt
 </expertise>
@@ -412,9 +409,6 @@ Key applications in cryptography...",
           "content": "<guidelines>
 guidelines prompt
 </guidelines>
-<expertise>
-expertise prompt
-</expertise>
 <variables>
   <RESEARCH_TOPIC>
  Quantum Computing Applications
@@ -737,7 +731,6 @@ You are a market analyst specializing in commercial trends.
     "activeTools": [
       "file",
       "research",
-      "calculator",
       "specialists",
       "synthesizer",
     ],
