@@ -147,14 +147,44 @@ describe('Prompt', () => {
         const [researchCount, setResearchCount] = defState('researchCount', 0);
         const [findings, setFindings] = defState('findings', []);
         const [analysisComplete, setAnalysisComplete] = defState('analysisComplete', false);
-        
+
+        // ========== SYSTEM PARTS (saved in const) ==========
+        const roleSystem = defSystem('role', `role prompt`);
+        const guidelinesSystem = defSystem('guidelines', `guidelines prompt`);
+        const expertiseSystem = defSystem('expertise', `expertise prompt`);
+
+        // ========== VARIABLES (saved in const) ==========
+        const topic = def('RESEARCH_TOPIC', 'Quantum Computing Applications');
+        const maxDepth = def('MAX_RESEARCH_DEPTH', '3');
+        const config = defData('CONFIG', {
+          timeout: 30000,
+          maxRetries: 3,
+          analysisMode: 'comprehensive',
+          priorities: ['accuracy', 'depth', 'novelty']
+        });
+        const workflowPhases = defData('WORKFLOW_PHASES', {
+          initialization: 'Set up research parameters',
+          research: 'Gather information from multiple sources',
+          analysis: 'Deep analysis by specialist agents',
+          synthesis: 'Combine findings into final report',
+          completion: 'Finalize and save results'
+        });
+
+        // Use remind on key definitions
+
+
         // ========== EFFECTS ==========
-        // Effect 1: Log phase changes
+        // Effect 1: Log phase changes and disable role system after initialization
         defEffect((context, stepModifier) => {
           console.log(`[Effect] Phase: ${phase}`);
-          // Add phase information to system prompt
-          if (phase === 'initialization') {
-            stepModifier('systems', context.systems.filter(s => s.name !== 'role'));
+          // Disable role system after initialization phase
+          if (phase !== 'initialization') {
+            roleSystem.disable();
+
+          }else{
+            guidelinesSystem.disable();
+            topic.remind();
+            config.remind();
           }
         }, [phase]);
 
@@ -170,42 +200,18 @@ describe('Prompt', () => {
           }
         }, [researchCount, findings]);
 
-        // Effect 3: Limit messages on later steps
+        // Effect 3: Limit messages on later steps and disable expertise system
         defEffect((context, stepModifier) => {
           if (context.stepNumber > 2) {
             // Keep only last 10 messages for efficiency
             stepModifier('messages', context.messages.slice(-2));
+            // Disable expertise system after step 2
+            expertiseSystem.disable();
           }
         }, []);
 
-        // ========== SYSTEM PARTS ==========
-        defSystem('role', `role prompt`);
-
-        defSystem('guidelines', `guidelines prompt`);
-
-        defSystem('expertise', `expertise prompt`);
-
-        // ========== VARIABLES ==========
-        const topic = def('RESEARCH_TOPIC', 'Quantum Computing Applications');
-        const maxDepth = def('MAX_RESEARCH_DEPTH', '3');
-
-        defData('CONFIG', {
-          timeout: 30000,
-          maxRetries: 3,
-          analysisMode: 'comprehensive',
-          priorities: ['accuracy', 'depth', 'novelty']
-        });
-
-        defData('WORKFLOW_PHASES', {
-          initialization: 'Set up research parameters',
-          research: 'Gather information from multiple sources',
-          analysis: 'Deep analysis by specialist agents',
-          synthesis: 'Combine findings into final report',
-          completion: 'Finalize and save results'
-        });
-
         // ========== COMPOSITE TOOLS ==========
-        defTool('file', 'File operations for saving research data', [
+        const fileTool = defTool('file', 'File operations for saving research data', [
           tool(
             'write',
             'Write content to a file',
@@ -237,7 +243,7 @@ describe('Prompt', () => {
         ]);
 
         // ========== SINGLE TOOLS ==========
-        defTool(
+        const researchTool = defTool(
           'research',
           'Search for information on a topic',
           z.object({
@@ -271,7 +277,7 @@ describe('Prompt', () => {
           }
         );
 
-        defTool(
+        const calculatorTool = defTool(
           'calculator',
           'Perform mathematical calculations',
           z.object({
@@ -294,8 +300,10 @@ describe('Prompt', () => {
           }
         );
 
+
+
         // ========== COMPOSITE AGENTS ==========
-        defAgent('specialists', 'Specialized analysis agents for deep research', [
+        const specialistsAgent = defAgent('specialists', 'Specialized analysis agents for deep research', [
           agent(
             'technical_analyst',
             'Analyze technical aspects and feasibility',
@@ -328,7 +336,7 @@ describe('Prompt', () => {
         ]);
 
         // ========== SINGLE AGENT ==========
-        defAgent(
+        const synthesizerAgent = defAgent(
           'synthesizer',
           'Synthesize all research findings into a coherent report',
           z.object({
@@ -349,10 +357,25 @@ describe('Prompt', () => {
           { model: synthesizerMock }
         );
 
-        // ========== HOOKS ==========
-   
-        // ========== MESSAGES ==========
-        $`You are starting a comprehensive research project on ${topic}.Maximum research depth is ${maxDepth}.`;
+        // Remind agents to be used
+        defEffect((context) => {
+           console.log(`[Effect] Research count changed: ${researchCount}`);
+          if (researchCount) {
+            specialistsAgent.remind();
+            synthesizerAgent.remind();
+
+          }
+        }, [researchCount]);
+        // Effect to disable calculator tool after first use
+        defEffect((context) => {
+          if (context.lastTool?.toolName === 'calculator') {
+            calculatorTool.disable();
+          }
+        }, []);
+        // ========== MESSAGES (using const variables) ==========
+        $`You are starting a comprehensive research project on ${topic}. Using ${config} with ${maxDepth} depth.`;
+
+
       }, {
       model: mockModel
     })

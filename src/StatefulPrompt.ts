@@ -111,6 +111,7 @@ export class StatefulPrompt extends StreamTextBuilder {
   protected activeVariables?: string[];
   protected activeTools?: string[];
   protected _remindedItems: Array<{ type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string }> = [];
+  protected _definitionsToDisable?: Set<{ type: string; name: string }>;
 
   // Stateful properties
   private _stateManager = new StateManager();
@@ -176,6 +177,17 @@ export class StatefulPrompt extends StreamTextBuilder {
             return tag;
           };
         }
+        if (prop === 'disable') {
+          return () => {
+            // This should only be called within a defEffect
+            // Mark this definition to be disabled for the next step
+            if (!self._definitionsToDisable) {
+              self._definitionsToDisable = new Set();
+            }
+            self._definitionsToDisable.add({ type, name });
+            return tag;
+          };
+        }
         if (prop === 'toString' || prop === 'valueOf') {
           return () => tag;
         }
@@ -185,10 +197,10 @@ export class StatefulPrompt extends StreamTextBuilder {
         return tag;
       },
       has(_target: any, prop: string | symbol) {
-        return prop === 'value' || prop === 'remind' || prop === 'toString' || prop === 'valueOf' || prop === Symbol.toPrimitive;
+        return prop === 'value' || prop === 'remind' || prop === 'disable' || prop === 'toString' || prop === 'valueOf' || prop === Symbol.toPrimitive;
       },
       ownKeys() {
-        return ['value', 'remind'];
+        return ['value', 'remind', 'disable'];
       },
       getOwnPropertyDescriptor(_target: any, prop: string) {
         if (prop === 'value') {
@@ -197,6 +209,17 @@ export class StatefulPrompt extends StreamTextBuilder {
         if (prop === 'remind') {
           return { enumerable: true, configurable: true, value: () => {
             self._remindedItems.push({ type, name });
+            return tag;
+          }};
+        }
+        if (prop === 'disable') {
+          return { enumerable: true, configurable: true, value: () => {
+            // This should only be called within a defEffect
+            // Mark this definition to be disabled for the next step
+            if (!self._definitionsToDisable) {
+              self._definitionsToDisable = new Set();
+            }
+            self._definitionsToDisable.add({ type, name });
             return tag;
           }};
         }
@@ -462,11 +485,6 @@ export class StatefulPrompt extends StreamTextBuilder {
   }
 
   run() {
-    // Add onStepFinish hook to reset reminded items after each step
-    this.addOnStepFinish(async () => {
-      // After each step, clear the reminded items
-      this._remindedItems = [];
-    });
 
     // Add hook to track last tool call
     this.addOnStepFinish(async (result: any) => {
@@ -539,26 +557,6 @@ export class StatefulPrompt extends StreamTextBuilder {
       return {};
     });
 
-    // After all steps are done, add a final message with reminder if there are any reminded items
-    if (this._remindedItems.length > 0) {
-      const reminderText = this._remindedItems
-        .map(item => {
-          const tagMap = {
-            'def': 'variable',
-            'defData': 'data variable',
-            'defSystem': 'system part',
-            'defTool': 'tool',
-            'defAgent': 'agent'
-          };
-          return `- ${item.name} (${tagMap[item.type] || item.type})`;
-        })
-        .join('\n');
-
-      this.addMessage({
-        role: 'assistant',
-        content: `\n\n[Reminder: Remember to use the following items in your response:\n${reminderText}]`
-      });
-    }
     return this.execute();
   }
 
@@ -613,6 +611,58 @@ export class StatefulPrompt extends StreamTextBuilder {
 
     // Create step modifier function
     const stepModifier = this._createStepModifier();
+
+    // Apply disabled definitions if any
+    if (this._definitionsToDisable && this._definitionsToDisable.size > 0) {
+      const disabledSystems: string[] = [];
+      const disabledVariables: string[] = [];
+      const disabledTools: string[] = [];
+
+      // Collect all disabled items by type
+      for (const { type, name } of this._definitionsToDisable) {
+        switch (type) {
+          case 'def':
+          case 'defData':
+            disabledVariables.push(name);
+            break;
+          case 'defSystem':
+            disabledSystems.push(name);
+            break;
+          case 'defTool':
+          case 'defAgent':
+            disabledTools.push(name);
+            break;
+        }
+      }
+
+      // Set filters to exclude disabled items
+      if (disabledSystems.length > 0) {
+        // Keep all systems except the disabled ones
+        const activeSystemNames = context.systems
+          .map(s => s.name)
+          .filter(name => !disabledSystems.includes(name));
+        this.activeSystems = activeSystemNames;
+      }
+
+      if (disabledVariables.length > 0) {
+        // Keep all variables except the disabled ones
+        const activeVariableNames = context.variables
+          .map(v => v.name)
+          .filter(name => !disabledVariables.includes(name));
+        this.activeVariables = activeVariableNames;
+      }
+
+      if (disabledTools.length > 0) {
+        // Keep all tools except the disabled ones
+        const activeToolNames = context.tools
+          .map(t => t.name)
+          .filter(name => !disabledTools.includes(name));
+        this.activeTools = activeToolNames;
+      }
+
+      // Clear disabled definitions after applying
+      this._definitionsToDisable.clear();
+    }
 
     // Process effects via the manager
     this._effectsManager.process(context, stepModifier);
@@ -722,6 +772,38 @@ export class StatefulPrompt extends StreamTextBuilder {
 
         // Call the original prepareStep function
         const baseResult = prepareStepFn(options);
+
+        // Add reminder if there are any reminded items
+        if (this._remindedItems.length > 0) {
+          const reminderText = this._remindedItems
+            .map(item => {
+              const tagMap = {
+                'def': 'variable',
+                'defData': 'data variable',
+                'defSystem': 'system part',
+                'defTool': 'tool',
+                'defAgent': 'agent'
+              };
+              return `- ${item.name} (${tagMap[item.type] || item.type})`;
+            })
+            .join('\n');
+
+          // Create the reminder message
+          const reminderMessage = {
+            role: 'assistant' as const,
+            content: `\n\n[Reminder: Remember to use the following items in your response:\n${reminderText}]`
+          };
+
+          // Add the reminder message to the result for the AI SDK
+          if (!baseResult.messages) {
+            baseResult.messages = options.messages || [];
+          }
+          baseResult.messages.push(reminderMessage);
+
+
+          // Clear reminded items after adding to reminder
+          this._remindedItems = [];
+        }
 
         // Merge results
         return { ...baseResult, ...modifications };

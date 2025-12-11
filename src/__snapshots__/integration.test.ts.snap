@@ -13,83 +13,6 @@ exports[`Prompt > should handle a complete workflow testing all Prompt class fea
     "input": {
       "prompt": [
         {
-          "content": "<guidelines>
-guidelines prompt
-</guidelines>
-<expertise>
-expertise prompt
-</expertise>
-<variables>
-  <RESEARCH_TOPIC>
- Quantum Computing Applications
-  </RESEARCH_TOPIC>
-  <MAX_RESEARCH_DEPTH>
- 3
-  </MAX_RESEARCH_DEPTH>
-  <CONFIG>
-timeout: 30000
-maxRetries: 3
-analysisMode: comprehensive
-priorities:
-  - accuracy
-  - depth
-  - novelty
-
-  </CONFIG>
-  <WORKFLOW_PHASES>
-initialization: Set up research parameters
-research: Gather information from multiple sources
-analysis: Deep analysis by specialist agents
-synthesis: Combine findings into final report
-completion: Finalize and save results
-
-  </WORKFLOW_PHASES>
-</variables>",
-          "role": "system",
-        },
-        {
-          "content": [
-            {
-              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>.Maximum research depth is <MAX_RESEARCH_DEPTH>.",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
-      ],
-    },
-    "output": {
-      "content": [
-        {
-          "input": {
-            "depth": "deep",
-            "query": "Quantum Computing Applications overview",
-          },
-          "toolCallId": "call_1",
-          "toolName": "research",
-          "type": "tool-call",
-        },
-        {
-          "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
-
-",
-          "type": "text",
-        },
-      ],
-      "finishReason": "tool-calls",
-    },
-  },
-  {
-    "activeTools": [
-      "file",
-      "research",
-      "calculator",
-      "specialists",
-      "synthesizer",
-    ],
-    "input": {
-      "prompt": [
-        {
           "content": "<role>
 role prompt
 </role>
@@ -130,7 +53,97 @@ completion: Finalize and save results
         {
           "content": [
             {
-              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>.Maximum research depth is <MAX_RESEARCH_DEPTH>.",
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- RESEARCH_TOPIC (variable)
+- CONFIG (data variable)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "depth": "deep",
+            "query": "Quantum Computing Applications overview",
+          },
+          "toolCallId": "call_1",
+          "toolName": "research",
+          "type": "tool-call",
+        },
+        {
+          "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
+
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+role prompt
+</role>
+<expertise>
+expertise prompt
+</expertise>
+<variables>
+  <RESEARCH_TOPIC>
+ Quantum Computing Applications
+  </RESEARCH_TOPIC>
+  <MAX_RESEARCH_DEPTH>
+ 3
+  </MAX_RESEARCH_DEPTH>
+  <CONFIG>
+timeout: 30000
+maxRetries: 3
+analysisMode: comprehensive
+priorities:
+  - accuracy
+  - depth
+  - novelty
+
+  </CONFIG>
+  <WORKFLOW_PHASES>
+initialization: Set up research parameters
+research: Gather information from multiple sources
+analysis: Deep analysis by specialist agents
+synthesis: Combine findings into final report
+completion: Finalize and save results
+
+  </WORKFLOW_PHASES>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
               "type": "text",
             },
           ],
@@ -176,6 +189,19 @@ completion: Finalize and save results
           ],
           "role": "tool",
         },
+        {
+          "content": [
+            {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- specialists (agent)
+- synthesizer (agent)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
       ],
     },
     "output": {
@@ -210,10 +236,7 @@ completion: Finalize and save results
     "input": {
       "prompt": [
         {
-          "content": "<role>
-role prompt
-</role>
-<guidelines>
+          "content": "<guidelines>
 guidelines prompt
 </guidelines>
 <expertise>
@@ -250,7 +273,7 @@ completion: Finalize and save results
         {
           "content": [
             {
-              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>.Maximum research depth is <MAX_RESEARCH_DEPTH>.",
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
               "type": "text",
             },
           ],
@@ -336,6 +359,19 @@ completion: Finalize and save results
           ],
           "role": "tool",
         },
+        {
+          "content": [
+            {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- specialists (agent)
+- synthesizer (agent)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
       ],
     },
     "output": {
@@ -373,10 +409,7 @@ Key applications in cryptography...",
     "input": {
       "prompt": [
         {
-          "content": "<role>
-role prompt
-</role>
-<guidelines>
+          "content": "<guidelines>
 guidelines prompt
 </guidelines>
 <expertise>
@@ -505,15 +538,9 @@ Key applications in cryptography...",
     "input": {
       "prompt": [
         {
-          "content": "<role>
-role prompt
-</role>
-<guidelines>
+          "content": "<guidelines>
 guidelines prompt
 </guidelines>
-<expertise>
-expertise prompt
-</expertise>
 <variables>
   <RESEARCH_TOPIC>
  Quantum Computing Applications
@@ -717,15 +744,9 @@ You are a market analyst specializing in commercial trends.
     "input": {
       "prompt": [
         {
-          "content": "<role>
-role prompt
-</role>
-<guidelines>
+          "content": "<guidelines>
 guidelines prompt
 </guidelines>
-<expertise>
-expertise prompt
-</expertise>
 <variables>
   <RESEARCH_TOPIC>
  Quantum Computing Applications
@@ -830,15 +851,9 @@ completion: Finalize and save results
     "input": {
       "prompt": [
         {
-          "content": "<role>
-role prompt
-</role>
-<guidelines>
+          "content": "<guidelines>
 guidelines prompt
 </guidelines>
-<expertise>
-expertise prompt
-</expertise>
 <variables>
   <RESEARCH_TOPIC>
  Quantum Computing Applications
