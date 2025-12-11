@@ -1,0 +1,931 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Plugin System > Basic Plugin Loading > should allow plugins to use defEffect 1`] = `
+[
+  {
+    "activeTools": [
+      "testTool",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Do something",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "call_test",
+          "toolName": "testTool",
+          "type": "tool-call",
+        },
+        {
+          "text": "Step 1",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "testTool",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Do something",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Step 1",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_test",
+              "toolName": "testTool",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "ok": true,
+                },
+              },
+              "toolCallId": "call_test",
+              "toolName": "testTool",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Step 2",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Basic Plugin Loading > should allow plugins to use defState 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start the counter",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Counter initialized!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Basic Plugin Loading > should allow plugins to use defTool 1`] = `
+[
+  {
+    "activeTools": [
+      "add",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Add 5 and 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "a": 5,
+            "b": 3,
+          },
+          "toolCallId": "call_add",
+          "toolName": "add",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me calculate...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "add",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Add 5 and 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me calculate...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "a": 5,
+                "b": 3,
+              },
+              "toolCallId": "call_add",
+              "toolName": "add",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": 8,
+                },
+              },
+              "toolCallId": "call_add",
+              "toolName": "add",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "The answer is 8!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Basic Plugin Loading > should load a simple plugin and make its methods available 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <GREETING>
+ Hello, World!
+  </GREETING>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Say <GREETING>",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Greetings!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Basic Plugin Loading > should support multiple plugins 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <FOO>
+ foo-value
+  </FOO>
+  <BAR>
+ bar-value
+  </BAR>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Use <FOO> and <BAR>",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Edge Cases > should handle async plugin methods 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <ASYNC_DATA>
+ async-value
+  </ASYNC_DATA>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Use async data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Async done!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Edge Cases > should handle plugin methods that return void 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<setup>
+System is configured
+</setup>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Check setup",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Setup complete!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Edge Cases > should work with empty plugins array 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <TEST>
+ value
+  </TEST>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Hello",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "No plugins!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Edge Cases > should work without plugins property 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <TEST>
+ value
+  </TEST>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Hello",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "No plugins config!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Plugin Re-execution > should maintain plugin method availability across re-executions 1`] = `
+[
+  {
+    "activeTools": [
+      "myTool",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Do something",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "call_1",
+          "toolName": "myTool",
+          "type": "tool-call",
+        },
+        {
+          "text": "First step",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "myTool",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Do something",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "First step",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_1",
+              "toolName": "myTool",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "ok": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "myTool",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Second step",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > Type Safety > should provide correct types for plugin methods 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <TEST>
+ 42
+  </TEST>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Use the custom value",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > should create a task list with startTask and completeTask tools 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete task 1",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "Starting task...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete task 1",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Starting task...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Test Task"",
+                  "success": true,
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_complete",
+          "toolName": "completeTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "Working on it...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete task 1",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Starting task...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Test Task"",
+                  "success": true,
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Working on it...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_complete",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Test Task"",
+                  "success": true,
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_complete",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Task completed!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > should handle starting a non-existent task gracefully 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task nonexistent",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "nonexistent",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task nonexistent",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "nonexistent",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Task with ID "nonexistent" not found",
+                  "success": false,
+                  "taskId": "nonexistent",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Task not found",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > should include task list in system prompt via defEffect 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Show task status",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Tasks received!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;

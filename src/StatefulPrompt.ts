@@ -6,7 +6,8 @@ import {
   PromptContext,
   LastToolInfo,
   StepModifier,
-  StepModifications
+  StepModifications,
+  Plugin
 } from './types';
 import { StateManager } from './state';
 import { EffectsManager } from './effects';
@@ -122,6 +123,10 @@ export class StatefulPrompt extends StreamTextBuilder {
   private _lastTool: LastToolInfo | null = null;
   private _executedOnce: boolean = false;
 
+  // Plugin support
+  private _plugins: readonly Plugin[] = [];
+  private _boundPluginMethods: Record<string, Function> = {};
+
   /**
    * Factory method to create a StatefulPrompt instance.
    */
@@ -138,6 +143,26 @@ export class StatefulPrompt extends StreamTextBuilder {
    */
   setPromptFn(fn: (args: any) => any): void {
     this._promptFn = fn;
+  }
+
+  /**
+   * Set plugins for this prompt instance.
+   * Plugin methods will be bound to this instance and available during re-execution.
+   *
+   * @param plugins - Array of plugin objects containing methods to bind
+   */
+  setPlugins(plugins: readonly Plugin[]): void {
+    this._plugins = plugins;
+    this._boundPluginMethods = {};
+
+    // Pre-bind all plugin methods to this instance
+    for (const plugin of plugins) {
+      for (const [methodName, method] of Object.entries(plugin)) {
+        if (typeof method === 'function') {
+          this._boundPluginMethods[methodName] = method.bind(this);
+        }
+      }
+    }
   }
 
   /**
@@ -586,10 +611,12 @@ export class StatefulPrompt extends StreamTextBuilder {
   }
 
   /**
-   * Get prompt methods for passing to promptFn
+   * Get prompt methods for passing to promptFn.
+   * Includes both core StatefulPrompt methods and bound plugin methods.
    */
   private _getPromptMethods() {
     return {
+      // Core StatefulPrompt methods
       $: this.$.bind(this),
       def: this.def.bind(this),
       defData: this.defData.bind(this),
@@ -599,6 +626,8 @@ export class StatefulPrompt extends StreamTextBuilder {
       defState: this.defState.bind(this),
       defEffect: this.defEffect.bind(this),
       defMessage: this.defMessage.bind(this),
+      // Plugin methods (already bound in setPlugins)
+      ...this._boundPluginMethods,
     };
   }
 
