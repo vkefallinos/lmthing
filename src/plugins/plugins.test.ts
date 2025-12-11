@@ -41,6 +41,9 @@ describe('Plugin System', () => {
       const systemMessage = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
       expect(systemMessage?.content).toContain('<GREETING>');
       expect(systemMessage?.content).toContain('Hello, World!');
+
+      // Snapshot validation
+      expect(steps).toMatchSnapshot();
     });
 
     it('should support multiple plugins', async () => {
@@ -81,6 +84,9 @@ describe('Plugin System', () => {
       expect(systemMessage?.content).toContain('foo-value');
       expect(systemMessage?.content).toContain('<BAR>');
       expect(systemMessage?.content).toContain('bar-value');
+
+      // Snapshot validation
+      expect(steps).toMatchSnapshot();
     });
 
     it('should allow plugins to use defState', async () => {
@@ -97,7 +103,7 @@ describe('Plugin System', () => {
 
       let capturedCounter: { count: number; increment: () => void } | null = null;
 
-      await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ defCounter, $ }) => {
           capturedCounter = defCounter(10);
           $`Start the counter`;
@@ -108,8 +114,13 @@ describe('Plugin System', () => {
         }
       );
 
+      await result.text;
+
       expect(capturedCounter).not.toBeNull();
       expect(capturedCounter!.count).toBe(10);
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should allow plugins to use defTool', async () => {
@@ -141,7 +152,7 @@ describe('Plugin System', () => {
         { type: 'text', text: 'The answer is 8!' }
       ]);
 
-      const { result } = await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ defCalculator, $ }) => {
           defCalculator(addFn);
           $`Add 5 and 3`;
@@ -159,6 +170,9 @@ describe('Plugin System', () => {
         { a: 5, b: 3 },
         expect.anything()
       );
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should allow plugins to use defEffect', async () => {
@@ -183,7 +197,7 @@ describe('Plugin System', () => {
         { type: 'text', text: 'Step 2' }
       ]);
 
-      const { result } = await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ defLogger, defTool, $ }) => {
           defLogger();
           defTool('testTool', 'A test tool', z.object({}), async () => ({ ok: true }));
@@ -200,6 +214,9 @@ describe('Plugin System', () => {
 
       // Effect should be called for each step
       expect(effectSpy).toHaveBeenCalled();
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
   });
 
@@ -227,7 +244,7 @@ describe('Plugin System', () => {
         { type: 'text', text: 'Second step' }
       ]);
 
-      const { result } = await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ defTracker, defTool, $ }) => {
           defTracker();
           defTool('myTool', 'Test tool', z.object({}), async () => ({ ok: true }));
@@ -244,6 +261,9 @@ describe('Plugin System', () => {
 
       // Plugin method should be called on initial execution and re-executions
       expect(executionCount.value).toBeGreaterThan(1);
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
   });
 
@@ -297,6 +317,9 @@ describe('Plugin System', () => {
 
       expect(toolCalls.some((tc: any) => tc.toolName === 'startTask')).toBe(true);
       expect(toolCalls.some((tc: any) => tc.toolName === 'completeTask')).toBe(true);
+
+      // Snapshot validation
+      expect(steps).toMatchSnapshot();
     });
 
     it('should handle starting a non-existent task gracefully', async () => {
@@ -334,6 +357,9 @@ describe('Plugin System', () => {
 
       // Tool should have been called but returned failure
       expect(toolResults.length).toBeGreaterThanOrEqual(0);
+
+      // Snapshot validation
+      expect(steps).toMatchSnapshot();
     });
 
     it('should include task list in system prompt via defEffect', async () => {
@@ -363,6 +389,9 @@ describe('Plugin System', () => {
       // Note: The effect adds to stepModifications which may be in subsequent steps
       // or in the first step depending on execution timing
       expect(steps.length).toBeGreaterThan(0);
+
+      // Snapshot validation
+      expect(steps).toMatchSnapshot();
     });
   });
 
@@ -387,16 +416,22 @@ describe('Plugin System', () => {
       ]);
 
       // The plugin method should be callable with proper types
-      await runPrompt(
-        async ({ defCustom }) => {
-          const result = defCustom({ name: 'TEST', value: 42 });
-          expect(typeof result).toBe('string');
+      const { result, prompt } = await runPrompt(
+        async ({ defCustom, $ }) => {
+          const res = defCustom({ name: 'TEST', value: 42 });
+          expect(typeof res).toBe('string');
+          $`Use the custom value`;
         },
         {
           model: mockModel,
           plugins: [myPlugin] as const
         }
       );
+
+      await result.text;
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
   });
 
@@ -406,7 +441,7 @@ describe('Plugin System', () => {
         { type: 'text', text: 'No plugins!' }
       ]);
 
-      const { result } = await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ def, $ }) => {
           def('TEST', 'value');
           $`Hello`;
@@ -419,6 +454,9 @@ describe('Plugin System', () => {
 
       const text = await result.text;
       expect(text).toBe('No plugins!');
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should work without plugins property', async () => {
@@ -426,7 +464,7 @@ describe('Plugin System', () => {
         { type: 'text', text: 'No plugins config!' }
       ]);
 
-      const { result } = await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ def, $ }) => {
           def('TEST', 'value');
           $`Hello`;
@@ -438,6 +476,9 @@ describe('Plugin System', () => {
 
       const text = await result.text;
       expect(text).toBe('No plugins config!');
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should handle plugin methods that return void', async () => {
@@ -452,7 +493,7 @@ describe('Plugin System', () => {
         { type: 'text', text: 'Setup complete!' }
       ]);
 
-      const { result } = await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ setupSomething, $ }) => {
           setupSomething();
           $`Check setup`;
@@ -465,6 +506,9 @@ describe('Plugin System', () => {
 
       const text = await result.text;
       expect(text).toBe('Setup complete!');
+
+      // Snapshot validation
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should handle async plugin methods', async () => {
@@ -496,6 +540,9 @@ describe('Plugin System', () => {
       const steps = prompt.steps;
       const systemMessage = steps[0].input.prompt?.find((msg: any) => msg.role === 'system');
       expect(systemMessage?.content).toContain('async-value');
+
+      // Snapshot validation
+      expect(steps).toMatchSnapshot();
     });
   });
 });
