@@ -4,7 +4,6 @@ exports[`defEffect() > filters tools via stepModifier 1`] = `
 [
   {
     "activeTools": [
-      "t1",
       "t2",
     ],
     "input": {
@@ -57,55 +56,6 @@ exports[`defEffect() > filters tools via stepModifier 1`] = `
     ],
     "input": {
       "prompt": [
-        {
-          "content": [
-            {
-              "text": "msg",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
-        {
-          "content": [
-            {
-              "text": "a",
-              "type": "text",
-            },
-            {
-              "input": {
-                "task": "do it",
-              },
-              "toolCallId": "c1",
-              "toolName": "worker",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "error-text",
-                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
-              },
-              "toolCallId": "c1",
-              "toolName": "worker",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "add message",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
         {
           "content": [
             {
