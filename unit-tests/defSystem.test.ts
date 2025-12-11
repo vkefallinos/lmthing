@@ -1,63 +1,70 @@
-import { describe, it, expect, beforeEach } from 'vitest';
-import { StatefulPrompt } from '../src/StatefulPrompt';
+import { describe, it, expect } from 'vitest';
+import { runPrompt } from '../src/runPrompt';
 import { createMockModel } from '../src/test/createMockModel';
 
 describe('defSystem()', () => {
-  let prompt: StatefulPrompt;
-
-  beforeEach(() => {
-    const mockModel = createMockModel([
-      { type: 'text', text: 'ok' }
-    ]);
-    prompt = new StatefulPrompt(mockModel);
-  });
+  const mockModel = createMockModel([
+    { type: 'text', text: 'ok' }
+  ]);
 
   it('defines a system prompt part', async () => {
-    prompt.defSystem('role', 'You are helpful.');
-    prompt.$`msg`;
-    const result = await prompt.run();
+    const { result, prompt } = await runPrompt(async ({ defSystem, $ }) => {
+      defSystem('role', 'You are helpful.');
+      $`msg`;
+    }, { model: mockModel });
+
     await result.text;
     expect(prompt.steps).toMatchSnapshot();
   });
 
   it('defines multiple system parts', async () => {
-    prompt.defSystem('role', 'You are helpful.');
-    prompt.defSystem('rules', 'Be polite.');
-    prompt.defSystem('context', 'User is new.');
-    prompt.$`msg`;
-    const result = await prompt.run();
+    const { result, prompt } = await runPrompt(async ({ defSystem, $ }) => {
+      defSystem('role', 'You are helpful.');
+      defSystem('rules', 'Be polite.');
+      defSystem('context', 'User is new.');
+      $`msg`;
+    }, { model: mockModel });
+
     await result.text;
     expect(prompt.steps).toMatchSnapshot();
   });
 
-  it('returns proxy with toString', () => {
-    const s = prompt.defSystem('role', 'You are AI.');
-    expect(String(s)).toBe('<role>');
+  it('returns proxy with toString', async () => {
+    await runPrompt(async ({ defSystem }) => {
+      const s = defSystem('role', 'You are AI.');
+      expect(String(s)).toBe('<role>');
+    }, { model: mockModel });
   });
 
   it('supports .remind() method', async () => {
-    const s = prompt.defSystem('role', 'AI');
-    (s as any).remind();
-    prompt.$`msg`;
-    const result = await prompt.run();
+    const { result, prompt } = await runPrompt(async ({ defSystem, $ }) => {
+      const s = defSystem('role', 'AI');
+      (s as any).remind();
+      $`msg`;
+    }, { model: mockModel });
+
     await result.text;
     expect(prompt.getRemindedItems()).toMatchSnapshot();
     expect(prompt.steps).toMatchSnapshot();
   });
 
   it('handles multiline system content', async () => {
-    prompt.defSystem('instructions', 'Line 1\nLine 2\nLine 3');
-    prompt.$`msg`;
-    const result = await prompt.run();
+    const { result, prompt } = await runPrompt(async ({ defSystem, $ }) => {
+      defSystem('instructions', 'Line 1\nLine 2\nLine 3');
+      $`msg`;
+    }, { model: mockModel });
+
     await result.text;
     expect(prompt.steps).toMatchSnapshot();
   });
 
   it('overwrites when same name used twice', async () => {
-    prompt.defSystem('role', 'First');
-    prompt.defSystem('role', 'Second');
-    prompt.$`msg`;
-    const result = await prompt.run();
+    const { result, prompt } = await runPrompt(async ({ defSystem, $ }) => {
+      defSystem('role', 'First');
+      defSystem('role', 'Second');
+      $`msg`;
+    }, { model: mockModel });
+
     await result.text;
     expect(prompt.steps).toMatchSnapshot();
   });

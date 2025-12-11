@@ -66,12 +66,7 @@ User is new.
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -104,12 +99,7 @@ Line 3
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -140,26 +130,14 @@ Second
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
 ]
 `;
 
-exports[`defSystem() > supports .remind() method 1`] = `
-[
-  {
-    "name": "role",
-    "type": "defSystem",
-  },
-]
-`;
+exports[`defSystem() > supports .remind() method 1`] = `[]`;
 
 exports[`defSystem() > supports .remind() method 2`] = `
 [
@@ -182,15 +160,23 @@ AI
           ],
           "role": "user",
         },
+        {
+          "content": [
+            {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- role (system part)
+- role (system part)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },

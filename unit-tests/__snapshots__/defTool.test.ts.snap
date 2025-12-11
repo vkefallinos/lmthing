@@ -68,6 +68,15 @@ exports[`defTool() > composite tool > calls sub-tools when model uses composite 
         {
           "content": [
             {
+              "text": "Use file",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "Using file",
               "type": "text",
             },
@@ -159,12 +168,7 @@ exports[`defTool() > composite tool > defines composite tool with sub-tools 1`] 
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -223,6 +227,15 @@ exports[`defTool() > composite tool > handles sub-tool errors gracefully 1`] = `
     ],
     "input": {
       "prompt": [
+        {
+          "content": [
+            {
+              "text": "Run",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
         {
           "content": [
             {
@@ -358,6 +371,15 @@ exports[`defTool() > single tool > calls tool when model uses it 1`] = `
         {
           "content": [
             {
+              "text": "Add 1 + 2",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "Let me calc",
               "type": "text",
             },
@@ -436,11 +458,4 @@ exports[`defTool() > single tool > defines a basic tool 1`] = `
 ]
 `;
 
-exports[`defTool() > single tool > supports .remind() method 1`] = `
-[
-  {
-    "name": "t",
-    "type": "defTool",
-  },
-]
-`;
+exports[`defTool() > single tool > supports .remind() method 1`] = `[]`;

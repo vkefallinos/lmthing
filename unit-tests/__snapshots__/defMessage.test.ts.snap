@@ -18,12 +18,7 @@ exports[`defMessage() > adds assistant message 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -66,12 +61,7 @@ exports[`defMessage() > adds multiple messages 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -126,12 +116,7 @@ exports[`defMessage() > handles empty content 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -158,12 +143,7 @@ Line 3",
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -197,12 +177,7 @@ exports[`defMessage() > integrates with $() template 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -254,12 +229,7 @@ exports[`defMessage() > maintains message order 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },

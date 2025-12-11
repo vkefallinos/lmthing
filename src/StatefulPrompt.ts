@@ -186,6 +186,7 @@ export class StatefulPrompt extends StreamTextBuilder {
     callback: (prompt: PromptContext, step: StepModifier) => void,
     dependencies?: any[]
   ): void {
+    console.log('Registering effect with dependencies:', callback.toString());
     this._effectsManager.register(callback, dependencies);
   }
 
@@ -509,81 +510,6 @@ export class StatefulPrompt extends StreamTextBuilder {
     }
   }
 
-  run() {
-
-    // Add hook to track last tool call
-    this.addOnStepFinish(async (result: any) => {
-      // Extract last tool call from result if exists
-      const toolCalls = result.toolCalls;
-      const toolResults = result.toolResults;
-
-      if (toolCalls && toolCalls.length > 0) {
-        const lastToolCall = toolCalls[toolCalls.length - 1];
-        const lastToolResult = toolResults?.find(
-          (r: any) => r.toolCallId === lastToolCall.toolCallId
-        );
-
-        this._lastTool = {
-          toolName: lastToolCall.toolName,
-          args: lastToolCall.input, // AI SDK uses 'input' for parsed args
-          output: lastToolResult?.output ?? null
-        };
-      } else {
-        // No tool calls in this step, keep previous value
-        // (don't reset to null so effects can still access the last tool from previous step)
-      }
-    });
-
-    // Set up prepare step hook
-    this.setLastPrepareStep((_options: any) => {
-      // Final preparation before run
-      let systemParts: string[] = [];
-
-      // Filter systems based on activeSystems if provided
-      const systemEntries = Object.entries(this.systems);
-      const filteredSystems = this.activeSystems
-        ? systemEntries.filter(([name]) => this.activeSystems!.includes(name))
-        : systemEntries;
-
-      for (const [name, part] of filteredSystems) {
-        systemParts.push(`<${name}>\n${part}\n</${name}>`);
-      }
-      const system = systemParts.length > 0 ? systemParts.join('\n') : undefined;
-
-      let variableDefinitions: string[] = [];
-
-      // Filter variables based on activeVariables if provided
-      const variableEntries = Object.entries(this.variables);
-      const filteredVariables = this.activeVariables
-        ? variableEntries.filter(([name]) => this.activeVariables!.includes(name))
-        : variableEntries;
-
-      for (const [name, varDef] of filteredVariables) {
-        if (varDef.type === 'string') {
-          variableDefinitions.push(`  <${name}>\n ${varDef.value}\n  </${name}>`);
-        } else if (varDef.type === 'data') {
-          const yamlData = yaml.dump(varDef.value);
-          variableDefinitions.push(`  <${name}>\n${yamlData}\n  </${name}>`);
-        }
-      }
-      // Build the final system prompt
-      if (variableDefinitions.length > 0) {
-        const varsSystemPart = `<variables>\n${variableDefinitions.join('\n')}\n</variables>`;
-        if (system) {
-          return { system: `${system}\n${varsSystemPart}` };
-        } else {
-          return { system: varsSystemPart };
-        }
-      } else if (system) {
-        // Return system parts even if there are no variables
-        return { system };
-      }
-      // Return empty object if no system or variables
-      return {};
-    });
-
-    return this.execute();
-  }
 
   /**
    * Get the list of reminded items that had their .remind() method called.
@@ -719,7 +645,7 @@ export class StatefulPrompt extends StreamTextBuilder {
       if (!this._stepModifications[aspect]) {
         this._stepModifications[aspect] = [];
       }
-      this._stepModifications[aspect]!.push(...items);
+      this._stepModifications[aspect] = items;
     };
   }
 
@@ -737,15 +663,11 @@ export class StatefulPrompt extends StreamTextBuilder {
     if (this._stepModifications.tools) {
       const toolNames = this._stepModifications.tools.map((t: any) => t.name);
       result.activeTools = toolNames;
-      // Also set on instance for consistency
-      this.activeTools = toolNames;
     }
 
     if (this._stepModifications.systems) {
       const systemNames = this._stepModifications.systems.map((s: any) => s.name);
       result.activeSystems = systemNames;
-      // Also set on instance for Prompt.run() to use
-      this.activeSystems = systemNames;
     }
 
     if (this._stepModifications.variables) {
@@ -766,81 +688,147 @@ export class StatefulPrompt extends StreamTextBuilder {
   /**
    * Override setLastPrepareStep to handle re-execution
    */
-  setLastPrepareStep(prepareStepFn: (options: any) => any): void {
-    // If we have a prompt function, enable re-execution logic
-    if (this._promptFn) {
-      this.addPrepareStep(async (options: PrepareStepOptions<any>) => {
-        // Reset filters at the start of each step to prevent persistence
-        this.activeSystems = undefined;
-        this.activeVariables = undefined;
-        this.activeTools = undefined;
+  // setLastPrepareStep(prepareStepFn: (options: any) => any): void {
+  //   // If we have a prompt function, enable re-execution logic
+  //   if (this._promptFn) {
+  //     this.addPrepareStep(async (options: PrepareStepOptions<any>) => {
+  //       // Reset filters at the start of each step to prevent persistence
 
-        // Clear step modifications
-        this._stepModifications = {};
+  //     });
+  //   } else {
+  //     // No prompt function, just set the prepare step directly
+  //     super.setLastPrepareStep(prepareStepFn);
+  //   }
+  // }
 
-        // Only re-execute after the first step
-        if (this._executedOnce) {
-          // Clear definition tracking for new execution cycle
-          this._clearDefinitions();
+  run() {
 
-          // Re-execute promptFn
-          const promptMethods = this._getPromptMethods();
-          await this._promptFn!(promptMethods);
+    // Add hook to track last tool call
+    this.addOnStepFinish(async (result: any) => {
+      // Extract last tool call from result if exists
+      const toolCalls = result.toolCalls;
+      const toolResults = result.toolResults;
 
-          // Reconcile definitions after re-execution
-          this._reconcileDefinitions();
+      if (toolCalls && toolCalls.length > 0) {
+        const lastToolCall = toolCalls[toolCalls.length - 1];
+        const lastToolResult = toolResults?.find(
+          (r: any) => r.toolCallId === lastToolCall.toolCallId
+        );
+
+        this._lastTool = {
+          toolName: lastToolCall.toolName,
+          args: lastToolCall.input, // AI SDK uses 'input' for parsed args
+          output: lastToolResult?.output ?? null
+        };
+      } else {
+        // No tool calls in this step, keep previous value
+        // (don't reset to null so effects can still access the last tool from previous step)
+      }
+    });
+
+    // Set up prepare step hook
+    this.setLastPrepareStep(async (_options: any) => {
+      this.activeSystems = undefined;
+      this.activeVariables = undefined;
+      this.activeTools = undefined;
+      const messages = _options.messages;
+      // Clear step modifications
+      this._stepModifications = {};
+
+      // Only re-execute after the first step
+        // Clear definition tracking for new execution cycle
+        this._clearDefinitions();
+
+        // Re-execute promptFn
+        const promptMethods = this._getPromptMethods();
+        await this._promptFn!(promptMethods);
+
+        // Reconcile definitions after re-execution
+        this._reconcileDefinitions();
+
+
+      // Process effects
+      this._processEffects(_options);
+
+      // Apply step modifications
+      const modifications = this._applyStepModifications();
+
+      // Call the original prepareStep function
+
+      // Add reminder if there are any reminded items
+      if (this._remindedItems.length > 0) {
+        const reminderText = this._remindedItems
+          .map(item => {
+            const tagMap = {
+              'def': 'variable',
+              'defData': 'data variable',
+              'defSystem': 'system part',
+              'defTool': 'tool',
+              'defAgent': 'agent'
+            };
+            return `- ${item.name} (${tagMap[item.type] || item.type})`;
+          })
+          .join('\n');
+
+        // Create the reminder message
+        const reminderMessage = {
+          role: 'assistant' as const,
+          content: `\n\n[Reminder: Remember to use the following items in your response:\n${reminderText}]`
+        };
+
+        messages.push(reminderMessage);
+
+        this._remindedItems = [];
+      }
+
+      // Merge results
+      // Final preparation before run
+      let systemParts: string[] = [];
+
+      // Filter systems based on activeSystems if provided
+      const systemEntries = Object.entries(this.systems);
+      const filteredSystems = this.activeSystems
+        ? systemEntries.filter(([name]) => this.activeSystems!.includes(name))
+        : systemEntries;
+      console.log('tools after effects:', this.activeTools);
+      for (const [name, part] of filteredSystems) {
+        systemParts.push(`<${name}>\n${part}\n</${name}>`);
+      }
+      const system = systemParts.length > 0 ? systemParts.join('\n') : undefined;
+
+      let variableDefinitions: string[] = [];
+
+      // Filter variables based on activeVariables if provided
+      const variableEntries = Object.entries(this.variables);
+      const filteredVariables = this.activeVariables
+        ? variableEntries.filter(([name]) => this.activeVariables!.includes(name))
+        : variableEntries;
+      let response = {}
+      for (const [name, varDef] of filteredVariables) {
+        if (varDef.type === 'string') {
+          variableDefinitions.push(`  <${name}>\n ${varDef.value}\n  </${name}>`);
+        } else if (varDef.type === 'data') {
+          const yamlData = yaml.dump(varDef.value);
+          variableDefinitions.push(`  <${name}>\n${yamlData}\n  </${name}>`);
         }
-
-        this._executedOnce = true;
-
-        // Process effects
-        this._processEffects(options);
-
-        // Apply step modifications
-        const modifications = this._applyStepModifications();
-
-        // Call the original prepareStep function
-        const baseResult = prepareStepFn(options);
-
-        // Add reminder if there are any reminded items
-        if (this._remindedItems.length > 0) {
-          const reminderText = this._remindedItems
-            .map(item => {
-              const tagMap = {
-                'def': 'variable',
-                'defData': 'data variable',
-                'defSystem': 'system part',
-                'defTool': 'tool',
-                'defAgent': 'agent'
-              };
-              return `- ${item.name} (${tagMap[item.type] || item.type})`;
-            })
-            .join('\n');
-
-          // Create the reminder message
-          const reminderMessage = {
-            role: 'assistant' as const,
-            content: `\n\n[Reminder: Remember to use the following items in your response:\n${reminderText}]`
-          };
-
-          // Add the reminder message to the result for the AI SDK
-          if (!baseResult.messages) {
-            baseResult.messages = options.messages || [];
-          }
-          baseResult.messages.push(reminderMessage);
-
-
-          // Clear reminded items after adding to reminder
-          this._remindedItems = [];
+      }
+      // Build the final system prompt
+      if (variableDefinitions.length > 0) {
+        const varsSystemPart = `<variables>\n${variableDefinitions.join('\n')}\n</variables>`;
+        if (system) {
+          response =  { system: `${system}\n${varsSystemPart}`, messages, activeTools: this.activeTools };
+        } else {
+          response = { system: varsSystemPart, messages, activeTools: this.activeTools };
         }
+      } else if (system) {
+        // Return system parts even if there are no variables
+        response = { system, messages, activeTools: this.activeTools };
+      }
+      // Return empty object if no system or variables
+      return response;
+    });
 
-        // Merge results
-        return { ...baseResult, ...modifications };
-      });
-    } else {
-      // No prompt function, just set the prepare step directly
-      super.setLastPrepareStep(prepareStepFn);
-    }
+    return this.execute();
   }
 }
 

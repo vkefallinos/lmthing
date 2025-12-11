@@ -69,12 +69,7 @@ exports[`defData() > handles arrays 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -117,12 +112,7 @@ config:
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -156,12 +146,7 @@ exports[`defData() > handles empty objects 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -199,26 +184,14 @@ settings:
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
 ]
 `;
 
-exports[`defData() > supports .remind() method 1`] = `
-[
-  {
-    "name": "D",
-    "type": "defData",
-  },
-]
-`;
+exports[`defData() > supports .remind() method 1`] = `[]`;
 
 exports[`defData() > supports .remind() method 2`] = `
 [
@@ -244,15 +217,23 @@ x: 1
           ],
           "role": "user",
         },
+        {
+          "content": [
+            {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- D (data variable)
+- D (data variable)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },

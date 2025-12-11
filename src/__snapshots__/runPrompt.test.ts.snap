@@ -122,6 +122,24 @@ preferredUnit: metric
         {
           "content": [
             {
+              "text": "What's the weather in <city> in <unit>? Convert it to the other unit. My config is <config>.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Please provide the weather details and conversion.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "I understand you need help with weather and calculations.",
               "type": "text",
             },
@@ -204,6 +222,42 @@ preferredUnit: metric
   </config>
 </variables>",
           "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "What's the weather in <city> in <unit>? Convert it to the other unit. My config is <config>.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Please provide the weather details and conversion.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "What's the weather in <city> in <unit>? Convert it to the other unit. My config is <config>.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Please provide the weather details and conversion.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
         },
         {
           "content": [
@@ -397,6 +451,24 @@ You are an orchestrator AI that coordinates multiple specialist agents.
         {
           "content": [
             {
+              "text": "Please validate and process user data for the new signup.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Coordinate the validation and processing agents to handle this request.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "I will coordinate with specialized agents to solve this.",
               "type": "text",
             },
@@ -417,49 +489,9 @@ You are an orchestrator AI that coordinates multiple specialist agents.
         {
           "content": [
             {
-              "agentSteps": [
-                {
-                  "activeTools": [],
-                  "input": {
-                    "prompt": [
-                      {
-                        "content": "<role>
-You are a data validation specialist.
-</role>
-<variables>
-  <inputData>
-email: test@example.com
-age: 25
-
-  </inputData>
-</variables>",
-                        "role": "system",
-                      },
-                      {
-                        "content": [
-                          {
-                            "text": "Validate the following data: <inputData>",
-                            "type": "text",
-                          },
-                        ],
-                        "role": "user",
-                      },
-                    ],
-                  },
-                  "output": {
-                    "content": [
-                      {
-                        "text": "Validating email format...Validating age range...All validations passed.",
-                        "type": "text",
-                      },
-                    ],
-                    "finishReason": "stop",
-                  },
-                },
-              ],
               "output": {
-                "type": "text",
-                "value": "Validating email format...Validating age range...All validations passed.",
+                "type": "error-text",
+                "value": "No output generated. Check the stream for errors.",
               },
               "toolCallId": "call_validator",
               "toolName": "validationAgent",
@@ -523,6 +555,42 @@ You are an orchestrator AI that coordinates multiple specialist agents.
         {
           "content": [
             {
+              "text": "Please validate and process user data for the new signup.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Coordinate the validation and processing agents to handle this request.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Please validate and process user data for the new signup.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Coordinate the validation and processing agents to handle this request.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "I will coordinate with specialized agents to solve this.",
               "type": "text",
             },
@@ -543,49 +611,9 @@ You are an orchestrator AI that coordinates multiple specialist agents.
         {
           "content": [
             {
-              "agentSteps": [
-                {
-                  "activeTools": [],
-                  "input": {
-                    "prompt": [
-                      {
-                        "content": "<role>
-You are a data validation specialist.
-</role>
-<variables>
-  <inputData>
-email: test@example.com
-age: 25
-
-  </inputData>
-</variables>",
-                        "role": "system",
-                      },
-                      {
-                        "content": [
-                          {
-                            "text": "Validate the following data: <inputData>",
-                            "type": "text",
-                          },
-                        ],
-                        "role": "user",
-                      },
-                    ],
-                  },
-                  "output": {
-                    "content": [
-                      {
-                        "text": "Validating email format...Validating age range...All validations passed.",
-                        "type": "text",
-                      },
-                    ],
-                    "finishReason": "stop",
-                  },
-                },
-              ],
               "output": {
-                "type": "text",
-                "value": "Validating email format...Validating age range...All validations passed.",
+                "type": "error-text",
+                "value": "No output generated. Check the stream for errors.",
               },
               "toolCallId": "call_validator",
               "toolName": "validationAgent",
@@ -615,53 +643,9 @@ age: 25
         {
           "content": [
             {
-              "agentSteps": [
-                {
-                  "activeTools": [],
-                  "input": {
-                    "prompt": [
-                      {
-                        "content": "<role>
-You are a data processing specialist.
-</role>
-<capabilities>
-Transform, filter, and aggregate data.
-</capabilities>
-<variables>
-  <operation>
- transform
-  </operation>
-  <inputSource>
- validated_data
-  </inputSource>
-</variables>",
-                        "role": "system",
-                      },
-                      {
-                        "content": [
-                          {
-                            "text": "Execute <operation> on <inputSource>",
-                            "type": "text",
-                          },
-                        ],
-                        "role": "user",
-                      },
-                    ],
-                  },
-                  "output": {
-                    "content": [
-                      {
-                        "text": "Starting transformation process...Data transformed successfully.",
-                        "type": "text",
-                      },
-                    ],
-                    "finishReason": "stop",
-                  },
-                },
-              ],
               "output": {
-                "type": "text",
-                "value": "Starting transformation process...Data transformed successfully.",
+                "type": "error-text",
+                "value": "No output generated. Check the stream for errors.",
               },
               "toolCallId": "call_processor",
               "toolName": "processingAgent",

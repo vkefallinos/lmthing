@@ -70,26 +70,14 @@ exports[`def() > handles multiple variables 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
 ]
 `;
 
-exports[`def() > supports .remind() method 1`] = `
-[
-  {
-    "name": "V",
-    "type": "def",
-  },
-]
-`;
+exports[`def() > supports .remind() method 1`] = `[]`;
 
 exports[`def() > supports .remind() method 2`] = `
 [
@@ -114,15 +102,23 @@ exports[`def() > supports .remind() method 2`] = `
           ],
           "role": "user",
         },
+        {
+          "content": [
+            {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- V (variable)
+- V (variable)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
@@ -158,12 +154,7 @@ exports[`def() > supports template literal interpolation 1`] = `
       ],
     },
     "output": {
-      "content": [
-        {
-          "text": "ok",
-          "type": "text",
-        },
-      ],
+      "content": [],
       "finishReason": "stop",
     },
   },
