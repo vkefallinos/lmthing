@@ -3,6 +3,9 @@
 exports[`StreamTextBuilder > Integration Test > should handle all features in a comprehensive workflow 1`] = `
 [
   {
+    "activeTools": [
+      "calculator",
+    ],
     "input": {
       "prompt": [
         {
@@ -59,6 +62,10 @@ exports[`StreamTextBuilder > Integration Test > should handle all features in a 
     },
   },
   {
+    "activeTools": [
+      "calculator",
+      "formatter",
+    ],
     "input": {
       "prompt": [
         {
@@ -151,6 +158,10 @@ Use the tools available to you for accuracy.",
     },
   },
   {
+    "activeTools": [
+      "calculator",
+      "formatter",
+    ],
     "input": {
       "prompt": [
         {

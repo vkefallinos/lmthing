@@ -179,5 +179,112 @@ describe('StreamTextBuilder', () => {
         expect(usage.totalTokens).toBe(usage.inputTokens + usage.outputTokens);
       }
     });
+
+    it('should track activeTools in steps', async () => {
+      // Setup: Create a mock model with tool calls
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Using calculator. ' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'calculator',
+          args: { a: 5, b: 3 }
+        },
+        { type: 'text', text: 'Result is 8. ' },
+      ]);
+
+      // Setup tools
+      const calculatorTool = {
+        description: 'Add two numbers',
+        inputSchema: z.object({
+          a: z.number(),
+          b: z.number(),
+        }),
+        execute: vi.fn().mockResolvedValue({ result: 8 }),
+      };
+
+      const searchTool = {
+        description: 'Search the web',
+        inputSchema: z.object({
+          query: z.string(),
+        }),
+        execute: vi.fn().mockResolvedValue({ results: [] }),
+      };
+
+      // Test 1: With activeTools set via prepareStep
+      const builder1 = new StreamTextBuilder();
+      builder1
+        .withModel(mockModel)
+        .addMessage({ role: 'user', content: 'Calculate 5 + 3' })
+        .addTool('calculator', calculatorTool)
+        .addTool('search', searchTool)
+        .addPrepareStep(async ({ steps }) => {
+          if (steps.length === 0) {
+            return { activeTools: ['calculator'] };
+          }
+          return {};
+        });
+
+      const result1 = await builder1.execute();
+      await result1.text;
+      const steps1 = builder1.steps;
+
+      expect(steps1.length).toBeGreaterThan(0);
+      expect(steps1[0].activeTools).toEqual(['calculator']);
+
+      // Test 2: Without activeTools set (should default to all tools)
+      const mockModel2 = createMockModel([
+        { type: 'text', text: 'Using tools. ' },
+      ]);
+
+      const builder2 = new StreamTextBuilder();
+      builder2
+        .withModel(mockModel2)
+        .addMessage({ role: 'user', content: 'Help me' })
+        .addTool('calculator', calculatorTool)
+        .addTool('search', searchTool);
+
+      const result2 = await builder2.execute();
+      await result2.text;
+      const steps2 = builder2.steps;
+
+      expect(steps2.length).toBeGreaterThan(0);
+      expect(steps2[0].activeTools).toEqual(['calculator', 'search']);
+
+      // Test 3: Verify activeTools changes across steps
+      const mockModel3 = createMockModel([
+        { type: 'text', text: 'Step 1. ' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'calculator',
+          args: { a: 1, b: 2 }
+        },
+        { type: 'text', text: 'Step 2. ' },
+      ]);
+
+      const builder3 = new StreamTextBuilder();
+      builder3
+        .withModel(mockModel3)
+        .addMessage({ role: 'user', content: 'Calculate' })
+        .addTool('calculator', calculatorTool)
+        .addTool('search', searchTool)
+        .addPrepareStep(async ({ steps }) => {
+          if (steps.length === 0) {
+            return { activeTools: ['calculator'] };
+          } else if (steps.length === 1) {
+            return { activeTools: ['search'] };
+          }
+          return {};
+        });
+
+      const result3 = await builder3.execute();
+      await result3.text;
+      const steps3 = builder3.steps;
+
+      expect(steps3.length).toBeGreaterThan(1);
+      expect(steps3[0].activeTools).toEqual(['calculator']);
+      expect(steps3[1].activeTools).toEqual(['search']);
+    });
   });
 });

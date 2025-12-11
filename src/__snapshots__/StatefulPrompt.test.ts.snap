@@ -12,6 +12,7 @@ exports[`StatefulPrompt > should allow step modifications from effects 1`] = `
   "stepModifierCalled": true,
   "steps": [
     {
+      "activeTools": [],
       "input": {
         "prompt": [
           {
@@ -32,6 +33,7 @@ exports[`StatefulPrompt > should allow step modifications from effects 1`] = `
 exports[`StatefulPrompt > should create state with defState 1`] = `
 [
   {
+    "activeTools": [],
     "input": {
       "prompt": [
         {
@@ -61,6 +63,9 @@ exports[`StatefulPrompt > should create state with defState 1`] = `
 exports[`StatefulPrompt > should maintain state across re-executions 1`] = `
 [
   {
+    "activeTools": [
+      "testTool",
+    ],
     "input": {
       "prompt": [
         {
@@ -93,6 +98,9 @@ exports[`StatefulPrompt > should maintain state across re-executions 1`] = `
     },
   },
   {
+    "activeTools": [
+      "testTool",
+    ],
     "input": {
       "prompt": [
         {
@@ -176,6 +184,7 @@ exports[`StatefulPrompt > should run effects with dependencies 1`] = `
   "finalDependency": 0,
   "steps": [
     {
+      "activeTools": [],
       "input": {
         "prompt": [
           {
@@ -206,6 +215,7 @@ exports[`StatefulPrompt > should run effects without dependencies on every step 
   ],
   "steps": [
     {
+      "activeTools": [],
       "input": {
         "prompt": [
           {

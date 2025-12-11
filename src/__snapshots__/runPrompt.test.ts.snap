@@ -3,6 +3,10 @@
 exports[`runPrompt > should execute a complete prompt workflow with all features 1`] = `
 [
   {
+    "activeTools": [
+      "getWeather",
+      "convertTemperature",
+    ],
     "input": {
       "prompt": [
         {
@@ -68,6 +72,10 @@ preferredUnit: metric
     },
   },
   {
+    "activeTools": [
+      "getWeather",
+      "convertTemperature",
+    ],
     "input": {
       "prompt": [
         {
@@ -168,6 +176,10 @@ preferredUnit: metric
     },
   },
   {
+    "activeTools": [
+      "getWeather",
+      "convertTemperature",
+    ],
     "input": {
       "prompt": [
         {
@@ -298,6 +310,10 @@ preferredUnit: metric
 exports[`runPrompt > should support defAgent for creating hierarchical agent workflows 1`] = `
 [
   {
+    "activeTools": [
+      "validationAgent",
+      "processingAgent",
+    ],
     "input": {
       "prompt": [
         {
@@ -348,6 +364,10 @@ You are an orchestrator AI that coordinates multiple specialist agents.
     },
   },
   {
+    "activeTools": [
+      "validationAgent",
+      "processingAgent",
+    ],
     "input": {
       "prompt": [
         {
@@ -399,6 +419,7 @@ You are an orchestrator AI that coordinates multiple specialist agents.
             {
               "agentSteps": [
                 {
+                  "activeTools": [],
                   "input": {
                     "prompt": [
                       {
@@ -469,6 +490,10 @@ age: 25
     },
   },
   {
+    "activeTools": [
+      "validationAgent",
+      "processingAgent",
+    ],
     "input": {
       "prompt": [
         {
@@ -520,6 +545,7 @@ You are an orchestrator AI that coordinates multiple specialist agents.
             {
               "agentSteps": [
                 {
+                  "activeTools": [],
                   "input": {
                     "prompt": [
                       {
@@ -591,6 +617,7 @@ age: 25
             {
               "agentSteps": [
                 {
+                  "activeTools": [],
                   "input": {
                     "prompt": [
                       {
