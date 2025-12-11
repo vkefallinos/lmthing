@@ -3,6 +3,10 @@
 exports[`Prompt > should handle a complete workflow testing all Prompt class features 1`] = `
 [
   {
+    "activeTools": [
+      "database",
+      "formatter",
+    ],
     "input": {
       "prompt": [
         {
@@ -71,6 +75,10 @@ permissions:
     },
   },
   {
+    "activeTools": [
+      "database",
+      "formatter",
+    ],
     "input": {
       "prompt": [
         {
@@ -179,6 +187,10 @@ permissions:
     },
   },
   {
+    "activeTools": [
+      "database",
+      "formatter",
+    ],
     "input": {
       "prompt": [
         {
@@ -317,6 +329,9 @@ permissions:
 exports[`Prompt > should handle composite agents with defAgent array syntax 1`] = `
 [
   {
+    "activeTools": [
+      "specialists",
+    ],
     "input": {
       "prompt": [
         {
@@ -362,6 +377,9 @@ exports[`Prompt > should handle composite agents with defAgent array syntax 1`] 
     },
   },
   {
+    "activeTools": [
+      "specialists",
+    ],
     "input": {
       "prompt": [
         {
@@ -415,6 +433,7 @@ exports[`Prompt > should handle composite agents with defAgent array syntax 1`] 
                       "response": "Researching quantum computing...Quantum computing uses qubits for computation.",
                       "steps": [
                         {
+                          "activeTools": [],
                           "input": {
                             "prompt": [
                               {
@@ -451,6 +470,7 @@ You are a researcher.
                       "response": "Analyzing quantum data...Analysis shows promising results.",
                       "steps": [
                         {
+                          "activeTools": [],
                           "input": {
                             "prompt": [
                               {
@@ -510,6 +530,9 @@ You are an analyst.
 exports[`Prompt > should handle composite tools with defTool array syntax 1`] = `
 [
   {
+    "activeTools": [
+      "file",
+    ],
     "input": {
       "prompt": [
         {
@@ -564,6 +587,9 @@ Appended line",
     },
   },
   {
+    "activeTools": [
+      "file",
+    ],
     "input": {
       "prompt": [
         {
@@ -670,6 +696,9 @@ Appended line",
 exports[`Prompt > should handle defAgent to create a sub-prompt with its own model 1`] = `
 [
   {
+    "activeTools": [
+      "researchAgent",
+    ],
     "input": {
       "prompt": [
         {
@@ -703,6 +732,9 @@ exports[`Prompt > should handle defAgent to create a sub-prompt with its own mod
     },
   },
   {
+    "activeTools": [
+      "researchAgent",
+    ],
     "input": {
       "prompt": [
         {
@@ -737,6 +769,7 @@ exports[`Prompt > should handle defAgent to create a sub-prompt with its own mod
             {
               "agentSteps": [
                 {
+                  "activeTools": [],
                   "input": {
                     "prompt": [
                       {
@@ -807,6 +840,9 @@ Your expertise is in technical topics.
 exports[`Prompt > should handle errors in composite agent sub-calls gracefully 1`] = `
 [
   {
+    "activeTools": [
+      "agents",
+    ],
     "input": {
       "prompt": [
         {
@@ -852,6 +888,9 @@ exports[`Prompt > should handle errors in composite agent sub-calls gracefully 1
     },
   },
   {
+    "activeTools": [
+      "agents",
+    ],
     "input": {
       "prompt": [
         {
@@ -905,6 +944,7 @@ exports[`Prompt > should handle errors in composite agent sub-calls gracefully 1
                       "response": "Working agent response.",
                       "steps": [
                         {
+                          "activeTools": [],
                           "input": {
                             "prompt": [
                               {
@@ -962,6 +1002,9 @@ exports[`Prompt > should handle errors in composite agent sub-calls gracefully 1
 exports[`Prompt > should handle errors in composite tool sub-calls gracefully 1`] = `
 [
   {
+    "activeTools": [
+      "operations",
+    ],
     "input": {
       "prompt": [
         {
@@ -1013,6 +1056,9 @@ exports[`Prompt > should handle errors in composite tool sub-calls gracefully 1`
     },
   },
   {
+    "activeTools": [
+      "operations",
+    ],
     "input": {
       "prompt": [
         {

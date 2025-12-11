@@ -53,6 +53,7 @@ export class StreamTextBuilder {
     }
     private _steps: Array<any> = [];
     private _agentStepsMap: Map<string, any[]> = new Map();
+    private _currentActiveTools?: string[];
     private _getMiddleware(): LanguageModelV2Middleware {
         return {
             middlewareVersion: 'v2',
@@ -92,11 +93,13 @@ export class StreamTextBuilder {
               // Collect chunks in the background without blocking
               (async () => {
                 const outputChunks: any[] = [];
+                // Capture activeTools at the time of this step
+                const activeTools = this._currentActiveTools;
                 try {
                   for await (const chunk of observerStream) {
                     outputChunks.push(chunk);
                   }
-                  this._steps.push({input: params, output: outputChunks});
+                  this._steps.push({input: params, output: outputChunks, activeTools});
                 } catch (error) {
                   // Silently ignore errors in the observer stream
                   console.error('Error collecting chunks in middleware:', error);
@@ -181,6 +184,7 @@ export class StreamTextBuilder {
             content,
             finishReason,
           },
+          activeTools: step.activeTools,
         };
       });
     }
@@ -315,20 +319,25 @@ export class StreamTextBuilder {
         const prepareStep: PrepareStepFunction<any> | undefined = (this._prepareStepHooks.length > 0 || this._lastPrepareStep)
             ? (async (options: PrepareStepOptions<any>): Promise<PrepareStepResult<any>> => {
                 let combinedResult: PrepareStepResult<any> = {};
-                
+
                 // console.log(options.messages[options.messages.length -1].content[0].output);
                 const hooks = this._prepareStepHooks.concat(this._lastPrepareStep ? [this._lastPrepareStep] : []);
                 for (const hook of hooks) {
                     const res = await hook(options);
                     if (res) {
-                        combinedResult = { 
-                            ...combinedResult, 
+                        combinedResult = {
+                            ...combinedResult,
                             ...res,
                             // Ensure activeTools is properly typed as string array
                             activeTools: res.activeTools ? res.activeTools.map(String) : combinedResult.activeTools
                         };
                     }
                 }
+
+                // Store the activeTools for this step
+                // If no activeTools specified, all tools are active by default
+                this._currentActiveTools = (combinedResult.activeTools as string[] | undefined) ?? Object.keys(this._tools);
+
                 return combinedResult;
             }) as PrepareStepFunction<any>
             : undefined;
@@ -346,6 +355,11 @@ export class StreamTextBuilder {
             onStepFinish,
             prepareStep,
         };
+
+        // Set default activeTools if not already set by prepareStep
+        if (!this._currentActiveTools) {
+            this._currentActiveTools = Object.keys(this._tools);
+        }
 
         return streamText(finalOptions);
     }

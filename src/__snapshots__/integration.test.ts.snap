@@ -3,6 +3,13 @@
 exports[`Prompt > should handle a complete workflow testing all Prompt class features 1`] = `
 [
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -73,6 +80,13 @@ completion: Finalize and save results
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -186,6 +200,13 @@ completion: Finalize and save results
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -342,6 +363,13 @@ Key applications in cryptography...",
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -467,6 +495,13 @@ Key applications in cryptography...",
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -519,6 +554,13 @@ You are a technical analyst specializing in deep technical evaluation.
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -604,6 +646,13 @@ You are a technical analyst specializing in deep technical evaluation.
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -723,6 +772,13 @@ The workflow progressed through all phases successfully!",
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -753,6 +809,13 @@ You are a market analyst specializing in commercial trends.
     },
   },
   {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
     "input": {
       "prompt": [
         {
@@ -850,6 +913,7 @@ I have conducted a comprehensive analysis of Quantum Computing Applications thro
 The workflow progressed through all phases successfully!",
                       "steps": [
                         {
+                          "activeTools": [],
                           "input": {
                             "prompt": [
                               {
@@ -902,6 +966,7 @@ You are a technical analyst specializing in deep technical evaluation.
                           },
                         },
                         {
+                          "activeTools": [],
                           "input": {
                             "prompt": [
                               {
@@ -987,6 +1052,7 @@ You are a technical analyst specializing in deep technical evaluation.
                           },
                         },
                         {
+                          "activeTools": [],
                           "input": {
                             "prompt": [
                               {
@@ -1112,6 +1178,7 @@ The workflow progressed through all phases successfully!",
                       "response": "",
                       "steps": [
                         {
+                          "activeTools": [],
                           "input": {
                             "prompt": [
                               {
