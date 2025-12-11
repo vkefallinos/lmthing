@@ -53,6 +53,15 @@ exports[`Plugin System > Basic Plugin Loading > should allow plugins to use defE
         {
           "content": [
             {
+              "text": "Do something",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "Step 1",
               "type": "text",
             },
@@ -170,6 +179,15 @@ exports[`Plugin System > Basic Plugin Loading > should allow plugins to use defT
     ],
     "input": {
       "prompt": [
+        {
+          "content": [
+            {
+              "text": "Add 5 and 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
         {
           "content": [
             {
@@ -510,6 +528,15 @@ exports[`Plugin System > Plugin Re-execution > should maintain plugin method ava
         {
           "content": [
             {
+              "text": "Do something",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "First step",
               "type": "text",
             },
@@ -648,6 +675,15 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
         {
           "content": [
             {
+              "text": "Complete task 1",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "Starting task...",
               "type": "text",
             },
@@ -707,6 +743,24 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
     ],
     "input": {
       "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete task 1",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Complete task 1",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
         {
           "content": [
             {
@@ -842,6 +896,15 @@ exports[`Plugin System > taskListPlugin > should handle starting a non-existent 
     ],
     "input": {
       "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task nonexistent",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
         {
           "content": [
             {

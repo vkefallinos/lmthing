@@ -5,12 +5,14 @@ import { Effect, PromptContext, StepModifier } from '../types';
  * Similar to React's useEffect hook pattern.
  */
 export class EffectsManager {
-  private effects: Effect[] = [];
+  private effects = new Set<Effect>();
   private previousDeps = new Map<number, any[]>();
+  private callbackToEffect = new Map<Function, Effect>();
   private idCounter = 0;
 
   /**
    * Register an effect to run based on dependency changes.
+   * If the callback already exists, it will not be added again.
    *
    * @param callback - Function to execute when effect runs
    * @param dependencies - Optional array of dependencies. If not provided, effect runs every step.
@@ -19,12 +21,18 @@ export class EffectsManager {
     callback: (context: PromptContext, stepModifier: StepModifier) => void,
     dependencies?: any[]
   ): void {
+    // Check if callback already exists
+    if (this.callbackToEffect.has(callback)) {
+      return;
+    }
+
     const effect: Effect = {
       id: this.idCounter++,
       callback,
       dependencies
     };
-    this.effects.push(effect);
+    this.effects.add(effect);
+    this.callbackToEffect.set(callback, effect);
   }
 
   /**
@@ -111,14 +119,15 @@ export class EffectsManager {
    * Get all registered effects.
    */
   getEffects(): Effect[] {
-    return [...this.effects];
+    return Array.from(this.effects);
   }
 
   /**
    * Clear all effects and reset state.
    */
   clear(): void {
-    this.effects = [];
+    this.effects.clear();
+    this.callbackToEffect.clear();
     this.previousDeps.clear();
     this.idCounter = 0;
   }

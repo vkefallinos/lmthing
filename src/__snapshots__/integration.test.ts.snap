@@ -59,19 +59,6 @@ completion: Finalize and save results
           ],
           "role": "user",
         },
-        {
-          "content": [
-            {
-              "text": "
-
-[Reminder: Remember to use the following items in your response:
-- RESEARCH_TOPIC (variable)
-- CONFIG (data variable)]",
-              "type": "text",
-            },
-          ],
-          "role": "assistant",
-        },
       ],
     },
     "output": {
@@ -152,6 +139,15 @@ completion: Finalize and save results
         {
           "content": [
             {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
 
 ",
@@ -188,19 +184,6 @@ completion: Finalize and save results
             },
           ],
           "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "text": "
-
-[Reminder: Remember to use the following items in your response:
-- specialists (agent)
-- synthesizer (agent)]",
-              "type": "text",
-            },
-          ],
-          "role": "assistant",
         },
       ],
     },
@@ -269,6 +252,24 @@ completion: Finalize and save results
   </WORKFLOW_PHASES>
 </variables>",
           "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
         },
         {
           "content": [
@@ -359,19 +360,6 @@ completion: Finalize and save results
           ],
           "role": "tool",
         },
-        {
-          "content": [
-            {
-              "text": "
-
-[Reminder: Remember to use the following items in your response:
-- specialists (agent)
-- synthesizer (agent)]",
-              "type": "text",
-            },
-          ],
-          "role": "assistant",
-        },
       ],
     },
     "output": {
@@ -442,6 +430,122 @@ completion: Finalize and save results
   </WORKFLOW_PHASES>
 </variables>",
           "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "deep",
+                "query": "Quantum Computing Applications overview",
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing Applications overview",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Great! Now let me research specific applications and save the findings.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "medium",
+                "query": "Quantum Computing in cryptography",
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing in cryptography",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
         },
         {
           "content": [
@@ -572,6 +676,178 @@ completion: Finalize and save results
         {
           "content": [
             {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "deep",
+                "query": "Quantum Computing Applications overview",
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing Applications overview",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Great! Now let me research specific applications and save the findings.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "medium",
+                "query": "Quantum Computing in cryptography",
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing in cryptography",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "content": "Quantum Computing Research Findings
+
+Key applications in cryptography...",
+                      "path": "/tmp/research.txt",
+                    },
+                    "name": "write",
+                  },
+                ],
+              },
+              "toolCallId": "call_3",
+              "toolName": "file",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "write",
+                      "result": {
+                        "bytesWritten": 72,
+                        "success": true,
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_3",
+              "toolName": "file",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
               "text": "Now I need deep analysis from specialists.
 
 ",
@@ -612,87 +888,11 @@ completion: Finalize and save results
                   "results": [
                     {
                       "name": "technical_analyst",
-                      "response": "Based on my technical analysis of Quantum Computing with focus on algorithm complexity, I find that the current quantum algorithms show significant promise for solving NP-hard problems with exponential speedup. Technical feasibility is rated at 85%.",
-                      "steps": [
-                        {
-                          "activeTools": [],
-                          "input": {
-                            "prompt": [
-                              {
-                                "content": "<role>
-You are a technical analyst specializing in deep technical evaluation.
-</role>
-<variables>
-  <ANALYSIS_FOCUS>
- algorithm complexity
-  </ANALYSIS_FOCUS>
-</variables>",
-                                "role": "system",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
-                                    "type": "text",
-                                  },
-                                ],
-                                "role": "user",
-                              },
-                            ],
-                          },
-                          "output": {
-                            "content": [
-                              {
-                                "text": "Based on my technical analysis of Quantum Computing with focus on algorithm complexity, I find that the current quantum algorithms show significant promise for solving NP-hard problems with exponential speedup. Technical feasibility is rated at 85%.",
-                                "type": "text",
-                              },
-                            ],
-                            "finishReason": "stop",
-                          },
-                        },
-                      ],
+                      "response": "Error: No output generated. Check the stream for errors.",
                     },
                     {
                       "name": "market_analyst",
-                      "response": "From a market perspective, Quantum Computing in the enterprise market shows strong potential with projected growth of 45% CAGR. Early adopters in finance and pharmaceuticals are driving demand.",
-                      "steps": [
-                        {
-                          "activeTools": [],
-                          "input": {
-                            "prompt": [
-                              {
-                                "content": "<role>
-You are a market analyst specializing in commercial trends.
-</role>
-<variables>
-  <MARKET_FOCUS>
- enterprise
-  </MARKET_FOCUS>
-</variables>",
-                                "role": "system",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "text": "Analyze the market potential of Quantum Computing in the enterprise market",
-                                    "type": "text",
-                                  },
-                                ],
-                                "role": "user",
-                              },
-                            ],
-                          },
-                          "output": {
-                            "content": [
-                              {
-                                "text": "From a market perspective, Quantum Computing in the enterprise market shows strong potential with projected growth of 45% CAGR. Early adopters in finance and pharmaceuticals are driving demand.",
-                                "type": "text",
-                              },
-                            ],
-                            "finishReason": "stop",
-                          },
-                        },
-                      ],
+                      "response": "Error: No output generated. Check the stream for errors.",
                     },
                   ],
                 },
@@ -774,6 +974,246 @@ completion: Finalize and save results
   </WORKFLOW_PHASES>
 </variables>",
           "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "deep",
+                "query": "Quantum Computing Applications overview",
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing Applications overview",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Great! Now let me research specific applications and save the findings.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "medium",
+                "query": "Quantum Computing in cryptography",
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing in cryptography",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "content": "Quantum Computing Research Findings
+
+Key applications in cryptography...",
+                      "path": "/tmp/research.txt",
+                    },
+                    "name": "write",
+                  },
+                ],
+              },
+              "toolCallId": "call_3",
+              "toolName": "file",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "write",
+                      "result": {
+                        "bytesWritten": 72,
+                        "success": true,
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_3",
+              "toolName": "file",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Now I need deep analysis from specialists.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "focus": "algorithm complexity",
+                      "topic": "Quantum Computing",
+                    },
+                    "name": "technical_analyst",
+                  },
+                  {
+                    "args": {
+                      "market": "enterprise",
+                      "topic": "Quantum Computing",
+                    },
+                    "name": "market_analyst",
+                  },
+                ],
+              },
+              "toolCallId": "call_4",
+              "toolName": "specialists",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "technical_analyst",
+                      "response": "Error: No output generated. Check the stream for errors.",
+                    },
+                    {
+                      "name": "market_analyst",
+                      "response": "Error: No output generated. Check the stream for errors.",
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_4",
+              "toolName": "specialists",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
         },
         {
           "content": [
@@ -885,6 +1325,298 @@ completion: Finalize and save results
         {
           "content": [
             {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "You are starting a comprehensive research project on <RESEARCH_TOPIC>. Using <CONFIG> with <MAX_RESEARCH_DEPTH> depth.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "I'll begin by researching Quantum Computing Applications. Let me start with a comprehensive search.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "deep",
+                "query": "Quantum Computing Applications overview",
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing Applications overview",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Great! Now let me research specific applications and save the findings.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "depth": "medium",
+                "query": "Quantum Computing in cryptography",
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "confidence": 0.85,
+                  "results": [
+                    "Key finding 1 about Quantum Computing in cryptography",
+                  ],
+                  "sources": 3,
+                },
+              },
+              "toolCallId": "call_2",
+              "toolName": "research",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "content": "Quantum Computing Research Findings
+
+Key applications in cryptography...",
+                      "path": "/tmp/research.txt",
+                    },
+                    "name": "write",
+                  },
+                ],
+              },
+              "toolCallId": "call_3",
+              "toolName": "file",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "write",
+                      "result": {
+                        "bytesWritten": 72,
+                        "success": true,
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_3",
+              "toolName": "file",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Now I need deep analysis from specialists.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "focus": "algorithm complexity",
+                      "topic": "Quantum Computing",
+                    },
+                    "name": "technical_analyst",
+                  },
+                  {
+                    "args": {
+                      "market": "enterprise",
+                      "topic": "Quantum Computing",
+                    },
+                    "name": "market_analyst",
+                  },
+                ],
+              },
+              "toolCallId": "call_4",
+              "toolName": "specialists",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "technical_analyst",
+                      "response": "Error: No output generated. Check the stream for errors.",
+                    },
+                    {
+                      "name": "market_analyst",
+                      "response": "Error: No output generated. Check the stream for errors.",
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_4",
+              "toolName": "specialists",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me calculate some metrics and synthesize the findings.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "operation": "analyze",
+                "values": [
+                  85,
+                  92,
+                  78,
+                  88,
+                  95,
+                ],
+              },
+              "toolCallId": "call_5",
+              "toolName": "calculator",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "operation": "analyze",
+                  "result": 87.6,
+                },
+              },
+              "toolCallId": "call_5",
+              "toolName": "calculator",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
               "input": {
                 "findings": [
                   "Quantum computing shows promise in cryptography",
@@ -904,57 +1636,9 @@ completion: Finalize and save results
         {
           "content": [
             {
-              "agentSteps": [
-                {
-                  "activeTools": [],
-                  "input": {
-                    "prompt": [
-                      {
-                        "content": "<role>
-You are a research synthesizer who creates comprehensive reports.
-</role>
-<variables>
-  <FINDINGS>
-- Quantum computing shows promise in cryptography
-- Technical feasibility is high with current algorithms
-- Market adoption expected to grow in enterprise sector
-- 'Average confidence score: 87.6%'
-
-  </FINDINGS>
-</variables>",
-                        "role": "system",
-                      },
-                      {
-                        "content": [
-                          {
-                            "text": "Create a executive report synthesizing these findings",
-                            "type": "text",
-                          },
-                        ],
-                        "role": "user",
-                      },
-                    ],
-                  },
-                  "output": {
-                    "content": [
-                      {
-                        "text": "# Executive Report: Quantum Computing Applications
-
-## Summary
-This comprehensive analysis reveals strong potential for quantum computing across cryptography and enterprise applications. Technical feasibility is high (85%) with growing market adoption (45% CAGR).",
-                        "type": "text",
-                      },
-                    ],
-                    "finishReason": "stop",
-                  },
-                },
-              ],
               "output": {
-                "type": "text",
-                "value": "# Executive Report: Quantum Computing Applications
-
-## Summary
-This comprehensive analysis reveals strong potential for quantum computing across cryptography and enterprise applications. Technical feasibility is high (85%) with growing market adoption (45% CAGR).",
+                "type": "error-text",
+                "value": "No output generated. Check the stream for errors.",
               },
               "toolCallId": "call_6",
               "toolName": "synthesizer",

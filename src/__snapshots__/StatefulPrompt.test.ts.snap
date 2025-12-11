@@ -16,8 +16,13 @@ exports[`StatefulPrompt > should allow step modifications from effects 1`] = `
       "input": {
         "prompt": [
           {
-            "content": "Modified message",
-            "role": "system",
+            "content": [
+              {
+                "text": "Original message",
+                "type": "text",
+              },
+            ],
+            "role": "user",
           },
         ],
       },
@@ -115,6 +120,15 @@ exports[`StatefulPrompt > should maintain state across re-executions 1`] = `
         {
           "content": [
             {
+              "text": "Current count: 0",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
               "text": "First response",
               "type": "text",
             },
@@ -180,6 +194,11 @@ exports[`StatefulPrompt > should run effects with dependencies 1`] = `
       "stateValue": 0,
       "stepNumber": 0,
     },
+    {
+      "runCount": 2,
+      "stateValue": 0,
+      "stepNumber": 0,
+    },
   ],
   "finalDependency": 0,
   "steps": [
@@ -209,8 +228,9 @@ exports[`StatefulPrompt > should run effects with dependencies 1`] = `
 
 exports[`StatefulPrompt > should run effects without dependencies on every step 1`] = `
 {
-  "runCount": 1,
+  "runCount": 2,
   "stepNumbers": [
+    0,
     0,
   ],
   "steps": [
