@@ -506,320 +506,6 @@ Key applications in cryptography...",
       "prompt": [
         {
           "content": "<role>
-You are a technical analyst specializing in deep technical evaluation.
-</role>
-<variables>
-  <ANALYSIS_FOCUS>
- algorithm complexity
-  </ANALYSIS_FOCUS>
-</variables>",
-          "role": "system",
-        },
-        {
-          "content": [
-            {
-              "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
-      ],
-    },
-    "output": {
-      "content": [
-        {
-          "input": {
-            "operation": "analyze",
-            "values": [
-              85,
-              92,
-              78,
-              88,
-              95,
-            ],
-          },
-          "toolCallId": "call_5",
-          "toolName": "calculator",
-          "type": "tool-call",
-        },
-        {
-          "text": "Let me calculate some metrics and synthesize the findings.
-
-",
-          "type": "text",
-        },
-      ],
-      "finishReason": "tool-calls",
-    },
-  },
-  {
-    "activeTools": [
-      "file",
-      "research",
-      "calculator",
-      "specialists",
-      "synthesizer",
-    ],
-    "input": {
-      "prompt": [
-        {
-          "content": "<role>
-You are a technical analyst specializing in deep technical evaluation.
-</role>
-<variables>
-  <ANALYSIS_FOCUS>
- algorithm complexity
-  </ANALYSIS_FOCUS>
-</variables>",
-          "role": "system",
-        },
-        {
-          "content": [
-            {
-              "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
-        {
-          "content": [
-            {
-              "text": "Let me calculate some metrics and synthesize the findings.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "operation": "analyze",
-                "values": [
-                  85,
-                  92,
-                  78,
-                  88,
-                  95,
-                ],
-              },
-              "toolCallId": "call_5",
-              "toolName": "calculator",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "error-text",
-                "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
-              },
-              "toolCallId": "call_5",
-              "toolName": "calculator",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-      ],
-    },
-    "output": {
-      "content": [
-        {
-          "input": {
-            "findings": [
-              "Quantum computing shows promise in cryptography",
-              "Technical feasibility is high with current algorithms",
-              "Market adoption expected to grow in enterprise sector",
-              "Average confidence score: 87.6%",
-            ],
-            "format": "executive",
-          },
-          "toolCallId": "call_6",
-          "toolName": "synthesizer",
-          "type": "tool-call",
-        },
-      ],
-      "finishReason": "tool-calls",
-    },
-  },
-  {
-    "activeTools": [
-      "file",
-      "research",
-      "calculator",
-      "specialists",
-      "synthesizer",
-    ],
-    "input": {
-      "prompt": [
-        {
-          "content": "<role>
-You are a technical analyst specializing in deep technical evaluation.
-</role>
-<variables>
-  <ANALYSIS_FOCUS>
- algorithm complexity
-  </ANALYSIS_FOCUS>
-</variables>",
-          "role": "system",
-        },
-        {
-          "content": [
-            {
-              "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
-        {
-          "content": [
-            {
-              "text": "Let me calculate some metrics and synthesize the findings.
-
-",
-              "type": "text",
-            },
-            {
-              "input": {
-                "operation": "analyze",
-                "values": [
-                  85,
-                  92,
-                  78,
-                  88,
-                  95,
-                ],
-              },
-              "toolCallId": "call_5",
-              "toolName": "calculator",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "error-text",
-                "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
-              },
-              "toolCallId": "call_5",
-              "toolName": "calculator",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-        {
-          "content": [
-            {
-              "input": {
-                "findings": [
-                  "Quantum computing shows promise in cryptography",
-                  "Technical feasibility is high with current algorithms",
-                  "Market adoption expected to grow in enterprise sector",
-                  "Average confidence score: 87.6%",
-                ],
-                "format": "executive",
-              },
-              "toolCallId": "call_6",
-              "toolName": "synthesizer",
-              "type": "tool-call",
-            },
-          ],
-          "role": "assistant",
-        },
-        {
-          "content": [
-            {
-              "output": {
-                "type": "error-text",
-                "value": "Model tried to call unavailable tool 'synthesizer'. No tools are available.",
-              },
-              "toolCallId": "call_6",
-              "toolName": "synthesizer",
-              "type": "tool-result",
-            },
-          ],
-          "role": "tool",
-        },
-      ],
-    },
-    "output": {
-      "content": [
-        {
-          "text": "
-
-**Research Complete!**
-
-I have conducted a comprehensive analysis of Quantum Computing Applications through multiple phases:
-
-1. ✅ Initial research gathered key findings
-2. ✅ Specialized agents provided deep technical and market analysis
-3. ✅ Metrics calculated and findings synthesized
-4. ✅ Executive report generated
-
-The workflow progressed through all phases successfully!",
-          "type": "text",
-        },
-      ],
-      "finishReason": "stop",
-    },
-  },
-  {
-    "activeTools": [
-      "file",
-      "research",
-      "calculator",
-      "specialists",
-      "synthesizer",
-    ],
-    "input": {
-      "prompt": [
-        {
-          "content": "<role>
-You are a market analyst specializing in commercial trends.
-</role>
-<variables>
-  <MARKET_FOCUS>
- enterprise
-  </MARKET_FOCUS>
-</variables>",
-          "role": "system",
-        },
-        {
-          "content": [
-            {
-              "text": "Analyze the market potential of Quantum Computing in the enterprise market",
-              "type": "text",
-            },
-          ],
-          "role": "user",
-        },
-      ],
-    },
-    "output": {
-      "content": [],
-      "finishReason": "stop",
-    },
-  },
-  {
-    "activeTools": [
-      "file",
-      "research",
-      "calculator",
-      "specialists",
-      "synthesizer",
-    ],
-    "input": {
-      "prompt": [
-        {
-          "content": "<role>
 role prompt
 </role>
 <guidelines>
@@ -899,18 +585,7 @@ completion: Finalize and save results
                   "results": [
                     {
                       "name": "technical_analyst",
-                      "response": "
-
-**Research Complete!**
-
-I have conducted a comprehensive analysis of Quantum Computing Applications through multiple phases:
-
-1. ✅ Initial research gathered key findings
-2. ✅ Specialized agents provided deep technical and market analysis
-3. ✅ Metrics calculated and findings synthesized
-4. ✅ Executive report generated
-
-The workflow progressed through all phases successfully!",
+                      "response": "Based on my technical analysis of Quantum Computing with focus on algorithm complexity, I find that the current quantum algorithms show significant promise for solving NP-hard problems with exponential speedup. Technical feasibility is rated at 85%.",
                       "steps": [
                         {
                           "activeTools": [],
@@ -941,230 +616,7 @@ You are a technical analyst specializing in deep technical evaluation.
                           "output": {
                             "content": [
                               {
-                                "input": {
-                                  "operation": "analyze",
-                                  "values": [
-                                    85,
-                                    92,
-                                    78,
-                                    88,
-                                    95,
-                                  ],
-                                },
-                                "toolCallId": "call_5",
-                                "toolName": "calculator",
-                                "type": "tool-call",
-                              },
-                              {
-                                "text": "Let me calculate some metrics and synthesize the findings.
-
-",
-                                "type": "text",
-                              },
-                            ],
-                            "finishReason": "tool-calls",
-                          },
-                        },
-                        {
-                          "activeTools": [],
-                          "input": {
-                            "prompt": [
-                              {
-                                "content": "<role>
-You are a technical analyst specializing in deep technical evaluation.
-</role>
-<variables>
-  <ANALYSIS_FOCUS>
- algorithm complexity
-  </ANALYSIS_FOCUS>
-</variables>",
-                                "role": "system",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
-                                    "type": "text",
-                                  },
-                                ],
-                                "role": "user",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "text": "Let me calculate some metrics and synthesize the findings.
-
-",
-                                    "type": "text",
-                                  },
-                                  {
-                                    "input": {
-                                      "operation": "analyze",
-                                      "values": [
-                                        85,
-                                        92,
-                                        78,
-                                        88,
-                                        95,
-                                      ],
-                                    },
-                                    "toolCallId": "call_5",
-                                    "toolName": "calculator",
-                                    "type": "tool-call",
-                                  },
-                                ],
-                                "role": "assistant",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "output": {
-                                      "type": "error-text",
-                                      "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
-                                    },
-                                    "toolCallId": "call_5",
-                                    "toolName": "calculator",
-                                    "type": "tool-result",
-                                  },
-                                ],
-                                "role": "tool",
-                              },
-                            ],
-                          },
-                          "output": {
-                            "content": [
-                              {
-                                "input": {
-                                  "findings": [
-                                    "Quantum computing shows promise in cryptography",
-                                    "Technical feasibility is high with current algorithms",
-                                    "Market adoption expected to grow in enterprise sector",
-                                    "Average confidence score: 87.6%",
-                                  ],
-                                  "format": "executive",
-                                },
-                                "toolCallId": "call_6",
-                                "toolName": "synthesizer",
-                                "type": "tool-call",
-                              },
-                            ],
-                            "finishReason": "tool-calls",
-                          },
-                        },
-                        {
-                          "activeTools": [],
-                          "input": {
-                            "prompt": [
-                              {
-                                "content": "<role>
-You are a technical analyst specializing in deep technical evaluation.
-</role>
-<variables>
-  <ANALYSIS_FOCUS>
- algorithm complexity
-  </ANALYSIS_FOCUS>
-</variables>",
-                                "role": "system",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "text": "Analyze the technical aspects of Quantum Computing with focus on algorithm complexity",
-                                    "type": "text",
-                                  },
-                                ],
-                                "role": "user",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "text": "Let me calculate some metrics and synthesize the findings.
-
-",
-                                    "type": "text",
-                                  },
-                                  {
-                                    "input": {
-                                      "operation": "analyze",
-                                      "values": [
-                                        85,
-                                        92,
-                                        78,
-                                        88,
-                                        95,
-                                      ],
-                                    },
-                                    "toolCallId": "call_5",
-                                    "toolName": "calculator",
-                                    "type": "tool-call",
-                                  },
-                                ],
-                                "role": "assistant",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "output": {
-                                      "type": "error-text",
-                                      "value": "Model tried to call unavailable tool 'calculator'. No tools are available.",
-                                    },
-                                    "toolCallId": "call_5",
-                                    "toolName": "calculator",
-                                    "type": "tool-result",
-                                  },
-                                ],
-                                "role": "tool",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "input": {
-                                      "findings": [
-                                        "Quantum computing shows promise in cryptography",
-                                        "Technical feasibility is high with current algorithms",
-                                        "Market adoption expected to grow in enterprise sector",
-                                        "Average confidence score: 87.6%",
-                                      ],
-                                      "format": "executive",
-                                    },
-                                    "toolCallId": "call_6",
-                                    "toolName": "synthesizer",
-                                    "type": "tool-call",
-                                  },
-                                ],
-                                "role": "assistant",
-                              },
-                              {
-                                "content": [
-                                  {
-                                    "output": {
-                                      "type": "error-text",
-                                      "value": "Model tried to call unavailable tool 'synthesizer'. No tools are available.",
-                                    },
-                                    "toolCallId": "call_6",
-                                    "toolName": "synthesizer",
-                                    "type": "tool-result",
-                                  },
-                                ],
-                                "role": "tool",
-                              },
-                            ],
-                          },
-                          "output": {
-                            "content": [
-                              {
-                                "text": "
-
-**Research Complete!**
-
-I have conducted a comprehensive analysis of Quantum Computing Applications through multiple phases:
-
-1. ✅ Initial research gathered key findings
-2. ✅ Specialized agents provided deep technical and market analysis
-3. ✅ Metrics calculated and findings synthesized
-4. ✅ Executive report generated
-
-The workflow progressed through all phases successfully!",
+                                "text": "Based on my technical analysis of Quantum Computing with focus on algorithm complexity, I find that the current quantum algorithms show significant promise for solving NP-hard problems with exponential speedup. Technical feasibility is rated at 85%.",
                                 "type": "text",
                               },
                             ],
@@ -1175,7 +627,7 @@ The workflow progressed through all phases successfully!",
                     },
                     {
                       "name": "market_analyst",
-                      "response": "",
+                      "response": "From a market perspective, Quantum Computing in the enterprise market shows strong potential with projected growth of 45% CAGR. Early adopters in finance and pharmaceuticals are driving demand.",
                       "steps": [
                         {
                           "activeTools": [],
@@ -1204,7 +656,12 @@ You are a market analyst specializing in commercial trends.
                             ],
                           },
                           "output": {
-                            "content": [],
+                            "content": [
+                              {
+                                "text": "From a market perspective, Quantum Computing in the enterprise market shows strong potential with projected growth of 45% CAGR. Early adopters in finance and pharmaceuticals are driving demand.",
+                                "type": "text",
+                              },
+                            ],
                             "finishReason": "stop",
                           },
                         },
@@ -1223,7 +680,294 @@ You are a market analyst specializing in commercial trends.
       ],
     },
     "output": {
-      "content": [],
+      "content": [
+        {
+          "input": {
+            "operation": "analyze",
+            "values": [
+              85,
+              92,
+              78,
+              88,
+              95,
+            ],
+          },
+          "toolCallId": "call_5",
+          "toolName": "calculator",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me calculate some metrics and synthesize the findings.
+
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+role prompt
+</role>
+<guidelines>
+guidelines prompt
+</guidelines>
+<expertise>
+expertise prompt
+</expertise>
+<variables>
+  <RESEARCH_TOPIC>
+ Quantum Computing Applications
+  </RESEARCH_TOPIC>
+  <MAX_RESEARCH_DEPTH>
+ 3
+  </MAX_RESEARCH_DEPTH>
+  <CONFIG>
+timeout: 30000
+maxRetries: 3
+analysisMode: comprehensive
+priorities:
+  - accuracy
+  - depth
+  - novelty
+
+  </CONFIG>
+  <WORKFLOW_PHASES>
+initialization: Set up research parameters
+research: Gather information from multiple sources
+analysis: Deep analysis by specialist agents
+synthesis: Combine findings into final report
+completion: Finalize and save results
+
+  </WORKFLOW_PHASES>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me calculate some metrics and synthesize the findings.
+
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "operation": "analyze",
+                "values": [
+                  85,
+                  92,
+                  78,
+                  88,
+                  95,
+                ],
+              },
+              "toolCallId": "call_5",
+              "toolName": "calculator",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "operation": "analyze",
+                  "result": 87.6,
+                },
+              },
+              "toolCallId": "call_5",
+              "toolName": "calculator",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "findings": [
+              "Quantum computing shows promise in cryptography",
+              "Technical feasibility is high with current algorithms",
+              "Market adoption expected to grow in enterprise sector",
+              "Average confidence score: 87.6%",
+            ],
+            "format": "executive",
+          },
+          "toolCallId": "call_6",
+          "toolName": "synthesizer",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "file",
+      "research",
+      "calculator",
+      "specialists",
+      "synthesizer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+role prompt
+</role>
+<guidelines>
+guidelines prompt
+</guidelines>
+<expertise>
+expertise prompt
+</expertise>
+<variables>
+  <RESEARCH_TOPIC>
+ Quantum Computing Applications
+  </RESEARCH_TOPIC>
+  <MAX_RESEARCH_DEPTH>
+ 3
+  </MAX_RESEARCH_DEPTH>
+  <CONFIG>
+timeout: 30000
+maxRetries: 3
+analysisMode: comprehensive
+priorities:
+  - accuracy
+  - depth
+  - novelty
+
+  </CONFIG>
+  <WORKFLOW_PHASES>
+initialization: Set up research parameters
+research: Gather information from multiple sources
+analysis: Deep analysis by specialist agents
+synthesis: Combine findings into final report
+completion: Finalize and save results
+
+  </WORKFLOW_PHASES>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "findings": [
+                  "Quantum computing shows promise in cryptography",
+                  "Technical feasibility is high with current algorithms",
+                  "Market adoption expected to grow in enterprise sector",
+                  "Average confidence score: 87.6%",
+                ],
+                "format": "executive",
+              },
+              "toolCallId": "call_6",
+              "toolName": "synthesizer",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": "<role>
+You are a research synthesizer who creates comprehensive reports.
+</role>
+<variables>
+  <FINDINGS>
+- Quantum computing shows promise in cryptography
+- Technical feasibility is high with current algorithms
+- Market adoption expected to grow in enterprise sector
+- 'Average confidence score: 87.6%'
+
+  </FINDINGS>
+</variables>",
+                        "role": "system",
+                      },
+                      {
+                        "content": [
+                          {
+                            "text": "Create a executive report synthesizing these findings",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "# Executive Report: Quantum Computing Applications
+
+## Summary
+This comprehensive analysis reveals strong potential for quantum computing across cryptography and enterprise applications. Technical feasibility is high (85%) with growing market adoption (45% CAGR).",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "# Executive Report: Quantum Computing Applications
+
+## Summary
+This comprehensive analysis reveals strong potential for quantum computing across cryptography and enterprise applications. Technical feasibility is high (85%) with growing market adoption (45% CAGR).",
+              },
+              "toolCallId": "call_6",
+              "toolName": "synthesizer",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+
+**Research Complete!**
+
+I have conducted a comprehensive analysis of Quantum Computing Applications through multiple phases:
+
+1. ✅ Initial research gathered key findings
+2. ✅ Specialized agents provided deep technical and market analysis
+3. ✅ Metrics calculated and findings synthesized
+4. ✅ Executive report generated
+
+The workflow progressed through all phases successfully!",
+          "type": "text",
+        },
+      ],
       "finishReason": "stop",
     },
   },
