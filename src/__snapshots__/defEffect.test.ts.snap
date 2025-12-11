@@ -1,0 +1,171 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defEffect() > filters tools via stepModifier 1`] = `
+[
+  {
+    "activeTools": [
+      "t1",
+      "t2",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "
+
+[Reminder: Remember to use the following items in your response:
+- t2 (tool)]",
+              "type": "text",
+            },
+          ],
+          "role": "assistant",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "task": "do it",
+          },
+          "toolCallId": "c1",
+          "toolName": "worker",
+          "type": "tool-call",
+        },
+        {
+          "text": "a",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "t1",
+      "t2",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "a",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "add message",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "msg",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "a",
+              "type": "text",
+            },
+            {
+              "input": {
+                "task": "do it",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "error-text",
+                "value": "Model tried to call unavailable tool 'worker'. Available tools: t1, t2.",
+              },
+              "toolCallId": "c1",
+              "toolName": "worker",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "add message",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "b",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
