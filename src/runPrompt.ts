@@ -24,9 +24,7 @@ export function createPluginArray<P extends Plugin[]>(...plugins: P): P {
 /**
  * Configuration options for runPrompt
  */
-export interface PromptConfig<
-  const P extends readonly Plugin[] = []
-> {
+export interface PromptConfig<P extends readonly Plugin[] = []> {
   model: ModelInput;
   // Allow passing any streamText options except the ones we handle internally
   options?: Partial<Omit<StreamTextOptions, 'model' | 'system' | 'messages' | 'tools' | 'onFinish' | 'onStepFinish' | 'prepareStep'>>;
