@@ -13,6 +13,10 @@
     "./test": {
       "types": "./dist/test/createMockModel.d.ts",
       "default": "./dist/test/createMockModel.js"
+    },
+    "./plugins": {
+      "types": "./dist/plugins/index.d.ts",
+      "default": "./dist/plugins/index.js"
     }
   },
   "bin": {

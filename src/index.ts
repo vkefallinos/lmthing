@@ -19,8 +19,16 @@ export type {
   SystemCollection,
   VariableCollection,
   LastToolInfo,
-  StepModifier
+  StepModifier,
+  // Plugin system types
+  Plugin,
+  PluginMethod,
+  MergePlugins,
+  PromptWithPlugins
 } from './types';
+
+// Export PromptConfig from runPrompt
+export type { PromptConfig } from './runPrompt';
 
 // Export all provider-related functionality
 export * from './providers';

@@ -85,3 +85,54 @@ export interface StepModifications {
   systems?: { name: string; value: string }[];
   variables?: { name: string; type: string; value: any }[];
 }
+
+// ============================================================================
+// Plugin System Types
+// ============================================================================
+
+/**
+ * Import StatefulPrompt type for plugin context
+ * Note: This creates a forward reference to avoid circular imports
+ */
+import type { StatefulPrompt } from './StatefulPrompt';
+
+/**
+ * A plugin method that receives StatefulPrompt as `this` context.
+ * Plugin methods can use all StatefulPrompt methods like defState, defTool, etc.
+ *
+ * @example
+ * function defTaskList(this: StatefulPrompt, tasks: Task[]) {
+ *   const [taskList, setTaskList] = this.defState('taskList', tasks);
+ *   this.defTool('startTask', ...);
+ *   return [taskList, setTaskList];
+ * }
+ */
+export type PluginMethod<Args extends any[] = any[], Return = any> =
+  (this: StatefulPrompt, ...args: Args) => Return;
+
+/**
+ * A plugin is an object containing named plugin methods.
+ * Each method receives the StatefulPrompt instance as `this` when called.
+ *
+ * @example
+ * export const taskListPlugin = {
+ *   defTaskList(this: StatefulPrompt, tasks: Task[]) { ... },
+ *   defDynamicTaskList(this: StatefulPrompt) { ... }
+ * };
+ */
+export type Plugin = Record<string, PluginMethod>;
+
+/**
+ * Utility type to merge multiple plugin types into a single intersection type.
+ * Used to combine methods from multiple plugins into one extended prompt type.
+ */
+export type MergePlugins<P extends Plugin[]> =
+  P extends [infer First extends Plugin, ...infer Rest extends Plugin[]]
+    ? First & MergePlugins<Rest>
+    : {};
+
+/**
+ * Extended StatefulPrompt type with plugin methods merged in.
+ * This type is what the user's prompt function receives.
+ */
+export type PromptWithPlugins<P extends Plugin[]> = StatefulPrompt & MergePlugins<P>;
