@@ -6,6 +6,30 @@ import { runPrompt } from './runPrompt';
 
 describe('Prompt', () => {
   it('should handle a complete workflow testing all Prompt class features', async () => {
+    // Create mock models for child agents
+    const technicalAnalystMock = createMockModel([
+      { type: 'text', text: 'Based on my technical analysis of ' },
+      { type: 'text', text: 'Quantum Computing with focus on algorithm complexity, ' },
+      { type: 'text', text: 'I find that the current quantum algorithms show significant ' },
+      { type: 'text', text: 'promise for solving NP-hard problems with exponential speedup. ' },
+      { type: 'text', text: 'Technical feasibility is rated at 85%.' }
+    ]);
+
+    const marketAnalystMock = createMockModel([
+      { type: 'text', text: 'From a market perspective, ' },
+      { type: 'text', text: 'Quantum Computing in the enterprise market ' },
+      { type: 'text', text: 'shows strong potential with projected growth of 45% CAGR. ' },
+      { type: 'text', text: 'Early adopters in finance and pharmaceuticals are driving demand.' }
+    ]);
+
+    const synthesizerMock = createMockModel([
+      { type: 'text', text: '# Executive Report: Quantum Computing Applications\n\n' },
+      { type: 'text', text: '## Summary\n' },
+      { type: 'text', text: 'This comprehensive analysis reveals strong potential for quantum computing ' },
+      { type: 'text', text: 'across cryptography and enterprise applications. ' },
+      { type: 'text', text: 'Technical feasibility is high (85%) with growing market adoption (45% CAGR).' }
+    ]);
+
     // Create a mock model that simulates a multi-step conversation with tool calls
     const mockModel = createMockModel([
       // Step 0: Initial planning and research
@@ -285,8 +309,8 @@ describe('Prompt', () => {
 
               // Update parent state
               setPhase('analysis');
-            }
-            // Model inherited from parent
+            },
+            { model: technicalAnalystMock }
           ),
           agent(
             'market_analyst',
@@ -298,8 +322,8 @@ describe('Prompt', () => {
               childPrompt.defSystem('role', 'You are a market analyst specializing in commercial trends.');
               childPrompt.def('MARKET_FOCUS', args.market);
               childPrompt.$`Analyze the market potential of ${args.topic} in the ${args.market} market`;
-            }
-            // Model inherited from parent
+            },
+            { model: marketAnalystMock }
           )
         ]);
 
@@ -321,8 +345,8 @@ describe('Prompt', () => {
             // Mark analysis as complete
             setAnalysisComplete(true);
             setPhase('synthesis');
-          }
-          // Model inherited from parent
+          },
+          { model: synthesizerMock }
         );
 
         // ========== HOOKS ==========
