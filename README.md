@@ -408,6 +408,44 @@ const userData = prompt.defData('USER_DATA', {
 prompt.$`Analyze the following user data: ${userData}`;
 ```
 
+### Definition Proxy Methods
+
+All `def*` methods (`def`, `defData`, `defSystem`, `defTool`, `defAgent`) return a proxy object that acts as a string in templates but also provides utility methods:
+
+```typescript
+const userName = prompt.def('USER_NAME', 'Alice');
+
+// Use in templates (acts as string '<USER_NAME>')
+prompt.$`Hello ${userName}`;
+
+// Access the tag value
+console.log(userName.value);  // '<USER_NAME>'
+
+// Mark for reminder - adds a message reminding the model to use this definition
+userName.remind();
+
+// Disable for current step - removes definition from next step
+// Should be called within defEffect
+prompt.defEffect((ctx, stepModifier) => {
+  if (someCondition) {
+    userName.disable();  // USER_NAME won't be in the next step's system prompt
+  }
+});
+```
+
+**Available methods:**
+- `.value` - Returns the XML tag string (e.g., `'<USER_NAME>'`)
+- `.remind()` - Marks the definition to remind the model to use it
+- `.disable()` - Removes the definition from the next step (use within `defEffect`)
+- `.toString()` / `.valueOf()` - Returns the tag for string coercion
+
+**Introspection:**
+```typescript
+// Get all reminded items
+const reminded = prompt.getRemindedItems();
+// Returns: [{ type: 'def', name: 'USER_NAME' }, ...]
+```
+
 ### `defTool<T>(name: string, description: string, schema: T, fn: Function)`
 
 Registers a tool that maps to the `tools` parameter in `streamText`. Takes a Zod schema for input validation (mapped to `inputSchema`) and executes the provided function when invoked by the model (mapped to `execute`).
@@ -614,152 +652,107 @@ If a sub-agent throws an error, execution continues for remaining sub-agents, an
 }
 ```
 
-### `defTaskList(tasks: Task[])`
+## Plugin System
 
-Sets up a sequential task execution system with validation. Creates a workflow where:
+The plugin system allows extending `StatefulPrompt` with additional methods. Plugins must be imported from `lmthing/plugins` and passed to `runPrompt` via the `plugins` option.
 
-- Tasks are executed sequentially, one at a time
-- A `finishTask` tool is automatically registered via `tools` parameter
-- Each task result is validated before proceeding
-- Validation failures provide feedback for correction attempts
-- Uses `defEffect` with `stepModifier` to manage message history, showing only:
-  - Task summaries for completed tasks
-  - Current task details
-  - Upcoming tasks list
-- Leverages `stopWhen` to control multi-step execution
+### Using the Task List Plugin
 
-Each task requires:
-- `task`: Description of what needs to be done
-- `validation`: Function that returns error message on failure, or `undefined`/`void` on success
-- `extend` (optional): Function to add task-specific context, tools, and messages
-  - Receives `prompt` (Prompt instance) and `messages` (current message history)
-  - Can call any context methods (`defTool`, `def`, `defMessage`, etc.)
-  - Uses `prepareStep` internally to activate extensions when the task starts
-  - Extensions are automatically cleaned up via `prepareStep` when the task completes
-  - Only active during the specific task execution
+The built-in task list plugin provides `defTaskList` for managing tasks:
 
 ```typescript
-prompt.defTaskList([
-  {
-    task: 'Calculate 5 + 3',
-    validation: (result) => {
-      const num = parseInt(result.trim());
-      if (num !== 8) {
-        return `Incorrect. Expected 8, got ${result}`;
-      }
-    },
-  },
-  {
-    task: 'Multiply the previous result by 2',
-    extend: (prompt, messages) => {
-      // Add task-specific tools
-      prompt.defTool(
-        'calculator',
-        'Perform multiplication',
-        z.object({ a: z.number(), b: z.number() }),
-        async ({ a, b }) => String(a * b)
-      );
+import { runPrompt } from 'lmthing';
+import { taskListPlugin } from 'lmthing/plugins';
 
-      // Add task-specific context
-      prompt.def('ALLOWED_OPERATIONS', 'multiplication only');
+const { result } = await runPrompt(async ({ defTaskList, $ }) => {
+  // defTaskList is available because we passed taskListPlugin
+  const [tasks, setTasks] = defTaskList([
+    { id: '1', name: 'Research the topic', status: 'pending' },
+    { id: '2', name: 'Write implementation', status: 'pending' },
+    { id: '3', name: 'Add tests', status: 'pending' },
+  ]);
 
-      // Add task-specific system instruction
-      prompt.defSystem('instructions', 'Use the calculator tool for multiplication.');
-
-      // All extensions are automatically removed via prepareStep when task completes
-    },
-    validation: (result) => {
-      const num = parseInt(result.trim());
-      if (num !== 16) {
-        return `Incorrect. Expected 16 (8 * 2), got ${result}`;
-      }
-    },
-  },
-  {
-    task: 'Subtract 6 from the previous result',
-    validation: (result) => {
-      const num = parseInt(result.trim());
-      if (num !== 10) {
-        return `Incorrect. Expected 10 (16 - 6), got ${result}`;
-      }
-    },
-  },
-]);
-
-// The LLM receives finishTask tool automatically
-prompt.$`Complete all tasks using the finishTask tool.`;
+  $`Complete all tasks. Use startTask when beginning and completeTask when finished.`;
+}, {
+  model: 'openai:gpt-4o',
+  plugins: [taskListPlugin]
+});
 ```
 
-**How `extend` integrates with `prepareStep`:**
+**Task interface:**
+```typescript
+interface Task {
+  id: string;         // Unique identifier
+  name: string;       // Task description
+  status: TaskStatus; // 'pending' | 'in_progress' | 'completed' | 'failed'
+  metadata?: Record<string, any>;  // Optional metadata
+}
+```
 
-The `extend` function leverages the `prepareStep` parameter from `streamText` to manage task-specific configurations:
+**Automatically Registered Tools:**
 
-1. **Task Start**: When a task becomes active (via `startTask` tool), `prepareStep` applies the extensions by calling the `extend` function, which adds task-specific tools, variables, and messages to the context.
-
-2. **Task Execution**: During the task, all extensions are active and available to the model via the modified `tools`, `system`, and `messages` parameters.
-
-3. **Task Complete**: When the task finishes (via `finishTask` tool), `prepareStep` removes all task-specific extensions, restoring the base context for the next task.
-
-This ensures clean isolation between tasks while maintaining the global context (completed task summaries, upcoming tasks, etc.).
-
-### `defDynamicTaskList()`
-
-Sets up a dynamic task list system using `tools` parameter to register task management functions. Unlike `defTaskList`, this allows agents to create and manage tasks during execution.
-
-**Automatically Registered Tools (via `tools` parameter):**
-
-- **`createTask`**: Add new tasks
-  ```typescript
-  { description: string } // Creates task with 'pending' status
-  ```
-
-- **`updateTask`**: Modify pending tasks
-  ```typescript
-  { taskId: string, newDescription: string }
-  ```
-
-- **`startTask`**: Mark pending task as in-progress
+- **`startTask`**: Mark a task as in-progress
   ```typescript
   { taskId: string }
+  // Returns: { success: boolean, taskId: string, message: string }
   ```
 
-- **`completeTask`**: Mark task as completed (pending or in-progress)
-  ```typescript
-  { taskId: string, result: string }
-  ```
-
-- **`getTaskList`**: View all tasks with their states
-  ```typescript
-  {} // Returns formatted list of all tasks
-  ```
-
-- **`deleteTask`**: Remove pending tasks only
+- **`completeTask`**: Mark a task as completed
   ```typescript
   { taskId: string }
+  // Returns: { success: boolean, taskId: string, message: string }
   ```
 
-**Task States:**
-- `pending`: Created but not started
-- `in_progress`: Currently being worked on
-- `completed`: Finished with results
+**System Prompt Updates:**
 
-**Message History Management:**
+The plugin automatically adds a system message showing task status via `defEffect`:
 
-Uses `defEffect` with `stepModifier` (via `prepareStep`) to maintain focused context:
-- Shows completed tasks as summaries
-- Highlights current in-progress task
-- Lists pending tasks for planning
-- Replaces message history to keep context clean
-- Agent must complete all tasks to finish
+```
+## Current Task Status
+
+### In Progress (1)
+  - [1] Research the topic
+
+### Pending (2)
+  - [2] Write implementation
+  - [3] Add tests
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+```
+
+### Creating Custom Plugins
 
 ```typescript
-prompt.defDynamicTaskList();
+import type { StatefulPrompt } from 'lmthing';
+import { z } from 'zod';
 
-// Agent can now dynamically manage tasks
-prompt.$`
-  Create a plan to build a user authentication system.
-  Break it down into tasks and complete them one by one.
-`;
+// Plugin methods receive StatefulPrompt as `this` context
+export function defCustomFeature(this: StatefulPrompt, config: { option: string }) {
+  const [state, setState] = this.defState('customState', config.option);
+
+  this.defTool('customTool', 'Custom tool description',
+    z.object({ input: z.string() }),
+    async ({ input }) => ({ result: `${state}: ${input}` })
+  );
+
+  this.defEffect((ctx, stepModifier) => {
+    // Update system prompt based on state
+    stepModifier('systems', [{ name: 'customInfo', value: `State: ${state}` }]);
+  }, [state]);
+
+  return [state, setState];
+}
+
+export const customPlugin = { defCustomFeature };
+
+// Usage:
+runPrompt(({ defCustomFeature, $ }) => {
+  defCustomFeature({ option: 'value' });
+  $`Use the custom tool...`;
+}, { model: 'openai:gpt-4o', plugins: [customPlugin] });
 ```
 
 ### `$(strings: TemplateStringsArray, ...values: any[]): void`

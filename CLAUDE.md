@@ -35,6 +35,8 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/providers/` | Provider adapters for OpenAI, Anthropic, Google, etc. |
 | `src/providers/resolver.ts` | Model string resolution (`provider:model_id` → LanguageModel) |
 | `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
+| `src/plugins/` | Plugin system for extending StatefulPrompt |
+| `src/plugins/taskList.ts` | Built-in task list plugin with `defTaskList` |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
 
 ### Internal Modules (StatefulPrompt Implementation)
@@ -215,6 +217,45 @@ Adds user messages to the conversation:
 ```typescript
 prompt.$`Help ${userRef} with their question about ${topic}`;
 // Adds: { role: 'user', content: 'Help <USER> with their question about AI' }
+```
+
+### 6. Definition Proxy Methods
+
+All `def*` methods return a proxy object that acts as a string in templates but also provides utility methods:
+
+```typescript
+const userName = prompt.def('USER_NAME', 'Alice');
+
+// Use in templates (acts as string '<USER_NAME>')
+prompt.$`Hello ${userName}`;
+
+// Access the tag value
+console.log(userName.value);  // '<USER_NAME>'
+
+// Mark for reminder - inserts a reminder message to the model
+userName.remind();
+
+// Disable for current step - removes definition from next step
+// Should be called within defEffect
+prompt.defEffect((ctx, stepModifier) => {
+  if (someCondition) {
+    userName.disable();  // USER_NAME won't be in the next step's system prompt
+  }
+});
+```
+
+**Available methods on all definition proxies:**
+- `.value` - Returns the XML tag string (e.g., `'<USER_NAME>'`)
+- `.remind()` - Marks the definition to remind the model to use it
+- `.disable()` - Removes the definition from the next step (use within `defEffect`)
+- `.toString()` / `.valueOf()` - Returns the tag for string coercion
+
+**getRemindedItems() method:**
+
+```typescript
+// After calling .remind() on definitions
+const reminded = prompt.getRemindedItems();
+// Returns: [{ type: 'def', name: 'USER_NAME' }, { type: 'defTool', name: 'search' }, ...]
 ```
 
 ## StatefulPrompt (`src/StatefulPrompt.ts`)
@@ -603,28 +644,74 @@ Middleware in `_getMiddleware()` transforms agent responses:
 - **No classes for configuration** - use interfaces and factory functions
 - **Fluent builder pattern** in StreamTextBuilder
 
+## Plugin System
+
+The plugin system allows extending `StatefulPrompt` with additional methods. Plugins are implemented in `src/plugins/`.
+
+### Using Plugins
+
+```typescript
+import { runPrompt } from 'lmthing';
+import { taskListPlugin } from 'lmthing/plugins';
+
+const { result } = await runPrompt(async ({ defTaskList, $ }) => {
+  const [tasks, setTasks] = defTaskList([
+    { id: '1', name: 'Research the topic', status: 'pending' },
+    { id: '2', name: 'Write implementation', status: 'pending' },
+  ]);
+
+  $`Complete the tasks using startTask and completeTask tools.`;
+}, {
+  model: 'openai:gpt-4o',
+  plugins: [taskListPlugin]
+});
+```
+
+### Built-in Plugins
+
+**taskListPlugin** (`src/plugins/taskList.ts`):
+- Provides `defTaskList(tasks)` method
+- Creates `startTask` and `completeTask` tools automatically
+- Updates system prompt with task status via `defEffect`
+- Returns `[taskList, setTaskList]` tuple for state access
+
+### Creating Custom Plugins
+
+```typescript
+import type { StatefulPrompt } from 'lmthing';
+
+export function defCustomFeature(this: StatefulPrompt, config: Config) {
+  const [state, setState] = this.defState('customState', initialValue);
+  this.defTool('customTool', 'description', schema, handler);
+  this.defEffect((ctx, step) => { /* ... */ }, [state]);
+  return [state, setState];
+}
+
+export const customPlugin = { defCustomFeature };
+```
+
+### Plugin Architecture
+
+- Plugin methods receive `StatefulPrompt` as `this` context
+- Methods are pre-bound during `setPlugins()` call
+- Available through the prompt function's destructured arguments
+- Can use all StatefulPrompt methods (`defState`, `defTool`, `defEffect`, etc.)
+
 ## Future Development (from PROPOSAL.md)
 
 ### Planned Features
 
 1. **Memory System** - Persistent state across conversations
 2. **Agent Teams** - Multi-agent coordination patterns (sequential, parallel, voting)
-3. **Plugin Architecture** - Extensible hook system
-4. **Task Lists** - `defTaskList` and `defDynamicTaskList` for structured workflows
-5. **Enhanced Error Handling** - Retry policies, circuit breakers
-6. **Metrics & Observability** - Built-in profiling and monitoring
+3. **Enhanced Error Handling** - Retry policies, circuit breakers
+4. **Metrics & Observability** - Built-in profiling and monitoring
 
-### Not Yet Implemented (from README)
+### Not Yet Implemented
 
-The README documents several features that may not be fully implemented:
-- `defTaskList` - Sequential task execution with validation
-- `defDynamicTaskList` - Dynamic task management
-- Plugin system
-
-**When implementing these, ensure:**
-1. Add to `Prompt` class
+The README documents `defDynamicTaskList` which is not yet implemented. When implementing:
+1. Add as a plugin method
 2. Store state appropriately
-3. Process in prepareStep or run()
+3. Process via defEffect
 4. Add comprehensive tests
 5. Update README if behavior changes
 
@@ -684,7 +771,8 @@ The package provides multiple entry points:
 {
   "exports": {
     ".": "./dist/index.js",           // Main entry: runPrompt, StatefulPrompt, tool, agent, providers
-    "./test": "./dist/test/createMockModel.js"  // Test utilities
+    "./test": "./dist/test/createMockModel.js",  // Test utilities
+    "./plugins": "./dist/plugins/index.js"       // Plugin system
   },
   "bin": {
     "lmthing": "./dist/cli.js"        // CLI executable
@@ -696,6 +784,7 @@ Usage:
 ```typescript
 import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
+import { taskListPlugin, defTaskList } from 'lmthing/plugins';
 ```
 
 ## Dependencies
