@@ -393,6 +393,413 @@ describe('Plugin System', () => {
       // Snapshot validation
       expect(steps).toMatchSnapshot();
     });
+
+    describe('Per-Task Extensions', () => {
+      it('should inject per-task tools when task is in progress', async () => {
+        const searchFn = vi.fn(async ({ query }: { query: string }) => ({
+          results: [`Result for ${query}`]
+        }));
+
+        const mockModel = createMockModel([
+          { type: 'text', text: 'Starting research...' },
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'research' }
+          },
+          { type: 'text', text: 'Task started, now searching...' },
+          {
+            type: 'tool-call',
+            toolCallId: 'call_search',
+            toolName: 'webSearch',
+            args: { query: 'AI trends' }
+          },
+          { type: 'text', text: 'Search completed!' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'research',
+            name: 'Research AI trends',
+            status: 'pending',
+            tools: [
+              {
+                name: 'webSearch',
+                description: 'Search the web',
+                inputSchema: z.object({ query: z.string() }),
+                execute: searchFn
+              }
+            ]
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, $ }) => {
+            defTaskList(initialTasks);
+            $`Start and complete the research task`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Check that the task-specific tool was called
+        expect(searchFn).toHaveBeenCalledWith(
+          { query: 'AI trends' },
+          expect.anything()
+        );
+
+        // Snapshot validation
+        expect(prompt.steps).toMatchSnapshot();
+      });
+
+      it('should handle exclusive tool mode', async () => {
+        const taskToolFn = vi.fn(async () => ({ ok: true }));
+
+        const mockModel = createMockModel([
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'exclusive' }
+          },
+          { type: 'text', text: 'Task with exclusive tools active' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'exclusive',
+            name: 'Exclusive task',
+            status: 'pending',
+            toolMode: 'exclusive',
+            tools: [
+              {
+                name: 'taskTool',
+                description: 'Task-specific tool',
+                inputSchema: z.object({}),
+                execute: taskToolFn
+              }
+            ]
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, defTool, $ }) => {
+            // Define a global tool
+            defTool('globalTool', 'A global tool', z.object({}), async () => ({ global: true }));
+            defTaskList(initialTasks);
+            $`Use exclusive tools`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Snapshot validation - should show activeTools filtering
+        expect(prompt.steps).toMatchSnapshot();
+      });
+
+      it('should inject per-task variables when task is in progress', async () => {
+        const mockModel = createMockModel([
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'translate' }
+          },
+          { type: 'text', text: 'Translation task with context variables' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'translate',
+            name: 'Translate document',
+            status: 'pending',
+            variables: {
+              sourceLanguage: 'English',
+              targetLanguage: 'Spanish',
+              preserveFormatting: true
+            }
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, $ }) => {
+            defTaskList(initialTasks);
+            $`Start translation with context`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Check that variables were injected in the system prompt
+        const steps = prompt.steps;
+        const systemMessage = steps[1]?.input.prompt?.find((msg: any) => msg.role === 'system');
+
+        // Variables should appear in some form (via stepModifier)
+        expect(systemMessage?.content).toBeTruthy();
+
+        // Snapshot validation
+        expect(steps).toMatchSnapshot();
+      });
+
+      it('should inject per-task system prompts (string)', async () => {
+        const mockModel = createMockModel([
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'creative' }
+          },
+          { type: 'text', text: 'Creative writing task active' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'creative',
+            name: 'Write creative story',
+            status: 'pending',
+            system: 'Be creative and imaginative. Use vivid language.'
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, $ }) => {
+            defTaskList(initialTasks);
+            $`Start the creative task`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Snapshot validation
+        expect(prompt.steps).toMatchSnapshot();
+      });
+
+      it('should inject per-task system prompts (SystemPart)', async () => {
+        const mockModel = createMockModel([
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'analysis' }
+          },
+          { type: 'text', text: 'Analysis task with custom system part' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'analysis',
+            name: 'Analyze data',
+            status: 'pending',
+            system: {
+              name: 'analysis_rules',
+              value: 'Be precise and methodical. Format output as JSON.'
+            }
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, $ }) => {
+            defTaskList(initialTasks);
+            $`Start analysis`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Snapshot validation
+        expect(prompt.steps).toMatchSnapshot();
+      });
+
+      it('should inject per-task system prompts (array)', async () => {
+        const mockModel = createMockModel([
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'review' }
+          },
+          { type: 'text', text: 'Code review task with multiple system parts' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'review',
+            name: 'Review code',
+            status: 'pending',
+            system: [
+              { name: 'reviewer_role', value: 'You are a senior code reviewer.' },
+              { name: 'review_criteria', value: 'Focus on: security, performance, readability.' }
+            ]
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, $ }) => {
+            defTaskList(initialTasks);
+            $`Start code review`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Snapshot validation
+        expect(prompt.steps).toMatchSnapshot();
+      });
+
+      it('should handle task with all extensions combined', async () => {
+        const analyzerFn = vi.fn(async ({ data }: { data: string }) => ({
+          analysis: `Analyzed: ${data}`
+        }));
+
+        const mockModel = createMockModel([
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'full' }
+          },
+          { type: 'text', text: 'Full featured task...' },
+          {
+            type: 'tool-call',
+            toolCallId: 'call_analyze',
+            toolName: 'analyze',
+            args: { data: 'test data' }
+          },
+          { type: 'text', text: 'Analysis complete!' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'full',
+            name: 'Full featured task',
+            status: 'pending',
+            tools: [
+              {
+                name: 'analyze',
+                description: 'Analyze data',
+                inputSchema: z.object({ data: z.string() }),
+                execute: analyzerFn
+              }
+            ],
+            variables: {
+              mode: 'detailed',
+              threshold: 0.8
+            },
+            system: 'Perform thorough analysis with attention to detail.'
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, $ }) => {
+            defTaskList(initialTasks);
+            $`Execute the full featured task`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Check that the task tool was called
+        expect(analyzerFn).toHaveBeenCalledWith(
+          { data: 'test data' },
+          expect.anything()
+        );
+
+        // Snapshot validation
+        expect(prompt.steps).toMatchSnapshot();
+      });
+
+      it('should remove task extensions when task completes', async () => {
+        const taskToolFn = vi.fn(async () => ({ ok: true }));
+
+        const mockModel = createMockModel([
+          {
+            type: 'tool-call',
+            toolCallId: 'call_start',
+            toolName: 'startTask',
+            args: { taskId: 'temp' }
+          },
+          { type: 'text', text: 'Task in progress...' },
+          {
+            type: 'tool-call',
+            toolCallId: 'call_complete',
+            toolName: 'completeTask',
+            args: { taskId: 'temp' }
+          },
+          { type: 'text', text: 'Task completed, extensions removed' }
+        ]);
+
+        const initialTasks: Task[] = [
+          {
+            id: 'temp',
+            name: 'Temporary task',
+            status: 'pending',
+            tools: [
+              {
+                name: 'tempTool',
+                description: 'Temporary tool',
+                inputSchema: z.object({}),
+                execute: taskToolFn
+              }
+            ],
+            variables: { temp: 'value' },
+            system: 'Temporary instructions'
+          }
+        ];
+
+        const { result, prompt } = await runPrompt(
+          async ({ defTaskList, $ }) => {
+            defTaskList(initialTasks);
+            $`Start and complete the temporary task`;
+          },
+          {
+            model: mockModel,
+            plugins: [taskListPlugin],
+            options: { stopWhen: stepCountIs(10) }
+          }
+        );
+
+        await result.text;
+
+        // Snapshot should show extensions present in middle steps but not after completion
+        expect(prompt.steps).toMatchSnapshot();
+      });
+    });
   });
 
   describe('Type Safety', () => {

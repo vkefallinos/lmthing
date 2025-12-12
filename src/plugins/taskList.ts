@@ -19,8 +19,9 @@
  */
 
 import { z } from 'zod';
+import yaml from 'js-yaml';
 import type { StatefulPrompt } from '../StatefulPrompt';
-import type { Task, TaskStatus, StartTaskResult, CompleteTaskResult } from './types';
+import type { Task, TaskStatus, StartTaskResult, CompleteTaskResult, SystemPart } from './types';
 
 /**
  * Creates a managed task list with tools and effects.
@@ -152,6 +153,81 @@ Use "startTask" to begin a pending task and "completeTask" when finished.
       name: 'taskList',
       value: taskListContent
     }]);
+  }, [taskList]);
+
+  // Define effect to handle per-task extensions (tools, variables, system)
+  this.defEffect((ctx, stepModifier) => {
+    // Find the currently active task (in_progress)
+    const activeTask = taskList.find(t => t.status === 'in_progress');
+
+    if (!activeTask) {
+      // No active task, nothing to inject
+      return;
+    }
+
+    // === Per-Task Tools ===
+    if (activeTask.tools && activeTask.tools.length > 0) {
+      const toolMode = activeTask.toolMode || 'extend';
+
+      // Register task-specific tools
+      const toolsToAdd = activeTask.tools.map(toolDef => ({
+        name: toolDef.name,
+        description: toolDef.description,
+        inputSchema: toolDef.inputSchema,
+        execute: toolDef.execute
+      }));
+
+      stepModifier('tools', toolsToAdd);
+
+      // If exclusive mode, filter to only show task tools
+      if (toolMode === 'exclusive') {
+        const taskToolNames = activeTask.tools.map(t => t.name);
+        // Add startTask and completeTask to the allowed list
+        taskToolNames.push('startTask', 'completeTask');
+        stepModifier('activeTools', taskToolNames);
+      }
+    }
+
+    // === Per-Task Variables ===
+    if (activeTask.variables && Object.keys(activeTask.variables).length > 0) {
+      // Format variables as YAML for injection
+      const variablesYaml = yaml.dump(activeTask.variables, { indent: 2 });
+      const variablesContent = `
+## Current Task Context
+
+Variables for task "${activeTask.name}":
+
+\`\`\`yaml
+${variablesYaml.trim()}
+\`\`\`
+`.trim();
+
+      stepModifier('variables', [{
+        name: 'current_task_context',
+        value: variablesContent
+      }]);
+    }
+
+    // === Per-Task System Prompts ===
+    if (activeTask.system) {
+      const systemParts: SystemPart[] = [];
+
+      if (typeof activeTask.system === 'string') {
+        // Single string: wrap in a default-named system part
+        systemParts.push({
+          name: `task_${activeTask.id}_instructions`,
+          value: activeTask.system
+        });
+      } else if (Array.isArray(activeTask.system)) {
+        // Array of SystemPart objects
+        systemParts.push(...activeTask.system);
+      } else {
+        // Single SystemPart object
+        systemParts.push(activeTask.system);
+      }
+
+      stepModifier('systems', systemParts);
+    }
   }, [taskList]);
 
   return [taskList, setTaskList];

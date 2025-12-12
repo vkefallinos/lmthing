@@ -591,6 +591,1441 @@ exports[`Plugin System > Type Safety > should provide correct types for plugin m
 ]
 `;
 
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should handle exclusive tool mode 1`] = `
+[
+  {
+    "activeTools": [
+      "globalTool",
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [exclusive] Exclusive task
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Use exclusive tools",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "exclusive",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "taskTool",
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [exclusive] Exclusive task
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Use exclusive tools",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "exclusive",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Exclusive task"",
+                  "success": true,
+                  "taskId": "exclusive",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Task with exclusive tools active",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should handle task with all extensions combined 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [full] Full featured task
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Execute the full featured task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "full",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "analyze",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [full] Full featured task
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>
+<task_full_instructions>
+Perform thorough analysis with attention to detail.
+</task_full_instructions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Execute the full featured task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "full",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Full featured task"",
+                  "success": true,
+                  "taskId": "full",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "data": "test data",
+          },
+          "toolCallId": "call_analyze",
+          "toolName": "analyze",
+          "type": "tool-call",
+        },
+        {
+          "text": "Full featured task...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "analyze",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [full] Full featured task
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>
+<task_full_instructions>
+Perform thorough analysis with attention to detail.
+</task_full_instructions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Execute the full featured task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "full",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Full featured task"",
+                  "success": true,
+                  "taskId": "full",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Full featured task...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "data": "test data",
+              },
+              "toolCallId": "call_analyze",
+              "toolName": "analyze",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "analysis": "Analyzed: test data",
+                },
+              },
+              "toolCallId": "call_analyze",
+              "toolName": "analyze",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Analysis complete!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should inject per-task system prompts (SystemPart) 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [analysis] Analyze data
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start analysis",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "analysis",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [analysis] Analyze data
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>
+<analysis_rules>
+Be precise and methodical. Format output as JSON.
+</analysis_rules>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start analysis",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "analysis",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Analyze data"",
+                  "success": true,
+                  "taskId": "analysis",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Analysis task with custom system part",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should inject per-task system prompts (array) 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [review] Review code
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start code review",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "review",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [review] Review code
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>
+<reviewer_role>
+You are a senior code reviewer.
+</reviewer_role>
+<review_criteria>
+Focus on: security, performance, readability.
+</review_criteria>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start code review",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "review",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Review code"",
+                  "success": true,
+                  "taskId": "review",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Code review task with multiple system parts",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should inject per-task system prompts (string) 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [creative] Write creative story
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start the creative task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "creative",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [creative] Write creative story
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>
+<task_creative_instructions>
+Be creative and imaginative. Use vivid language.
+</task_creative_instructions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start the creative task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "creative",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Write creative story"",
+                  "success": true,
+                  "taskId": "creative",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Creative writing task active",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should inject per-task tools when task is in progress 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [research] Research AI trends
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start and complete the research task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "research",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "Starting research...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "webSearch",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [research] Research AI trends
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start and complete the research task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Starting research...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "research",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Research AI trends"",
+                  "success": true,
+                  "taskId": "research",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "query": "AI trends",
+          },
+          "toolCallId": "call_search",
+          "toolName": "webSearch",
+          "type": "tool-call",
+        },
+        {
+          "text": "Task started, now searching...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "webSearch",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [research] Research AI trends
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start and complete the research task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Starting research...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "research",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Research AI trends"",
+                  "success": true,
+                  "taskId": "research",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Task started, now searching...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "query": "AI trends",
+              },
+              "toolCallId": "call_search",
+              "toolName": "webSearch",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    "Result for AI trends",
+                  ],
+                },
+              },
+              "toolCallId": "call_search",
+              "toolName": "webSearch",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Search completed!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should inject per-task variables when task is in progress 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [translate] Translate document
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start translation with context",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "translate",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [translate] Translate document
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start translation with context",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "translate",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Translate document"",
+                  "success": true,
+                  "taskId": "translate",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Translation task with context variables",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Plugin System > taskListPlugin > Per-Task Extensions > should remove task extensions when task completes 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [temp] Temporary task
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start and complete the temporary task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "temp",
+          },
+          "toolCallId": "call_start",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "tempTool",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [temp] Temporary task
+
+### Pending (0)
+  (none)
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>
+<task_temp_instructions>
+Temporary instructions
+</task_temp_instructions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start and complete the temporary task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "temp",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Temporary task"",
+                  "success": true,
+                  "taskId": "temp",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "temp",
+          },
+          "toolCallId": "call_complete",
+          "toolName": "completeTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "Task in progress...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (0)
+  (none)
+
+### Completed (1)
+  - [temp] Temporary task
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Start and complete the temporary task",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "input": {
+                "taskId": "temp",
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Temporary task"",
+                  "success": true,
+                  "taskId": "temp",
+                },
+              },
+              "toolCallId": "call_start",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Task in progress...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "temp",
+              },
+              "toolCallId": "call_complete",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Temporary task"",
+                  "success": true,
+                  "taskId": "temp",
+                },
+              },
+              "toolCallId": "call_complete",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Task completed, extensions removed",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
 exports[`Plugin System > taskListPlugin > should create a task list with startTask and completeTask tools 1`] = `
 [
   {
@@ -600,6 +2035,24 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
     ],
     "input": {
       "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (2)
+  - [1] Test Task
+  - [2] Another Task
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -636,6 +2089,23 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
     ],
     "input": {
       "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [1] Test Task
+
+### Pending (1)
+  - [2] Another Task
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -707,6 +2177,23 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
     ],
     "input": {
       "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [2] Another Task
+
+### Completed (1)
+  - [1] Test Task
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -811,6 +2298,23 @@ exports[`Plugin System > taskListPlugin > should handle starting a non-existent 
     "input": {
       "prompt": [
         {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [1] Task 1
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
+        {
           "content": [
             {
               "text": "Start task nonexistent",
@@ -842,6 +2346,23 @@ exports[`Plugin System > taskListPlugin > should handle starting a non-existent 
     ],
     "input": {
       "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (0)
+  (none)
+
+### Pending (1)
+  - [1] Task 1
+
+### Completed (0)
+  (none)
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
         {
           "content": [
             {
@@ -906,6 +2427,23 @@ exports[`Plugin System > taskListPlugin > should include task list in system pro
     ],
     "input": {
       "prompt": [
+        {
+          "content": "<taskList>
+## Current Task Status
+
+### In Progress (1)
+  - [2] Implement
+
+### Pending (1)
+  - [1] Research
+
+### Completed (1)
+  - [3] Test
+
+Use "startTask" to begin a pending task and "completeTask" when finished.
+</taskList>",
+          "role": "system",
+        },
         {
           "content": [
             {

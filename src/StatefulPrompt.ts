@@ -82,6 +82,7 @@ export function agent(
  * @property activeVariables - Filter which variables to include (by name)
  * @property messages - Override or modify the messages array
  * @property variables - Add or update variables (will be merged with existing)
+ * @property systems - Add or update system parts (will be merged with existing)
  */
 export interface DefHookResult {
   system ?: string;
@@ -90,6 +91,7 @@ export interface DefHookResult {
   activeVariables ?: string[];
   messages ?: any[];
   variables ?: Record<string, any>;
+  systems ?: Record<string, string>;
 }
 
 /**
@@ -715,11 +717,16 @@ export class StatefulPrompt extends StreamTextBuilder {
    * Create step modifier function
    */
   private _createStepModifier(): StepModifier {
-    return (aspect: 'messages' | 'tools' | 'systems' | 'variables', items: any[]) => {
-      if (!this._stepModifications[aspect]) {
-        this._stepModifications[aspect] = [];
+    return (aspect: 'messages' | 'tools' | 'systems' | 'variables' | 'activeTools', items: any[]) => {
+      if (aspect === 'activeTools') {
+        // activeTools is special - it's an array of strings, not objects
+        this._stepModifications.activeTools = items;
+      } else {
+        if (!this._stepModifications[aspect]) {
+          this._stepModifications[aspect] = [];
+        }
+        this._stepModifications[aspect]!.push(...items);
       }
-      this._stepModifications[aspect]!.push(...items);
     };
   }
 
@@ -735,26 +742,39 @@ export class StatefulPrompt extends StreamTextBuilder {
     }
 
     if (this._stepModifications.tools) {
-      const toolNames = this._stepModifications.tools.map((t: any) => t.name);
-      result.activeTools = toolNames;
-      // Also set on instance for consistency
-      this.activeTools = toolNames;
+      // Register the tools in _tools so they're actually available
+      for (const toolDef of this._stepModifications.tools) {
+        this._tools[toolDef.name] = {
+          description: toolDef.description,
+          parameters: toolDef.inputSchema,
+          execute: toolDef.execute
+        };
+        // Mark tool as seen so it doesn't get reconciled away
+        this._definitionTracker.mark('defTool', toolDef.name);
+      }
+      // Don't set activeTools filter here - tools are added, not filtered
+      // If a filter is needed, it will come through _stepModifications.activeTools
+    }
+
+    if (this._stepModifications.activeTools) {
+      // Set tool filter
+      result.activeTools = this._stepModifications.activeTools;
+      this.activeTools = this._stepModifications.activeTools;
     } else if (this.activeTools) {
       // Include activeTools set by disable() in _processEffects
       result.activeTools = this.activeTools;
     }
 
     if (this._stepModifications.systems) {
-      const systemNames = this._stepModifications.systems.map((s: any) => s.name);
-      result.activeSystems = systemNames;
-      // Also set on instance for Prompt.run() to use
-      this.activeSystems = systemNames;
-    } else if (this.activeSystems) {
-      // Include activeSystems set by disable() in _processEffects
-      result.activeSystems = this.activeSystems;
+      // Add systems to the result for this step only
+      result.systems = {};
+      for (const system of this._stepModifications.systems) {
+        result.systems[system.name] = system.value;
+      }
     }
 
     if (this._stepModifications.variables) {
+      // Add variables to the result for this step only
       result.variables = {};
       for (const variable of this._stepModifications.variables) {
         result.variables[variable.name] = {
@@ -762,11 +782,6 @@ export class StatefulPrompt extends StreamTextBuilder {
           value: variable.value
         };
       }
-      // Also update instance variables
-      this.variables = { ...this.variables, ...result.variables };
-    } else if (this.activeVariables) {
-      // Include activeVariables set by disable() in _processEffects
-      // Note: This sets filter, not the variables themselves
     }
 
     return result;
@@ -811,8 +826,28 @@ export class StatefulPrompt extends StreamTextBuilder {
         // Apply step modifications
         const modifications = this._applyStepModifications();
 
+        // Temporarily add systems and variables from modifications to instance
+        // so prepareStepFn can see them
+        const originalSystems = modifications.systems ? { ...this.systems } : null;
+        const originalVariables = modifications.variables ? { ...this.variables } : null;
+
+        if (modifications.systems) {
+          this.systems = { ...this.systems, ...modifications.systems };
+        }
+        if (modifications.variables) {
+          this.variables = { ...this.variables, ...modifications.variables };
+        }
+
         // Call the original prepareStep function
         const baseResult = prepareStepFn(options);
+
+        // Restore original systems and variables
+        if (originalSystems) {
+          this.systems = originalSystems;
+        }
+        if (originalVariables) {
+          this.variables = originalVariables;
+        }
 
         // Add reminder if there are any reminded items
         if (this._remindedItems.length > 0) {

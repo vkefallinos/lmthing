@@ -63,7 +63,7 @@ export interface LastToolInfo {
  * Step modifier function type
  */
 export type StepModifier = (
-  aspect: 'messages' | 'tools' | 'systems' | 'variables',
+  aspect: 'messages' | 'tools' | 'systems' | 'variables' | 'activeTools',
   items: any[]
 ) => void;
 
@@ -84,6 +84,7 @@ export interface StepModifications {
   tools?: any[];
   systems?: { name: string; value: string }[];
   variables?: { name: string; type: string; value: any }[];
+  activeTools?: string[];
 }
 
 // ============================================================================
