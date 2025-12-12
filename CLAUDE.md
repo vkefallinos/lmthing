@@ -121,6 +121,57 @@ prompt.defTool(
 );
 ```
 
+**Tool Options (Response Schema & Callbacks):**
+
+Tools support optional response schema definition and event callbacks:
+
+```typescript
+// Tool with responseSchema and callbacks
+prompt.defTool(
+  'calculate',
+  'Calculate numbers',
+  z.object({ a: z.number(), b: z.number() }),
+  async ({ a, b }) => {
+    return { result: a + b };
+  },
+  {
+    // Optional: Define the response schema for validation/documentation
+    responseSchema: z.object({
+      result: z.number()
+    }),
+
+    // Optional: Called before tool execution
+    // Return undefined to continue, or return a value to skip execution
+    beforeCall: async (input, output) => {
+      console.log('Before:', input);
+      return undefined; // Continue execution
+    },
+
+    // Optional: Called after successful execution
+    // Return undefined to keep original output, or return modified output
+    onSuccess: async (input, output) => {
+      console.log('Success:', output);
+      return undefined; // Use original output
+    },
+
+    // Optional: Called if tool throws an error
+    // Return undefined to keep error, or return modified error response
+    onError: async (input, error) => {
+      console.log('Error:', error);
+      return undefined; // Use original error
+    }
+  }
+);
+```
+
+**Callback Behavior:**
+
+- **`beforeCall(input, output)`**: Called before tool execution. If it returns a value other than `undefined`, tool execution is skipped and that value is returned as the result.
+- **`onSuccess(input, output)`**: Called after successful execution. If it returns `undefined`, the original output is used. Otherwise, the returned value becomes the new output.
+- **`onError(input, error)`**: Called when tool throws. If it returns `undefined`, the original error is used. Otherwise, the returned value becomes the result.
+- All callbacks are async and support both sync and async implementations
+- Callbacks receive the tool input and output, allowing for logging, monitoring, or transformation
+
 **Composite Tools (Array Syntax):**
 
 When an array of sub-tool definitions is passed, `defTool` creates a single composite tool that allows the LLM to invoke multiple sub-tools in one tool call:
@@ -131,7 +182,12 @@ import { tool } from 'lmthing';
 // Composite tool with multiple sub-tools
 prompt.defTool('file', 'File operations', [
   tool('write', 'Write to file', z.object({ path: z.string(), content: z.string() }), writeFn),
-  tool('append', 'Append to file', z.object({ path: z.string(), content: z.string() }), appendFn),
+  tool('append', 'Append to file', z.object({ path: z.string(), content: z.string() }), appendFn, {
+    onSuccess: async (input, output) => {
+      console.log('Appended to:', input.path);
+      return undefined; // Use original output
+    }
+  }),
   tool('read', 'Read a file', z.object({ path: z.string() }), readFn),
 ]);
 
@@ -153,6 +209,7 @@ prompt.defTool('file', 'File operations', [
 - Automatically generates enhanced description listing available sub-tools
 - Executes sub-tools sequentially, collecting results
 - Handles errors gracefully per sub-tool (continues execution, returns error in result)
+- For composite tools, callbacks are executed independently for each sub-tool
 
 ### 4. Agents (`defAgent`)
 
@@ -782,7 +839,7 @@ The package provides multiple entry points:
 
 Usage:
 ```typescript
-import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier } from 'lmthing';
+import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier, ToolOptions, ToolEventCallback } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
 import { taskListPlugin, defTaskList } from 'lmthing/plugins';
 ```

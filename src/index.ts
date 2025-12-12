@@ -20,6 +20,10 @@ export type {
   VariableCollection,
   LastToolInfo,
   StepModifier,
+  // Tool options & callbacks
+  ToolOptions,
+  ToolEventCallback,
+  ToolCallbackResult,
   // Plugin system types
   Plugin,
   PluginMethod,

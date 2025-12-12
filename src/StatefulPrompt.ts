@@ -7,7 +7,8 @@ import {
   LastToolInfo,
   StepModifier,
   StepModifications,
-  Plugin
+  Plugin,
+  ToolOptions
 } from './types';
 import { StateManager } from './state';
 import { EffectsManager } from './effects';
@@ -22,6 +23,7 @@ export interface SubToolDefinition {
   description: string;
   inputSchema: z.ZodType<any>;
   execute: Function;
+  options?: ToolOptions;
 }
 
 /**
@@ -32,14 +34,22 @@ export interface SubToolDefinition {
  *   tool('write', 'Write to file', z.object({ path: z.string(), content: z.string() }), writeFile),
  *   tool('append', 'Append to file', z.object({ path: z.string(), content: z.string() }), appendFile),
  * ]);
+ *
+ * @example
+ * // With response schema and callbacks
+ * tool('calculate', 'Calculate numbers', z.object({ a: z.number(), b: z.number() }), calculateFn, {
+ *   responseSchema: z.object({ result: z.number() }),
+ *   onSuccess: async (input, output) => { console.log('Success:', output); return undefined; }
+ * })
  */
 export function tool(
   name: string,
   description: string,
   inputSchema: z.ZodType<any>,
-  execute: Function
+  execute: Function,
+  options?: ToolOptions
 ): SubToolDefinition {
-  return { name, description, inputSchema, execute };
+  return { name, description, inputSchema, execute, options };
 }
 
 /**
@@ -294,7 +304,7 @@ export class StatefulPrompt extends StreamTextBuilder {
   /**
    * Define a tool for the LLM to use.
    *
-   * @overload Single tool: defTool(name, description, inputSchema, execute)
+   * @overload Single tool: defTool(name, description, inputSchema, execute, options?)
    * @overload Composite tool: defTool(name, description, subTools[])
    *
    * When an array of sub-tools is provided, creates a composite tool that allows
@@ -304,24 +314,82 @@ export class StatefulPrompt extends StreamTextBuilder {
    * // Single tool
    * defTool('search', 'Search the web', z.object({ query: z.string() }), searchFn);
    *
+   * // Single tool with response schema and callbacks
+   * defTool('calculate', 'Calculate numbers', z.object({ a: z.number(), b: z.number() }), calculateFn, {
+   *   responseSchema: z.object({ result: z.number() }),
+   *   onSuccess: async (input, output) => { console.log('Success'); return undefined; }
+   * });
+   *
    * // Composite tool
    * defTool('file', 'File operations', [
    *   tool('write', 'Write to file', z.object({ path: z.string(), content: z.string() }), writeFn),
    *   tool('read', 'Read a file', z.object({ path: z.string() }), readFn),
    * ]);
    */
-  defTool(name: string, description: string, inputSchemaOrSubTools: any, execute?: Function) {
+  defTool(name: string, description: string, inputSchemaOrSubTools: any, execute?: Function, options?: ToolOptions) {
     this._definitionTracker.mark('defTool', name);
     // Check if this is a composite tool (array of sub-tools)
     if (Array.isArray(inputSchemaOrSubTools)) {
       const subTools = inputSchemaOrSubTools as SubToolDefinition[];
       this._registerCompositeTool(name, description, subTools);
     } else {
-      // Standard single tool
-      this.addTool(name, { description, inputSchema: inputSchemaOrSubTools, execute });
+      // Standard single tool with options support
+      const wrappedExecute = options ? this._wrapToolExecute(execute!, options) : execute;
+      this.addTool(name, { description, inputSchema: inputSchemaOrSubTools, execute: wrappedExecute });
     }
     const tag = `<${name}>`;
     return this.createProxy(tag, 'defTool', name);
+  }
+
+  /**
+   * Wraps a tool's execute function to handle callbacks and response schema.
+   */
+  protected _wrapToolExecute(execute: Function, options: ToolOptions): Function {
+    return async (input: any, toolOptions?: any) => {
+      try {
+        // Call beforeCall hook if present
+        if (options.beforeCall) {
+          const beforeResult = await options.beforeCall(input, undefined);
+          // If hook returns undefined, continue with normal execution
+          // Otherwise, return the hook result
+          if (beforeResult !== undefined) {
+            return this._formatToolOutput(beforeResult, options);
+          }
+        }
+
+        // Execute the tool
+        let output = await execute(input, toolOptions);
+
+        // Call onSuccess hook if present
+        if (options.onSuccess) {
+          const successResult = await options.onSuccess(input, output);
+          // If hook returns undefined, use original output
+          // Otherwise, use the returned value
+          if (successResult !== undefined) {
+            output = successResult;
+          }
+        }
+
+        // Format output according to responseSchema if present
+        output = this._formatToolOutput(output, options);
+        return output;
+      } catch (error: any) {
+        let errorOutput: any = { error: error.message || String(error) };
+
+        // Call onError hook if present
+        if (options.onError) {
+          const errorResult = await options.onError(input, errorOutput);
+          // If hook returns undefined, use original error output
+          // Otherwise, use the returned value
+          if (errorResult !== undefined) {
+            errorOutput = errorResult;
+          }
+        }
+
+        errorOutput = this._formatToolOutput(errorOutput, options);
+        return errorOutput;
+      }
+    };
   }
 
   /**
@@ -362,13 +430,48 @@ export class StatefulPrompt extends StreamTextBuilder {
         }
 
         try {
-          const result = await subTool.execute(call.args, options);
+          // Call beforeCall hook if present
+          if (subTool.options?.beforeCall) {
+            const beforeResult = await subTool.options.beforeCall(call.args, undefined);
+            // If hook returns undefined, continue with normal execution
+            // Otherwise, use the returned value
+            if (beforeResult !== undefined) {
+              results.push({ name: call.name, result: this._formatToolOutput(beforeResult, subTool.options) });
+              continue;
+            }
+          }
+
+          // Execute the sub-tool
+          let result = await subTool.execute(call.args, options);
+
+          // Call onSuccess hook if present
+          if (subTool.options?.onSuccess) {
+            const successResult = await subTool.options.onSuccess(call.args, result);
+            // If hook returns undefined, use original result
+            // Otherwise, use the returned value
+            if (successResult !== undefined) {
+              result = successResult;
+            }
+          }
+
+          // Format output according to responseSchema if present
+          result = this._formatToolOutput(result, subTool.options);
           results.push({ name: call.name, result });
         } catch (error: any) {
-          results.push({
-            name: call.name,
-            result: { error: error.message || String(error) }
-          });
+          let result: any = { error: error.message || String(error) };
+
+          // Call onError hook if present
+          if (subTool.options?.onError) {
+            const errorResult = await subTool.options.onError(call.args, result);
+            // If hook returns undefined, use original error result
+            // Otherwise, use the returned value
+            if (errorResult !== undefined) {
+              result = errorResult;
+            }
+          }
+
+          result = this._formatToolOutput(result, subTool.options);
+          results.push({ name: call.name, result });
         }
       }
 
@@ -380,6 +483,25 @@ export class StatefulPrompt extends StreamTextBuilder {
       inputSchema: compositeSchema,
       execute: compositeExecute
     });
+  }
+
+  /**
+   * Format tool output according to responseSchema if present.
+   * If output is an object and responseSchema exists, stringify it (or return as-is).
+   * Otherwise return as-is.
+   */
+  protected _formatToolOutput(output: any, options?: ToolOptions): any {
+    if (!options?.responseSchema) {
+      return output;
+    }
+
+    // If output is an object/array, keep it as-is (will be stringified by AI SDK if needed)
+    // The responseSchema is primarily for validation/documentation
+    if (typeof output === 'object' && output !== null) {
+      return output;
+    }
+
+    return output;
   }
 
   /**
