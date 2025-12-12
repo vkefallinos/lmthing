@@ -551,6 +551,90 @@ If a sub-tool throws an error, execution continues for remaining sub-tools, and 
 }
 ```
 
+### Tool Options: Response Schema & Callbacks
+
+Both single and composite tools support optional response schema definition and event callbacks for monitoring, validation, and output transformation:
+
+```typescript
+// Single tool with callbacks
+prompt.defTool(
+  'calculate',
+  'Calculate numbers',
+  z.object({ a: z.number(), b: z.number() }),
+  async ({ a, b }) => {
+    return { result: a + b };
+  },
+  {
+    // Optional: Define expected response structure
+    responseSchema: z.object({
+      result: z.number()
+    }),
+
+    // Optional: Called before execution
+    // Return undefined to continue, or return a value to short-circuit
+    beforeCall: async (input, output) => {
+      console.log('Executing with input:', input);
+      return undefined; // Continue to execute tool
+    },
+
+    // Optional: Called after successful execution
+    // Return undefined to keep result, or return modified result
+    onSuccess: async (input, output) => {
+      console.log('Tool succeeded with output:', output);
+      return undefined; // Use original output
+    },
+
+    // Optional: Called if tool throws an error
+    // Return undefined to keep error, or return modified result
+    onError: async (input, error) => {
+      console.log('Tool failed with error:', error);
+      return { fallback: true };
+    }
+  }
+);
+```
+
+**Callback Behavior:**
+
+- **`beforeCall(input, output)`**: Invoked before tool execution. If returns a non-undefined value, execution is skipped and that value becomes the result.
+- **`onSuccess(input, output)`**: Invoked after successful execution. Return `undefined` to keep the original output, or return a new value to use instead.
+- **`onError(input, error)`**: Invoked when tool throws an error. Return `undefined` to keep the error object, or return a recovery value.
+
+**With Composite Tools:**
+
+```typescript
+import { tool } from 'lmthing';
+
+prompt.defTool('operations', 'File and database operations', [
+  tool('writeFile', 'Write to file', z.object({ path: z.string(), content: z.string() }),
+    async ({ path, content }) => {
+      await fs.writeFile(path, content);
+      return { success: true };
+    },
+    {
+      onSuccess: async (input, output) => {
+        console.log(`File written to ${input.path}`);
+        return undefined;
+      }
+    }
+  ),
+  tool('readFile', 'Read from file', z.object({ path: z.string() }),
+    async ({ path }) => {
+      const content = await fs.readFile(path, 'utf-8');
+      return { content };
+    },
+    {
+      responseSchema: z.object({ content: z.string() }),
+      onError: async (input, error) => {
+        return { content: '', error: 'File not found' };
+      }
+    }
+  )
+]);
+```
+
+For composite tools, each sub-tool's callbacks are executed independently during the composite tool execution.
+
 ### `defAgent<T>(name: string, description: string, inputSchema: T, fn: Function, options?: AgentOptions)`
 
 Registers a sub-agent as a callable tool in the `tools` parameter. The agent runs its own `streamText` execution context with independent state. Supports custom configuration:
