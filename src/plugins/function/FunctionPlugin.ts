@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { StatefulPrompt } from '../../StatefulPrompt';
+import { StatefulPrompt } from '../../StatefulPrompt';
 import type { FunctionOptions, CompositeFunctionDefinition, FunctionAgentOptions, CompositeFunctionAgentDefinition } from './types';
 import { FunctionRegistry } from './FunctionRegistry';
 import { validateTypeScript } from './typeChecker';
@@ -106,7 +106,7 @@ function ensureRunToolCodeRegistered(prompt: StatefulPrompt): void {
 
       // Execute in sandbox with parent prompt for agents
       try {
-        const result = await executeSandbox(code, registry, prompt);
+        const result = await executeSandbox(code, registry, prompt, StatefulPrompt);
         return {
           success: true,
           result

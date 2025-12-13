@@ -54,7 +54,7 @@ function createWrappedFunction(definition: FunctionDefinition) {
 /**
  * Creates wrapped version of a function agent with validation and callbacks
  */
-function createWrappedAgent(definition: FunctionAgentDefinition, parentPrompt: any) {
+function createWrappedAgent(definition: FunctionAgentDefinition, parentPrompt: any, StatefulPromptClass: any) {
   return async (args: any) => {
     const { inputSchema, responseSchema, execute, options } = definition;
     let validatedInput: any;
@@ -73,9 +73,8 @@ function createWrappedAgent(definition: FunctionAgentDefinition, parentPrompt: a
       }
 
       // Create child prompt for agent
-      const { StatefulPrompt } = require('../../StatefulPrompt');
       const { model, system, plugins, ...otherOptions } = options;
-      const childPrompt = StatefulPrompt.create(model || parentPrompt.getModel());
+      const childPrompt = StatefulPromptClass.create(model || parentPrompt.getModel());
       childPrompt.withOptions(otherOptions || parentPrompt.getOptions());
 
       // Set plugins if provided
@@ -135,7 +134,7 @@ function createWrappedAgent(definition: FunctionAgentDefinition, parentPrompt: a
 /**
  * Creates sandbox object with all registered functions and agents
  */
-function createSandboxObject(registry: FunctionRegistry, parentPrompt: any): Record<string, any> {
+function createSandboxObject(registry: FunctionRegistry, parentPrompt: any, StatefulPromptClass: any): Record<string, any> {
   const sandbox: Record<string, any> = {
     console: {
       log: (...args: any[]) => console.log('[Sandbox]', ...args),
@@ -148,7 +147,7 @@ function createSandboxObject(registry: FunctionRegistry, parentPrompt: any): Rec
     if ('execute' in value) {
       // Single function or agent
       if ('isAgent' in value && value.isAgent) {
-        sandbox[name] = createWrappedAgent(value as FunctionAgentDefinition, parentPrompt);
+        sandbox[name] = createWrappedAgent(value as FunctionAgentDefinition, parentPrompt, StatefulPromptClass);
       } else {
         sandbox[name] = createWrappedFunction(value as FunctionDefinition);
       }
@@ -157,7 +156,7 @@ function createSandboxObject(registry: FunctionRegistry, parentPrompt: any): Rec
       sandbox[name] = {};
       for (const [subName, definition] of Object.entries(value as Record<string, FunctionDefinition | FunctionAgentDefinition>)) {
         if ('isAgent' in definition && definition.isAgent) {
-          sandbox[name][subName] = createWrappedAgent(definition as FunctionAgentDefinition, parentPrompt);
+          sandbox[name][subName] = createWrappedAgent(definition as FunctionAgentDefinition, parentPrompt, StatefulPromptClass);
         } else {
           sandbox[name][subName] = createWrappedFunction(definition as FunctionDefinition);
         }
@@ -171,9 +170,9 @@ function createSandboxObject(registry: FunctionRegistry, parentPrompt: any): Rec
 /**
  * Executes user code in a secure sandbox
  */
-export async function executeSandbox(code: string, registry: FunctionRegistry, parentPrompt?: any): Promise<any> {
+export async function executeSandbox(code: string, registry: FunctionRegistry, parentPrompt?: any, StatefulPromptClass?: any): Promise<any> {
   // Create sandbox with wrapped functions and agents
-  const sandboxObject = createSandboxObject(registry, parentPrompt);
+  const sandboxObject = createSandboxObject(registry, parentPrompt, StatefulPromptClass);
 
   // Create VM2 instance with security restrictions
   const vm = new VM({

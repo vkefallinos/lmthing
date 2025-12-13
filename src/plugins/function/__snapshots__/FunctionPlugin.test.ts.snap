@@ -641,6 +641,274 @@ exports[`FunctionPlugin > defFunction - single functions > should register a fun
 ]
 `;
 
+exports[`FunctionPlugin > defFunctionAgent - callbacks > should allow beforeCall to short-circuit execution > agent-beforeCall-shortcircuit-steps 1`] = `
+[
+  {
+    "activeTools": [
+      "runToolCode",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## analyzer (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze test",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "code": "const result = await analyzer({ data: "test" });
+return result;",
+          },
+          "toolCallId": "call_1",
+          "toolName": "runToolCode",
+          "type": "tool-call",
+        },
+        {
+          "text": "Analyzing...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## analyzer (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze test",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyzing...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "code": "const result = await analyzer({ data: "test" });
+return result;",
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": {
+                    "score": 100,
+                    "summary": "Cached",
+                  },
+                  "success": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`FunctionPlugin > defFunctionAgent - callbacks > should execute beforeCall callback > agent-beforeCall-callback-steps 1`] = `
+[
+  {
+    "activeTools": [
+      "runToolCode",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## analyzer (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze test",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "code": "const result = await analyzer({ data: "test" });
+return result;",
+          },
+          "toolCallId": "call_1",
+          "toolName": "runToolCode",
+          "type": "tool-call",
+        },
+        {
+          "text": "Analyzing...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## analyzer (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze test",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyzing...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "code": "const result = await analyzer({ data: "test" });
+return result;",
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": {
+                    "score": 90,
+                    "summary": "Test",
+                  },
+                  "success": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
 exports[`FunctionPlugin > defFunctionAgent - composite agents > should register composite agents > composite-agent-system-prompt 1`] = `
 "# Available Functions
 
@@ -659,6 +927,140 @@ Analyze data
 - Parameters: any
 - Returns: any
 "
+`;
+
+exports[`FunctionPlugin > defFunctionAgent - single agents > should execute agent and validate response schema > agent-execution-steps 1`] = `
+[
+  {
+    "activeTools": [
+      "runToolCode",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## analyzer (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze test data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "code": "const result = await analyzer({ data: "test data" });
+return result;",
+          },
+          "toolCallId": "call_1",
+          "toolName": "runToolCode",
+          "type": "tool-call",
+        },
+        {
+          "text": "Analyzing...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## analyzer (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze test data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyzing...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "code": "const result = await analyzer({ data: "test data" });
+return result;",
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": {
+                    "score": 85,
+                    "summary": "Test summary",
+                  },
+                  "success": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
 `;
 
 exports[`FunctionPlugin > defFunctionAgent - single agents > should register an agent and generate system prompt > single-agent-system-prompt 1`] = `

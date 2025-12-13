@@ -663,7 +663,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Done' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
         defFunctionAgent('analyzer', 'Analyze data',
           z.object({ data: z.string() }),
           async ({ data }, childPrompt) => {
@@ -682,6 +682,10 @@ describe('FunctionPlugin', () => {
       });
 
       await result.text;
+
+      // Snapshot the execution steps
+      const steps = (prompt as any).steps;
+      expect(steps).toMatchSnapshot('agent-execution-steps');
     });
   });
 
@@ -766,7 +770,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Done' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
         defFunctionAgent('analyzer', 'Analyze data',
           z.object({ data: z.string() }),
           async ({ data }, childPrompt) => {
@@ -787,6 +791,10 @@ describe('FunctionPlugin', () => {
 
       await result.text;
       expect(beforeCallFn).toHaveBeenCalledWith({ data: 'test' }, undefined);
+
+      // Snapshot the execution steps
+      const steps = (prompt as any).steps;
+      expect(steps).toMatchSnapshot('agent-beforeCall-callback-steps');
     });
 
     it('should allow beforeCall to short-circuit execution', async () => {
@@ -806,7 +814,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Done' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
         defFunctionAgent('analyzer', 'Analyze data',
           z.object({ data: z.string() }),
           executeFn,
@@ -825,6 +833,10 @@ describe('FunctionPlugin', () => {
       await result.text;
       expect(beforeCallFn).toHaveBeenCalled();
       expect(executeFn).not.toHaveBeenCalled(); // Should be skipped
+
+      // Snapshot the execution steps for short-circuit behavior
+      const steps = (prompt as any).steps;
+      expect(steps).toMatchSnapshot('agent-beforeCall-shortcircuit-steps');
     });
   });
 });
