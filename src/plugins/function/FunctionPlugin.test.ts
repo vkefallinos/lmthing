@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { z } from 'zod';
 import { runPrompt } from '../../runPrompt';
-import { functionPlugin, func } from './index';
+import { functionPlugin, func, funcAgent } from './index';
 import { createMockModel } from '../../test/createMockModel';
 
 describe('FunctionPlugin', () => {
@@ -575,6 +575,256 @@ describe('FunctionPlugin', () => {
 
       await result.text;
       // Should fail due to security restrictions
+    });
+  });
+
+  describe('defFunctionAgent - single agents', () => {
+    it('should register an agent and generate system prompt', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Hello!' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          async ({ data }, childPrompt) => {
+            childPrompt.$`Analyze: ${data}`;
+          },
+          {
+            responseSchema: z.object({ summary: z.string(), score: z.number() })
+          }
+        );
+
+        $`Use the analyzer agent`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      // Check that system prompt includes agent description
+      const systems = (prompt as any).systems;
+      expect(systems['available_functions']).toBeDefined();
+      const functionsPrompt = systems['available_functions'];
+      expect(functionsPrompt).toContain('analyzer');
+      expect(functionsPrompt).toContain('(agent)');
+      expect(functionsPrompt).toContain('Analyze data');
+
+      // Snapshot the system prompt
+      expect(functionsPrompt).toMatchSnapshot('single-agent-system-prompt');
+    });
+
+    it('should throw error if responseSchema is missing', async () => {
+      await expect(async () => {
+        await runPrompt(async ({ defFunctionAgent }) => {
+          (defFunctionAgent as any)('analyzer', 'Analyze data',
+            z.object({ data: z.string() }),
+            async ({ data }, prompt) => {},
+            {} // Missing responseSchema
+          );
+        }, {
+          model: createMockModel([{ type: 'text', text: 'test' }]) as any,
+          plugins: [functionPlugin]
+        });
+      }).rejects.toThrow('responseSchema');
+    });
+
+    it('should throw error if options are missing', async () => {
+      await expect(async () => {
+        await runPrompt(async ({ defFunctionAgent }) => {
+          (defFunctionAgent as any)('analyzer', 'Analyze data',
+            z.object({ data: z.string() }),
+            async ({ data }, prompt) => {}
+            // Missing options parameter
+          );
+        }, {
+          model: createMockModel([{ type: 'text', text: 'test' }]) as any,
+          plugins: [functionPlugin]
+        });
+      }).rejects.toThrow('options');
+    });
+
+    it('should execute agent and validate response schema', async () => {
+      const childMockModel = createMockModel([
+        { type: 'text', text: '{"summary": "Test summary", "score": 85}' }
+      ]);
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Analyzing...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: {
+            code: 'const result = await analyzer({ data: "test data" });\nreturn result;'
+          }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          async ({ data }, childPrompt) => {
+            childPrompt.$`Analyze this data: ${data}`;
+          },
+          {
+            responseSchema: z.object({ summary: z.string(), score: z.number() }),
+            model: childMockModel as any
+          }
+        );
+
+        $`Analyze test data`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+    });
+  });
+
+  describe('defFunctionAgent - composite agents', () => {
+    it('should register composite agents', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Hello!' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('specialists', 'Specialist agents', [
+          funcAgent('researcher', 'Research topics',
+            z.object({ topic: z.string() }),
+            async ({ topic }, childPrompt) => {
+              childPrompt.$`Research: ${topic}`;
+            },
+            { responseSchema: z.object({ findings: z.array(z.string()) }) }
+          ),
+          funcAgent('analyst', 'Analyze data',
+            z.object({ data: z.string() }),
+            async ({ data }, childPrompt) => {
+              childPrompt.$`Analyze: ${data}`;
+            },
+            { responseSchema: z.object({ summary: z.string(), score: z.number() }) }
+          )
+        ]);
+
+        $`Use specialist agents`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      // Check that system prompt includes composite agent description
+      const systems = (prompt as any).systems;
+      expect(systems['available_functions']).toBeDefined();
+      const functionsPrompt = systems['available_functions'];
+      expect(functionsPrompt).toContain('specialists');
+      expect(functionsPrompt).toContain('researcher');
+      expect(functionsPrompt).toContain('(agent)');
+      expect(functionsPrompt).toContain('analyst');
+
+      // Snapshot the system prompt
+      expect(functionsPrompt).toMatchSnapshot('composite-agent-system-prompt');
+    });
+
+    it('should throw error if sub-agent is missing responseSchema', async () => {
+      await expect(async () => {
+        await runPrompt(async ({ defFunctionAgent }) => {
+          defFunctionAgent('specialists', 'Specialist agents', [
+            (funcAgent as any)('researcher', 'Research topics',
+              z.object({ topic: z.string() }),
+              async ({ topic }, prompt) => {},
+              {} // Missing responseSchema
+            )
+          ]);
+        }, {
+          model: createMockModel([{ type: 'text', text: 'test' }]) as any,
+          plugins: [functionPlugin]
+        });
+      }).rejects.toThrow('responseSchema');
+    });
+  });
+
+  describe('defFunctionAgent - callbacks', () => {
+    it('should execute beforeCall callback', async () => {
+      const beforeCallFn = vi.fn(async (input) => undefined);
+      const childMockModel = createMockModel([
+        { type: 'text', text: '{"summary": "Test", "score": 90}' }
+      ]);
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Analyzing...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await analyzer({ data: "test" });\nreturn result;' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          async ({ data }, childPrompt) => {
+            childPrompt.$`Analyze: ${data}`;
+          },
+          {
+            responseSchema: z.object({ summary: z.string(), score: z.number() }),
+            beforeCall: beforeCallFn,
+            model: childMockModel as any
+          }
+        );
+
+        $`Analyze test`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+      expect(beforeCallFn).toHaveBeenCalledWith({ data: 'test' }, undefined);
+    });
+
+    it('should allow beforeCall to short-circuit execution', async () => {
+      const beforeCallFn = vi.fn(async (input) => ({ summary: 'Cached', score: 100 }));
+      const executeFn = vi.fn(async ({ data }, prompt) => {
+        prompt.$`Analyze: ${data}`;
+      });
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Analyzing...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await analyzer({ data: "test" });\nreturn result;' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          executeFn,
+          {
+            responseSchema: z.object({ summary: z.string(), score: z.number() }),
+            beforeCall: beforeCallFn
+          }
+        );
+
+        $`Analyze test`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+      expect(beforeCallFn).toHaveBeenCalled();
+      expect(executeFn).not.toHaveBeenCalled(); // Should be skipped
     });
   });
 });

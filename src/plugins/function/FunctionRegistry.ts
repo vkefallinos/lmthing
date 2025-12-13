@@ -1,10 +1,10 @@
-import type { FunctionDefinition, CompositeFunctionDefinition } from './types';
+import type { FunctionDefinition, CompositeFunctionDefinition, FunctionAgentDefinition, CompositeFunctionAgentDefinition } from './types';
 
 /**
  * Registry for storing and managing function definitions
  */
 export class FunctionRegistry {
-  private functions: Map<string, FunctionDefinition | Record<string, FunctionDefinition>>;
+  private functions: Map<string, FunctionDefinition | FunctionAgentDefinition | Record<string, FunctionDefinition | FunctionAgentDefinition>>;
 
   constructor() {
     this.functions = new Map();
@@ -55,10 +55,55 @@ export class FunctionRegistry {
   }
 
   /**
-   * Get a function by name
-   * For composite functions, use "namespace.functionName"
+   * Register a single function agent
    */
-  get(name: string): FunctionDefinition | undefined {
+  registerAgent(definition: FunctionAgentDefinition): void {
+    if (!definition.options?.responseSchema) {
+      throw new Error(
+        `Function agent '${definition.name}' is missing required responseSchema in options. ` +
+        `All function agents must specify a responseSchema for output validation.`
+      );
+    }
+    this.functions.set(definition.name, definition);
+  }
+
+  /**
+   * Register a composite function agent (multiple sub-agents under a namespace)
+   */
+  registerCompositeAgent(
+    name: string,
+    description: string,
+    subAgents: CompositeFunctionAgentDefinition[]
+  ): void {
+    const composite: Record<string, FunctionAgentDefinition> = {};
+
+    for (const subAgent of subAgents) {
+      if (!subAgent.options?.responseSchema) {
+        throw new Error(
+          `Sub-agent '${name}.${subAgent.name}' is missing required responseSchema in options. ` +
+          `All function agents must specify a responseSchema for output validation.`
+        );
+      }
+
+      composite[subAgent.name] = {
+        name: `${name}.${subAgent.name}`,
+        description: subAgent.description,
+        inputSchema: subAgent.inputSchema,
+        responseSchema: subAgent.options.responseSchema,
+        execute: subAgent.execute,
+        options: subAgent.options,
+        isAgent: true,
+      };
+    }
+
+    this.functions.set(name, composite);
+  }
+
+  /**
+   * Get a function or agent by name
+   * For composite functions/agents, use "namespace.functionName"
+   */
+  get(name: string): FunctionDefinition | FunctionAgentDefinition | undefined {
     if (name.includes('.')) {
       const [namespace, funcName] = name.split('.');
       const composite = this.functions.get(namespace);
@@ -70,15 +115,15 @@ export class FunctionRegistry {
 
     const func = this.functions.get(name);
     if (func && 'execute' in func) {
-      return func as FunctionDefinition;
+      return func as FunctionDefinition | FunctionAgentDefinition;
     }
     return undefined;
   }
 
   /**
-   * Get all registered functions
+   * Get all registered functions and agents
    */
-  getAll(): Map<string, FunctionDefinition | Record<string, FunctionDefinition>> {
+  getAll(): Map<string, FunctionDefinition | FunctionAgentDefinition | Record<string, FunctionDefinition | FunctionAgentDefinition>> {
     return this.functions;
   }
 

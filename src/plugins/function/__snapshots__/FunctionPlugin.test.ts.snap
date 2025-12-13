@@ -640,3 +640,36 @@ exports[`FunctionPlugin > defFunction - single functions > should register a fun
   "runToolCode",
 ]
 `;
+
+exports[`FunctionPlugin > defFunctionAgent - composite agents > should register composite agents > composite-agent-system-prompt 1`] = `
+"# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## specialists (namespace)
+
+### specialists.researcher (agent)
+Research topics
+- Parameters: any
+- Returns: any
+
+### specialists.analyst (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+"
+`;
+
+exports[`FunctionPlugin > defFunctionAgent - single agents > should register an agent and generate system prompt > single-agent-system-prompt 1`] = `
+"# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## analyzer (agent)
+Analyze data
+- Parameters: any
+- Returns: any
+"
+`;
