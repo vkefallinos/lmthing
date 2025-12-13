@@ -61,6 +61,7 @@ export interface TypeScriptError {
   column: number;
   message: string;
   code: number;
+  codeLine: string;
 }
 
 /**

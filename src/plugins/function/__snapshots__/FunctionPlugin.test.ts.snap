@@ -388,6 +388,7 @@ Add two numbers
                   "errors": [
                     {
                       "code": 2353,
+                      "codeLine": "const result = await calculate({ x: 5, y: 3 });",
                       "column": 34,
                       "line": 1,
                       "message": "Object literal may only specify known properties, and 'x' does not exist in type '{ a: number; b: number; }'.",
@@ -423,6 +424,7 @@ exports[`FunctionPlugin > TypeScript validation > should reject invalid TypeScri
 [
   {
     "code": 2353,
+    "codeLine": "const result = await calculate({ x: 5, y: 3 });",
     "column": 34,
     "line": 1,
     "message": "Object literal may only specify known properties, and 'x' does not exist in type '{ a: number; b: number; }'.",
@@ -536,12 +538,14 @@ Add two numbers
                   "errors": [
                     {
                       "code": 2322,
+                      "codeLine": "const result = await calculate({ a: "5", b: "3" });",
                       "column": 34,
                       "line": 1,
                       "message": "Type 'string' is not assignable to type 'number'.",
                     },
                     {
                       "code": 2322,
+                      "codeLine": "const result = await calculate({ a: "5", b: "3" });",
                       "column": 42,
                       "line": 1,
                       "message": "Type 'string' is not assignable to type 'number'.",
@@ -577,12 +581,14 @@ exports[`FunctionPlugin > TypeScript validation > should reject invalid TypeScri
 [
   {
     "code": 2322,
+    "codeLine": "const result = await calculate({ a: "5", b: "3" });",
     "column": 34,
     "line": 1,
     "message": "Type 'string' is not assignable to type 'number'.",
   },
   {
     "code": 2322,
+    "codeLine": "const result = await calculate({ a: "5", b: "3" });",
     "column": 42,
     "line": 1,
     "message": "Type 'string' is not assignable to type 'number'.",

@@ -56,6 +56,9 @@ export function validateTypeScript(code: string, registry: FunctionRegistry): Va
   // Convert diagnostics to error format
   const errors: TypeScriptError[] = [];
 
+  // Split user code into lines for error reporting
+  const codeLines = code.split('\n');
+
   for (const diagnostic of diagnostics) {
     if (diagnostic.file && diagnostic.start !== undefined) {
       const { line, character } = diagnostic.file.getLineAndCharacterOfPosition(diagnostic.start);
@@ -67,11 +70,16 @@ export function validateTypeScript(code: string, registry: FunctionRegistry): Va
       // Only include errors from user code (not from type declarations)
       if (adjustedLine >= 0) {
         const message = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
+
+        // Extract the actual code line where the error occurred
+        const codeLine = codeLines[adjustedLine] || '';
+
         errors.push({
           line: adjustedLine + 1, // Convert to 1-based
           column: character + 1,   // Convert to 1-based
           message,
           code: diagnostic.code,
+          codeLine: codeLine.trim(),
         });
       }
     }
