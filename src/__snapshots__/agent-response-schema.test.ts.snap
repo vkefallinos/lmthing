@@ -1,0 +1,1196 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Agent Response Schema > Composite agent with response schema > should combine system prompt with schema instruction 1`] = `
+[
+  {
+    "activeTools": [
+      "processor",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Process the test data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "data": "test data",
+          },
+          "toolCallId": "1",
+          "toolName": "processor",
+          "type": "tool-call",
+        },
+        {
+          "text": "Processing...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "processor",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Process the test data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Processing...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "data": "test data",
+              },
+              "toolCallId": "1",
+              "toolName": "processor",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": "<responseFormat>
+You are a data processor. Be precise and accurate.
+
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "result": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "result",
+    "timestamp"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                        "role": "system",
+                      },
+                      {
+                        "content": [
+                          {
+                            "text": "Process: test data",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "{"result": "processed", "timestamp": 1234567890}",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "{"result": "processed", "timestamp": 1234567890}",
+              },
+              "toolCallId": "1",
+              "toolName": "processor",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Processed!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Agent Response Schema > Composite agent with response schema > should handle validation errors in composite agents 1`] = `
+[
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Validate the input",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "input": "test",
+                },
+                "name": "validator",
+              },
+            ],
+          },
+          "toolCallId": "1",
+          "toolName": "team",
+          "type": "tool-call",
+        },
+        {
+          "text": "Executing...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Validate the input",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Executing...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "input": "test",
+                    },
+                    "name": "validator",
+                  },
+                ],
+              },
+              "toolCallId": "1",
+              "toolName": "team",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "validator",
+                      "response": "{"status": "ok"}",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "required": [
+    "status",
+    "errors"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                                "role": "system",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Validate: test",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "{"status": "ok"}",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                      "validationError": "[
+  {
+    "expected": "array",
+    "code": "invalid_type",
+    "path": [
+      "errors"
+    ],
+    "message": "Invalid input: expected array, received undefined"
+  }
+]",
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "1",
+              "toolName": "team",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Agent Response Schema > Composite agent with response schema > should validate response schema for each sub-agent independently 1`] = `
+[
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Research AI and analyze the results",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "topic": "AI",
+                },
+                "name": "researcher",
+              },
+              {
+                "args": {
+                  "data": "research data",
+                },
+                "name": "analyst",
+              },
+            ],
+          },
+          "toolCallId": "1",
+          "toolName": "team",
+          "type": "tool-call",
+        },
+        {
+          "text": "Delegating tasks...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "team",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Research AI and analyze the results",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Delegating tasks...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "topic": "AI",
+                    },
+                    "name": "researcher",
+                  },
+                  {
+                    "args": {
+                      "data": "research data",
+                    },
+                    "name": "analyst",
+                  },
+                ],
+              },
+              "toolCallId": "1",
+              "toolName": "team",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "researcher",
+                      "response": "{"findings": ["Finding 1", "Finding 2"], "confidence": 0.9}",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "confidence": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "findings",
+    "confidence"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                                "role": "system",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Research: AI",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "{"findings": ["Finding 1", "Finding 2"], "confidence": 0.9}",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                    {
+                      "name": "analyst",
+                      "response": "{"summary": "Analysis complete", "score": 92}",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "summary",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                                "role": "system",
+                              },
+                              {
+                                "content": [
+                                  {
+                                    "text": "Analyze: research data",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "{"summary": "Analysis complete", "score": 92}",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": "stop",
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "1",
+              "toolName": "team",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Team completed tasks!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Agent Response Schema > Response schema instruction formatting > should create proper JSON schema instruction 1`] = `
+[
+  {
+    "activeTools": [
+      "structured",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Get user data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "query": "test",
+          },
+          "toolCallId": "1",
+          "toolName": "structured",
+          "type": "tool-call",
+        },
+        {
+          "text": "Working...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "structured",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Get user data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Working...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "query": "test",
+              },
+              "toolCallId": "1",
+              "toolName": "structured",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Person name"
+    },
+    "age": {
+      "type": "number",
+      "description": "Person age"
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Whether person is active"
+    }
+  },
+  "required": [
+    "name",
+    "age",
+    "active"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                        "role": "system",
+                      },
+                      {
+                        "content": [
+                          {
+                            "text": "Query: test",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "{"name": "Test", "age": 25, "active": true}",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "{"name": "Test", "age": 25, "active": true}",
+              },
+              "toolCallId": "1",
+              "toolName": "structured",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Complete!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Agent Response Schema > Single agent with response schema > should accept and validate response schema for single agent 1`] = `
+[
+  {
+    "activeTools": [
+      "analyst",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Please analyze the sample data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "data": "sample data",
+          },
+          "toolCallId": "1",
+          "toolName": "analyst",
+          "type": "tool-call",
+        },
+        {
+          "text": "Analyzing data...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "analyst",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Please analyze the sample data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyzing data...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "data": "sample data",
+              },
+              "toolCallId": "1",
+              "toolName": "analyst",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": "<responseFormat>
+You are a data analyst.
+
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "Summary of the analysis"
+    },
+    "score": {
+      "type": "number",
+      "description": "Score from 0-100"
+    }
+  },
+  "required": [
+    "summary",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                        "role": "system",
+                      },
+                      {
+                        "content": [
+                          {
+                            "text": "Analyze: sample data",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "{"summary": "Analysis shows positive trends", "score": 85}",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "{"summary": "Analysis shows positive trends", "score": 85}",
+              },
+              "toolCallId": "1",
+              "toolName": "analyst",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Analysis complete!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Agent Response Schema > Single agent with response schema > should add schema instruction to agent system prompt 1`] = `
+[
+  {
+    "activeTools": [
+      "formatter",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Format hello",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "text": "hello",
+          },
+          "toolCallId": "1",
+          "toolName": "formatter",
+          "type": "tool-call",
+        },
+        {
+          "text": "Calling agent...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "formatter",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Format hello",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Calling agent...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "text": "hello",
+              },
+              "toolCallId": "1",
+              "toolName": "formatter",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "formatted": {
+      "type": "string",
+      "description": "The formatted text"
+    },
+    "length": {
+      "type": "number",
+      "description": "Length of original text"
+    }
+  },
+  "required": [
+    "formatted",
+    "length"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                        "role": "system",
+                      },
+                      {
+                        "content": [
+                          {
+                            "text": "Format: hello",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "{"formatted": "HELLO", "length": 5}",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": "stop",
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "{"formatted": "HELLO", "length": 5}",
+              },
+              "toolCallId": "1",
+              "toolName": "formatter",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Formatted!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`Agent Response Schema > Single agent with response schema > should include validation error when response does not match schema 1`] = `
+[
+  {
+    "activeTools": [
+      "analyst",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Analyze test data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "data": "test",
+          },
+          "toolCallId": "1",
+          "toolName": "analyst",
+          "type": "tool-call",
+        },
+        {
+          "text": "Analyzing...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "analyst",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Analyze test data",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyzing...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "data": "test",
+              },
+              "toolCallId": "1",
+              "toolName": "analyst",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "response": "{"summary": "Test summary"}",
+                  "steps": [
+                    {
+                      "activeTools": [],
+                      "input": {
+                        "prompt": [
+                          {
+                            "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "summary",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                            "role": "system",
+                          },
+                          {
+                            "content": [
+                              {
+                                "text": "Analyze: test",
+                                "type": "text",
+                              },
+                            ],
+                            "role": "user",
+                          },
+                        ],
+                      },
+                      "output": {
+                        "content": [
+                          {
+                            "text": "{"summary": "Test summary"}",
+                            "type": "text",
+                          },
+                        ],
+                        "finishReason": "stop",
+                      },
+                    },
+                  ],
+                  "validationError": "[
+  {
+    "expected": "number",
+    "code": "invalid_type",
+    "path": [
+      "score"
+    ],
+    "message": "Invalid input: expected number, received undefined"
+  }
+]",
+                },
+              },
+              "toolCallId": "1",
+              "toolName": "analyst",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;

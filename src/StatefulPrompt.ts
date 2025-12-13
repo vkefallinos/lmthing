@@ -8,7 +8,8 @@ import {
   StepModifier,
   StepModifications,
   Plugin,
-  ToolOptions
+  ToolOptions,
+  AgentOptions
 } from './types';
 import { StateManager } from './state';
 import { EffectsManager } from './effects';
@@ -60,7 +61,7 @@ export interface SubAgentDefinition {
   description: string;
   inputSchema: z.ZodType<any>;
   execute: Function;
-  options?: { model?: ModelInput } & Record<string, any>;
+  options?: AgentOptions;
 }
 
 /**
@@ -71,13 +72,19 @@ export interface SubAgentDefinition {
  *   agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn, { model: 'openai:gpt-4o' }),
  *   agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn),
  * ]);
+ *
+ * @example
+ * // With response schema
+ * agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn, {
+ *   responseSchema: z.object({ summary: z.string(), score: z.number() })
+ * })
  */
 export function agent(
   name: string,
   description: string,
   inputSchema: z.ZodType<any>,
   execute: Function,
-  options?: { model?: ModelInput } & Record<string, any>
+  options?: AgentOptions
 ): SubAgentDefinition {
   return { name, description, inputSchema, execute, options };
 }
@@ -505,6 +512,72 @@ export class StatefulPrompt extends StreamTextBuilder {
   }
 
   /**
+   * Creates instruction text for response schema in agent system prompts.
+   * Converts a Zod schema into a human-readable format description.
+   */
+  protected _createResponseSchemaInstruction(schema: z.ZodType<any>): string {
+    try {
+      // Try to get the schema description from Zod
+      const schemaJson = this._zodToJsonSchema(schema);
+      const formattedSchema = JSON.stringify(schemaJson, null, 2);
+
+      return `You must respond with a valid JSON object that matches this schema:
+
+${formattedSchema}
+
+Return only the JSON object in your response, without any additional text or explanation.`;
+    } catch (error) {
+      // Fallback if schema parsing fails
+      return 'You must respond with a valid JSON object that matches the expected schema.';
+    }
+  }
+
+  /**
+   * Converts a Zod schema to a simplified JSON schema representation.
+   */
+  protected _zodToJsonSchema(schema: z.ZodType<any>): any {
+    // Basic conversion - handles common Zod types
+    if (schema instanceof z.ZodObject) {
+      // In Zod v4, _def.shape is an object, not a function
+      const shape = typeof schema._def.shape === 'function' ? schema._def.shape() : schema._def.shape;
+      const properties: any = {};
+      const required: string[] = [];
+
+      for (const [key, value] of Object.entries(shape)) {
+        properties[key] = this._zodToJsonSchema(value as z.ZodType<any>);
+        // Check if field is not optional
+        if (!(value instanceof z.ZodOptional)) {
+          required.push(key);
+        }
+      }
+
+      return {
+        type: 'object',
+        properties,
+        required: required.length > 0 ? required : undefined
+      };
+    } else if (schema instanceof z.ZodString) {
+      return { type: 'string', description: schema.description };
+    } else if (schema instanceof z.ZodNumber) {
+      return { type: 'number', description: schema.description };
+    } else if (schema instanceof z.ZodBoolean) {
+      return { type: 'boolean', description: schema.description };
+    } else if (schema instanceof z.ZodArray) {
+      return {
+        type: 'array',
+        items: this._zodToJsonSchema((schema as any)._def.element)
+      };
+    } else if (schema instanceof z.ZodOptional) {
+      return this._zodToJsonSchema((schema as any)._def.innerType);
+    } else if (schema instanceof z.ZodNullable) {
+      return { ...this._zodToJsonSchema((schema as any)._def.innerType), nullable: true };
+    } else {
+      // Fallback for unknown types
+      return { type: 'any' };
+    }
+  }
+
+  /**
    * Define an agent for the LLM to delegate tasks to.
    *
    * @overload Single agent: defAgent(name, description, inputSchema, execute, options)
@@ -517,6 +590,12 @@ export class StatefulPrompt extends StreamTextBuilder {
    * // Single agent
    * defAgent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn);
    *
+   * // Single agent with response schema
+   * defAgent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn, {
+   *   responseSchema: z.object({ summary: z.string(), score: z.number() }),
+   *   system: 'You are a data analyst.'
+   * });
+   *
    * // Composite agent
    * defAgent('specialists', 'Specialist agents', [
    *   agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn),
@@ -528,7 +607,7 @@ export class StatefulPrompt extends StreamTextBuilder {
     description: string,
     inputSchemaOrSubAgents: any,
     execute?: Function,
-    {model, ...options}: {model?: ModelInput} & any = {}
+    options: AgentOptions = {}
   ) {
     this._definitionTracker.mark('defAgent', name);
     // Check if this is a composite agent (array of sub-agents)
@@ -538,11 +617,44 @@ export class StatefulPrompt extends StreamTextBuilder {
     } else {
       // Standard single agent
       this.addTool(name, { description, inputSchema: inputSchemaOrSubAgents, execute: async (args:any)=>{
+        const { model, responseSchema, system, plugins, ...otherOptions } = options;
         const prompt = StatefulPrompt.create(model || this.getModel() as ModelInput);
-        prompt.withOptions(options || this.getOptions());
+        prompt.withOptions(otherOptions || this.getOptions());
+
+        // Set plugins if provided
+        if (plugins) {
+          prompt.setPlugins(plugins);
+        }
+
+        // Add response schema instruction to system prompt if provided
+        if (responseSchema) {
+          const schemaInstruction = this._createResponseSchemaInstruction(responseSchema);
+          const finalSystem = system ? `${system}\n\n${schemaInstruction}` : schemaInstruction;
+          prompt.defSystem('responseFormat', finalSystem);
+        } else if (system) {
+          prompt.defSystem('agentSystem', system);
+        }
+
         await execute!({ ...args}, prompt);
         const result = prompt.run();
         const lastResponse = await result.text;
+
+        // Validate response against schema if provided
+        if (responseSchema) {
+          try {
+            const parsedResponse = JSON.parse(lastResponse);
+            responseSchema.parse(parsedResponse);
+            return { response: lastResponse, steps: prompt.steps };
+          } catch (error: any) {
+            // If validation fails, return error information
+            return {
+              response: lastResponse,
+              steps: prompt.steps,
+              validationError: error.message || String(error)
+            };
+          }
+        }
+
         return { response: lastResponse, steps: prompt.steps };
       }});
     }
@@ -575,7 +687,7 @@ export class StatefulPrompt extends StreamTextBuilder {
 
     // Create the composite execute function
     const compositeExecute = async (args: { calls: Array<{ name: string; args: any }> }) => {
-      const results: Array<{ name: string; response: string; steps?: any[] }> = [];
+      const results: Array<{ name: string; response: string; steps?: any[]; validationError?: string }> = [];
 
       for (const call of args.calls) {
         const subAgent = subAgents.find(sa => sa.name === call.name);
@@ -588,13 +700,46 @@ export class StatefulPrompt extends StreamTextBuilder {
         }
 
         try {
-          const { model: agentModel, ...agentOptions } = subAgent.options || {};
+          const { model: agentModel, responseSchema, system, plugins, ...agentOptions } = subAgent.options || {};
           const prompt = StatefulPrompt.create(agentModel || this.getModel() as ModelInput);
           prompt.withOptions(agentOptions || this.getOptions());
+
+          // Set plugins if provided
+          if (plugins) {
+            prompt.setPlugins(plugins);
+          }
+
+          // Add response schema instruction to system prompt if provided
+          if (responseSchema) {
+            const schemaInstruction = this._createResponseSchemaInstruction(responseSchema);
+            const finalSystem = system ? `${system}\n\n${schemaInstruction}` : schemaInstruction;
+            prompt.defSystem('responseFormat', finalSystem);
+          } else if (system) {
+            prompt.defSystem('agentSystem', system);
+          }
+
           await subAgent.execute(call.args, prompt);
           const result = await prompt.run();
           const lastResponse = await result.text;
-          results.push({ name: call.name, response: lastResponse, steps: prompt.steps });
+
+          // Validate response against schema if provided
+          if (responseSchema) {
+            try {
+              const parsedResponse = JSON.parse(lastResponse);
+              responseSchema.parse(parsedResponse);
+              results.push({ name: call.name, response: lastResponse, steps: prompt.steps });
+            } catch (error: any) {
+              // If validation fails, include error information
+              results.push({
+                name: call.name,
+                response: lastResponse,
+                steps: prompt.steps,
+                validationError: error.message || String(error)
+              });
+            }
+          } else {
+            results.push({ name: call.name, response: lastResponse, steps: prompt.steps });
+          }
         } catch (error: any) {
           results.push({
             name: call.name,

@@ -228,12 +228,55 @@ prompt.defAgent(
 );
 ```
 
+**Agent Options (Response Schema & System Prompt):**
+
+Agents support optional configuration including response schema validation:
+
+```typescript
+// Agent with responseSchema and system prompt
+prompt.defAgent(
+  'analyst',
+  'Analyze data with structured output',
+  z.object({ data: z.string() }),
+  async (args, childPrompt) => {
+    childPrompt.$`Analyze: ${args.data}`;
+  },
+  {
+    // Optional: Override the model for this agent
+    model: 'openai:gpt-4o',
+
+    // Optional: Define the response schema for validation
+    responseSchema: z.object({
+      summary: z.string().describe('Summary of the analysis'),
+      score: z.number().describe('Score from 0-100'),
+      recommendations: z.array(z.string()).describe('List of recommendations')
+    }),
+
+    // Optional: Custom system prompt for the agent
+    system: 'You are a data analyst specializing in comprehensive analysis.',
+
+    // Optional: Additional plugins for the agent
+    plugins: [customPlugin]
+  }
+);
+```
+
+**Response Schema Behavior:**
+
+- When `responseSchema` is provided, the agent receives instructions to respond with valid JSON matching the schema
+- The agent's response is automatically validated against the schema
+- If validation fails, the response includes a `validationError` field with error details
+- The schema is converted to JSON Schema format and included in the agent's system prompt
+- Works with both single agents and composite agents (each sub-agent can have its own schema)
+
 **Agent execution flow:**
 1. Parent model calls agent tool
 2. New `Prompt` created with specified/inherited model
-3. User's callback configures the child prompt
-4. Child `prompt.run()` executes
-5. Returns `{ response: text, steps: [...] }` to parent
+3. If `responseSchema` is provided, schema instructions are added to system prompt
+4. User's callback configures the child prompt
+5. Child `prompt.run()` executes
+6. Response is validated against schema if provided
+7. Returns `{ response: text, steps: [...], validationError?: string }` to parent
 
 **Composite Agents (Array Syntax):**
 
@@ -244,8 +287,19 @@ import { agent } from 'lmthing';
 
 // Composite agent with multiple sub-agents
 prompt.defAgent('specialists', 'Specialist agents', [
-  agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn, { model: 'openai:gpt-4o' }),
-  agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn),
+  agent('researcher', 'Research topics', z.object({ topic: z.string() }), researchFn, {
+    model: 'openai:gpt-4o',
+    responseSchema: z.object({
+      findings: z.array(z.string()),
+      confidence: z.number()
+    })
+  }),
+  agent('analyst', 'Analyze data', z.object({ data: z.string() }), analyzeFn, {
+    responseSchema: z.object({
+      summary: z.string(),
+      score: z.number()
+    })
+  }),
 ]);
 
 // LLM calls with:
@@ -256,8 +310,8 @@ prompt.defAgent('specialists', 'Specialist agents', [
 
 // Returns:
 // { results: [
-//   { name: 'researcher', response: '...', steps: [...] },
-//   { name: 'analyst', response: '...', steps: [...] }
+//   { name: 'researcher', response: '{"findings": [...], "confidence": 0.9}', steps: [...] },
+//   { name: 'analyst', response: '{"summary": "...", "score": 85}', steps: [...], validationError?: '...' }
 // ]}
 ```
 
@@ -265,6 +319,8 @@ prompt.defAgent('specialists', 'Specialist agents', [
 - Uses `z.union()` to create a discriminated union schema from sub-agent schemas
 - Automatically generates enhanced description listing available sub-agents
 - Executes sub-agents sequentially, collecting responses and steps
+- Each sub-agent can have its own `responseSchema`, `system`, and other options
+- Response validation is performed independently for each sub-agent
 - Handles errors gracefully per sub-agent (continues execution, returns error message)
 
 ### 5. Template Literal (`$`)
@@ -839,7 +895,7 @@ The package provides multiple entry points:
 
 Usage:
 ```typescript
-import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier, ToolOptions, ToolEventCallback } from 'lmthing';
+import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier, ToolOptions, AgentOptions, ToolEventCallback } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
 import { taskListPlugin, defTaskList } from 'lmthing/plugins';
 ```
