@@ -856,6 +856,125 @@ The plugin automatically adds a system message showing task status via `defEffec
 Use "startTask" to begin a pending task and "completeTask" when finished.
 ```
 
+### Using the Function Plugin
+
+The built-in function plugin provides `defFunction` and `defFunctionAgent` for defining functions that the LLM can call via TypeScript code execution. Unlike `defTool`, which uses JSON for arguments, functions are called through TypeScript code with compile-time type checking.
+
+```typescript
+import { runPrompt } from 'lmthing';
+import { functionPlugin, func } from 'lmthing/plugins';
+
+const { result } = await runPrompt(async ({ defFunction, $ }) => {
+  // Single function
+  defFunction(
+    'calculate',
+    'Add two numbers',
+    z.object({ a: z.number(), b: z.number() }),
+    async ({ a, b }) => ({ sum: a + b }),
+    {
+      responseSchema: z.object({ sum: z.number() }),
+      onSuccess: async (input, output) => {
+        console.log('Result:', output);
+        return undefined; // Use original output
+      }
+    }
+  );
+
+  // Composite functions (namespace)
+  defFunction('math', 'Math operations', [
+    func('multiply', 'Multiply numbers',
+      z.object({ a: z.number(), b: z.number() }),
+      async ({ a, b }) => ({ product: a * b }),
+      { responseSchema: z.object({ product: z.number() }) }
+    ),
+    func('divide', 'Divide numbers',
+      z.object({ a: z.number(), b: z.number() }),
+      async ({ a, b }) => {
+        if (b === 0) throw new Error('Division by zero');
+        return { quotient: a / b };
+      },
+      {
+        responseSchema: z.object({ quotient: z.number() }),
+        onError: async (input, error) => ({ quotient: null, error: error.message })
+      }
+    )
+  ]);
+
+  $`Calculate: 15 + 27, then multiply the result by 2`;
+}, {
+  model: 'openai:gpt-4o',
+  plugins: [functionPlugin]
+});
+```
+
+**How the LLM uses functions:**
+
+The LLM writes TypeScript code to call the registered functions:
+
+```typescript
+// LLM-generated code:
+const sum = await calculate({ a: 15, b: 27 });
+const product = await math.multiply({ a: sum.sum, b: 2 });
+console.log(product.product); // 84
+```
+
+**Key Features:**
+
+- **TypeScript Validation**: Code is validated before execution using generated type declarations
+- **Sandboxed Execution**: Code runs in a secure vm2 sandbox
+- **Composite Functions**: Group related functions into namespaces
+- **Response Schemas**: Define expected output structure with Zod
+- **Callbacks**: `beforeCall`, `onSuccess`, `onError` for monitoring and transformation
+- **Function Agents**: Use `defFunctionAgent` to create agents callable via TypeScript
+
+**Function Agent Example:**
+
+```typescript
+import { functionPlugin, funcAgent } from 'lmthing/plugins';
+
+defFunctionAgent('specialists', 'Research and analysis team', [
+  funcAgent('researcher', 'Research topics',
+    z.object({ topic: z.string() }),
+    async ({ topic }, prompt) => {
+      prompt.$`Research: ${topic}`;
+    },
+    {
+      model: 'openai:gpt-4o',
+      responseSchema: z.object({
+        findings: z.array(z.string()),
+        confidence: z.number()
+      })
+    }
+  ),
+  funcAgent('analyst', 'Analyze data',
+    z.object({ data: z.string() }),
+    async ({ data }, prompt) => {
+      prompt.$`Analyze: ${data}`;
+    },
+    { responseSchema: z.object({ summary: z.string(), score: z.number() }) }
+  )
+]);
+
+// LLM calls via:
+// const research = await specialists.researcher({ topic: 'quantum computing' });
+// const analysis = await specialists.analyst({ data: research.findings.join('\n') });
+```
+
+**Automatic Tool Registration:**
+
+The plugin automatically registers a `runToolCode` tool that:
+1. Validates TypeScript code against generated type declarations
+2. Executes validated code in a sandboxed environment
+3. Returns results to the LLM
+4. Provides error messages if validation fails
+
+**Security:**
+
+- Code execution is sandboxed using vm2
+- Only registered functions are accessible
+- No file system, network, or Node.js API access unless explicitly provided
+- TypeScript validation catches errors before execution
+
 ### Creating Custom Plugins
 
 ```typescript
