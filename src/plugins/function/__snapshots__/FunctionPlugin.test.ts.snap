@@ -131,6 +131,465 @@ return result.sum;",
 ]
 `;
 
+exports[`FunctionPlugin > Sandbox execution > should handle composite functions in sandbox > composite-function-execution-steps 1`] = `
+[
+  {
+    "activeTools": [
+      "runToolCode",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## math (namespace)
+
+### math.add
+Add numbers
+- Parameters: any
+- Returns: any
+
+### math.multiply
+Multiply numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate (5 + 3) * 2",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "code": "
+              const sum = await math.add({ a: 5, b: 3 });
+              const product = await math.multiply({ a: sum.result, b: 2 });
+              return product.result;
+            ",
+          },
+          "toolCallId": "call_1",
+          "toolName": "runToolCode",
+          "type": "tool-call",
+        },
+        {
+          "text": "Calculating...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## math (namespace)
+
+### math.add
+Add numbers
+- Parameters: any
+- Returns: any
+
+### math.multiply
+Multiply numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate (5 + 3) * 2",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculating...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "code": "
+              const sum = await math.add({ a: 5, b: 3 });
+              const product = await math.multiply({ a: sum.result, b: 2 });
+              return product.result;
+            ",
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": 16,
+                  "success": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`FunctionPlugin > TypeScript validation > should reject invalid TypeScript code with wrong property names > typescript-validation-failed-wrong-properties-steps 1`] = `
+[
+  {
+    "activeTools": [
+      "runToolCode",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## calculate
+Add two numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate 5 + 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "code": "const result = await calculate({ x: 5, y: 3 });",
+          },
+          "toolCallId": "call_1",
+          "toolName": "runToolCode",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me try...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## calculate
+Add two numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate 5 + 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me try...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "code": "const result = await calculate({ x: 5, y: 3 });",
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "errors": [
+                    {
+                      "code": 2353,
+                      "column": 34,
+                      "line": 1,
+                      "message": "Object literal may only specify known properties, and 'x' does not exist in type '{ a: number; b: number; }'.",
+                    },
+                  ],
+                  "message": "TypeScript validation failed. Fix the errors and try again.",
+                  "success": false,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Error occurred",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`FunctionPlugin > TypeScript validation > should reject invalid TypeScript code with wrong property names > typescript-wrong-property-names-errors 1`] = `
+[
+  {
+    "code": 2353,
+    "column": 34,
+    "line": 1,
+    "message": "Object literal may only specify known properties, and 'x' does not exist in type '{ a: number; b: number; }'.",
+  },
+]
+`;
+
+exports[`FunctionPlugin > TypeScript validation > should reject invalid TypeScript code with wrong types > typescript-validation-failed-wrong-types-steps 1`] = `
+[
+  {
+    "activeTools": [
+      "runToolCode",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## calculate
+Add two numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate 5 + 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "code": "const result = await calculate({ a: "5", b: "3" });",
+          },
+          "toolCallId": "call_1",
+          "toolName": "runToolCode",
+          "type": "tool-call",
+        },
+        {
+          "text": "Let me try...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## calculate
+Add two numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate 5 + 3",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Let me try...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "code": "const result = await calculate({ a: "5", b: "3" });",
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "errors": [
+                    {
+                      "code": 2322,
+                      "column": 34,
+                      "line": 1,
+                      "message": "Type 'string' is not assignable to type 'number'.",
+                    },
+                    {
+                      "code": 2322,
+                      "column": 42,
+                      "line": 1,
+                      "message": "Type 'string' is not assignable to type 'number'.",
+                    },
+                  ],
+                  "message": "TypeScript validation failed. Fix the errors and try again.",
+                  "success": false,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Error occurred",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`FunctionPlugin > TypeScript validation > should reject invalid TypeScript code with wrong types > typescript-wrong-types-errors 1`] = `
+[
+  {
+    "code": 2322,
+    "column": 34,
+    "line": 1,
+    "message": "Type 'string' is not assignable to type 'number'.",
+  },
+  {
+    "code": 2322,
+    "column": 42,
+    "line": 1,
+    "message": "Type 'string' is not assignable to type 'number'.",
+  },
+]
+`;
+
 exports[`FunctionPlugin > defFunction - composite functions > should register composite functions > composite-function-system-prompt 1`] = `
 "# Available Functions
 

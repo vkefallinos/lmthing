@@ -164,8 +164,6 @@ describe('FunctionPlugin', () => {
     });
 
     it('should reject invalid TypeScript code with wrong property names', async () => {
-      const capturedToolResults: any[] = [];
-
       const mockModel = createMockModel([
         { type: 'text', text: 'Let me try...' },
         {
@@ -192,21 +190,39 @@ describe('FunctionPlugin', () => {
 
       await result.text;
 
-      // Check the steps to capture validation errors
+      // Snapshot the complete steps to verify TypeScript validation error flow
       const steps = (prompt as any).steps;
-      if (steps && steps.length > 0) {
-        const toolCallStep = steps.find((s: any) =>
-          s.output?.content?.some((c: any) => c.type === 'tool-result')
-        );
+      expect(steps).toBeDefined();
+      expect(steps.length).toBeGreaterThan(0);
 
-        if (toolCallStep) {
-          const toolResult = toolCallStep.output.content.find((c: any) => c.type === 'tool-result');
-          if (toolResult && !toolResult.result.success) {
-            // Snapshot the validation errors
-            expect(toolResult.result.errors).toMatchSnapshot('typescript-wrong-property-names-errors');
+      // Look through all steps to find tool result
+      let toolResult: any = null;
+      for (const step of steps) {
+        if (step.input?.prompt) {
+          for (const message of step.input.prompt) {
+            if (message.role === 'tool' && message.content) {
+              for (const content of message.content) {
+                if (content.type === 'tool-result' && content.toolName === 'runToolCode') {
+                  toolResult = content;
+                  break;
+                }
+              }
+            }
           }
         }
       }
+
+      // Verify we found the tool result
+      expect(toolResult).toBeDefined();
+      expect(toolResult.output.value.success).toBe(false);
+      expect(toolResult.output.value.errors).toBeDefined();
+      expect(toolResult.output.value.errors.length).toBeGreaterThan(0);
+
+      // Snapshot the validation errors
+      expect(toolResult.output.value.errors).toMatchSnapshot('typescript-wrong-property-names-errors');
+
+      // Snapshot the complete execution steps
+      expect(steps).toMatchSnapshot('typescript-validation-failed-wrong-properties-steps');
     });
 
     it('should reject invalid TypeScript code with wrong types', async () => {
@@ -236,21 +252,39 @@ describe('FunctionPlugin', () => {
 
       await result.text;
 
-      // Check the steps to capture validation errors
+      // Snapshot the complete steps to verify TypeScript validation error flow
       const steps = (prompt as any).steps;
-      if (steps && steps.length > 0) {
-        const toolCallStep = steps.find((s: any) =>
-          s.output?.content?.some((c: any) => c.type === 'tool-result')
-        );
+      expect(steps).toBeDefined();
+      expect(steps.length).toBeGreaterThan(0);
 
-        if (toolCallStep) {
-          const toolResult = toolCallStep.output.content.find((c: any) => c.type === 'tool-result');
-          if (toolResult && !toolResult.result.success) {
-            // Snapshot the validation errors
-            expect(toolResult.result.errors).toMatchSnapshot('typescript-wrong-types-errors');
+      // Look through all steps to find tool result
+      let toolResult: any = null;
+      for (const step of steps) {
+        if (step.input?.prompt) {
+          for (const message of step.input.prompt) {
+            if (message.role === 'tool' && message.content) {
+              for (const content of message.content) {
+                if (content.type === 'tool-result' && content.toolName === 'runToolCode') {
+                  toolResult = content;
+                  break;
+                }
+              }
+            }
           }
         }
       }
+
+      // Verify we found the tool result
+      expect(toolResult).toBeDefined();
+      expect(toolResult.output.value.success).toBe(false);
+      expect(toolResult.output.value.errors).toBeDefined();
+      expect(toolResult.output.value.errors.length).toBeGreaterThan(0);
+
+      // Snapshot the validation errors
+      expect(toolResult.output.value.errors).toMatchSnapshot('typescript-wrong-types-errors');
+
+      // Snapshot the complete execution steps
+      expect(steps).toMatchSnapshot('typescript-validation-failed-wrong-types-steps');
     });
   });
 
@@ -311,7 +345,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Done' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunction, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('math', 'Math operations', [
           func('add', 'Add numbers',
             z.object({ a: z.number(), b: z.number() }),
@@ -334,6 +368,10 @@ describe('FunctionPlugin', () => {
       await result.text;
       expect(addFn).toHaveBeenCalledWith({ a: 5, b: 3 });
       expect(multiplyFn).toHaveBeenCalledWith({ a: 8, b: 2 });
+
+      // Snapshot the execution steps for composite functions
+      const steps = (prompt as any).steps;
+      expect(steps).toMatchSnapshot('composite-function-execution-steps');
     });
   });
 
