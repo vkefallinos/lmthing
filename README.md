@@ -642,7 +642,7 @@ Registers a sub-agent as a callable tool in the `tools` parameter. The agent run
 - `model`: Override the language model for this agent. Can be either:
   - A string in the format `provider:model_id` (e.g., `'openai:gpt-4o'`)
   - An AI SDK `LanguageModelV1` provider implementation (e.g., `openai('gpt-4o')`)
-- `responseSchema`: Define expected output structure using `experimental_output`
+- `responseSchema`: Define expected output structure as a Zod schema. The agent will be instructed to respond with valid JSON matching this schema, and the response will be validated automatically.
 - `system`: Custom system prompt for the agent
 - `plugins`: Additional plugins for the agent context
 
@@ -662,7 +662,7 @@ prompt.defAgent(
   }
 );
 
-// Or with direct provider
+// Agent with response schema validation
 prompt.defAgent(
   'analyst',
   'Analyze data with structured output',
@@ -671,11 +671,25 @@ prompt.defAgent(
     prompt.$`Analyze: ${args.data}`;
   },
   {
-    model: openai('gpt-4o', { structuredOutputs: true }), // Direct provider
-    system: 'You are a data analyst.'
+    model: 'openai:gpt-4o',
+    system: 'You are a data analyst.',
+    responseSchema: z.object({
+      summary: z.string().describe('Summary of the analysis'),
+      score: z.number().describe('Score from 0-100'),
+      recommendations: z.array(z.string()).describe('List of recommendations')
+    })
   }
 );
 ```
+
+**Response Schema Behavior:**
+
+When `responseSchema` is provided:
+1. The agent receives instructions to respond with valid JSON matching the schema
+2. The schema is converted to JSON Schema format and included in the agent's system prompt
+3. After execution, the agent's response is validated against the schema
+4. If validation fails, the response includes a `validationError` field
+5. Both single agents and composite agents support response schemas
 
 ### `defAgent(name: string, description: string, subAgents: SubAgentDefinition[])`
 
@@ -690,13 +704,27 @@ prompt.defAgent('specialists', 'Specialist agents for research and analysis', [
   }), async ({ topic }, agentPrompt) => {
     agentPrompt.defSystem('role', 'You are a research specialist.');
     agentPrompt.$`Research: ${topic}`;
-  }, { model: 'openai:gpt-4o' }),
+  }, {
+    model: 'openai:gpt-4o',
+    responseSchema: z.object({
+      findings: z.array(z.string()),
+      sources: z.array(z.string()),
+      confidence: z.number()
+    })
+  }),
   agent('analyst', 'Analyze data and provide insights', z.object({
     data: z.string().describe('Data to analyze')
   }), async ({ data }, agentPrompt) => {
     agentPrompt.defSystem('role', 'You are a data analyst.');
     agentPrompt.$`Analyze: ${data}`;
-  }, { model: 'anthropic:claude-3-5-sonnet-20241022' })
+  }, {
+    model: 'anthropic:claude-3-5-sonnet-20241022',
+    responseSchema: z.object({
+      summary: z.string(),
+      insights: z.array(z.string()),
+      score: z.number()
+    })
+  })
 ]);
 ```
 
@@ -714,12 +742,20 @@ The model calls the composite agent with an array of sub-agent calls:
 
 **Return value:**
 
-The composite agent returns results for each sub-agent call, including the response text and execution steps:
+The composite agent returns results for each sub-agent call, including the response text, execution steps, and optional validation errors:
 ```json
 {
   "results": [
-    { "name": "researcher", "response": "Quantum computing uses...", "steps": [...] },
-    { "name": "analyst", "response": "Analysis shows...", "steps": [...] }
+    {
+      "name": "researcher",
+      "response": "{\"findings\": [...], \"sources\": [...], \"confidence\": 0.9}",
+      "steps": [...]
+    },
+    {
+      "name": "analyst",
+      "response": "{\"summary\": \"...\", \"insights\": [...], \"score\": 85}",
+      "steps": [...]
+    }
   ]
 }
 ```
@@ -732,6 +768,19 @@ If a sub-agent throws an error, execution continues for remaining sub-agents, an
   "results": [
     { "name": "researcher", "response": "Research complete..." },
     { "name": "failing", "response": "Error: Agent execution failed" }
+  ]
+}
+```
+
+If response schema validation fails, a `validationError` field is included:
+```json
+{
+  "results": [
+    {
+      "name": "researcher",
+      "response": "{\"findings\": [...]}",
+      "validationError": "Required property 'confidence' is missing"
+    }
   ]
 }
 ```

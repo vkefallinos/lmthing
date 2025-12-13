@@ -24,6 +24,8 @@ export type {
   ToolOptions,
   ToolEventCallback,
   ToolCallbackResult,
+  // Agent options
+  AgentOptions,
   // Plugin system types
   Plugin,
   PluginMethod,
