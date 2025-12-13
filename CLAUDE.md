@@ -37,6 +37,7 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
 | `src/plugins/` | Plugin system for extending StatefulPrompt |
 | `src/plugins/taskList.ts` | Built-in task list plugin with `defTaskList` |
+| `src/plugins/function/` | Built-in function plugin with `defFunction` and `defFunctionAgent` |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
 
 ### Internal Modules (StatefulPrompt Implementation)
@@ -556,6 +557,7 @@ CLI (src/cli.ts)
 Examples are in `examples/` directory:
 - `mock-demo.lmt.mjs` - Simple mock model demo
 - `mock-tools.lmt.mjs` - Tool usage with mock model
+- `function-demo.lmt.mjs` - Function plugin with TypeScript validation
 - `hello.lmt.mjs` - Real model example (requires API key)
 - `weather.lmt.mjs` - Tool example with real model
 - `multi-agent.lmt.mjs` - Agent orchestration example
@@ -788,6 +790,151 @@ const { result } = await runPrompt(async ({ defTaskList, $ }) => {
 - Updates system prompt with task status via `defEffect`
 - Returns `[taskList, setTaskList]` tuple for state access
 
+**functionPlugin** (`src/plugins/function/`):
+- Provides `defFunction()` and `defFunctionAgent()` methods
+- Enables LLM to call functions via TypeScript code execution
+- Automatic TypeScript validation before execution
+- Sandboxed execution environment for security
+- Supports single functions, composite functions (namespaces), and agents
+- Response schemas and callbacks (beforeCall, onSuccess, onError)
+- Helper functions: `func()` for composite functions, `funcAgent()` for composite agents
+
+#### defFunction - TypeScript-Validated Function Execution
+
+The `defFunction` method allows you to define JavaScript/TypeScript functions that the LLM can call via code execution. Unlike `defTool` which uses JSON schemas, functions are called through TypeScript code, providing compile-time type checking.
+
+**Single Function:**
+
+```typescript
+import { functionPlugin } from 'lmthing/plugins';
+
+defFunction(
+  'calculate',
+  'Add two numbers',
+  z.object({ a: z.number(), b: z.number() }),
+  async ({ a, b }) => ({ sum: a + b }),
+  {
+    responseSchema: z.object({ sum: z.number() }),
+    beforeCall: async (input) => {
+      console.log('Calling with:', input);
+      return undefined; // Continue execution
+    },
+    onSuccess: async (input, output) => {
+      console.log('Result:', output);
+      return undefined; // Use original output
+    },
+    onError: async (input, error) => {
+      console.error('Error:', error);
+      return { fallback: true };
+    }
+  }
+);
+
+// LLM calls via TypeScript code:
+// const result = await calculate({ a: 5, b: 3 });
+// console.log(result.sum); // 8
+```
+
+**Composite Functions (Namespaces):**
+
+```typescript
+import { functionPlugin, func } from 'lmthing/plugins';
+
+defFunction('math', 'Mathematical operations', [
+  func('add', 'Add numbers', z.object({ a: z.number(), b: z.number() }),
+    async ({ a, b }) => ({ result: a + b }),
+    { responseSchema: z.object({ result: z.number() }) }
+  ),
+  func('multiply', 'Multiply numbers', z.object({ a: z.number(), b: z.number() }),
+    async ({ a, b }) => ({ result: a * b }),
+    { responseSchema: z.object({ result: z.number() }) }
+  )
+]);
+
+// LLM calls via TypeScript code:
+// const sum = await math.add({ a: 5, b: 3 });
+// const product = await math.multiply({ a: 4, b: 7 });
+```
+
+**How it works:**
+1. `defFunction` registers functions in a registry
+2. Automatically creates a `runToolCode` tool with TypeScript validation
+3. LLM writes TypeScript code calling the registered functions
+4. Code is validated against generated type declarations
+5. If valid, code executes in a sandboxed environment (vm2)
+6. Results are returned to the LLM
+
+#### defFunctionAgent - Agents Called via TypeScript
+
+The `defFunctionAgent` method works like `defFunction` but spawns child agents instead of executing simple functions.
+
+**Single Function Agent:**
+
+```typescript
+defFunctionAgent(
+  'researcher',
+  'Research topics in depth',
+  z.object({ topic: z.string() }),
+  async ({ topic }, agentPrompt) => {
+    agentPrompt.$`Research: ${topic}`;
+  },
+  {
+    model: 'openai:gpt-4o',
+    responseSchema: z.object({
+      findings: z.array(z.string()),
+      confidence: z.number()
+    })
+  }
+);
+
+// LLM calls via TypeScript code:
+// const research = await researcher({ topic: 'quantum computing' });
+// console.log(research.findings);
+```
+
+**Composite Function Agents:**
+
+```typescript
+import { functionPlugin, funcAgent } from 'lmthing/plugins';
+
+defFunctionAgent('specialists', 'Specialist agents', [
+  funcAgent('researcher', 'Research topics', z.object({ topic: z.string() }),
+    async ({ topic }, prompt) => { prompt.$`Research: ${topic}`; },
+    { responseSchema: z.object({ findings: z.array(z.string()) }) }
+  ),
+  funcAgent('analyst', 'Analyze data', z.object({ data: z.string() }),
+    async ({ data }, prompt) => { prompt.$`Analyze: ${data}`; },
+    { responseSchema: z.object({ summary: z.string(), score: z.number() }) }
+  )
+]);
+
+// LLM calls via TypeScript code:
+// const research = await specialists.researcher({ topic: 'AI' });
+// const analysis = await specialists.analyst({ data: research.findings.join('\n') });
+```
+
+**TypeScript Validation:**
+
+The plugin generates TypeScript declarations for all registered functions and validates code before execution:
+
+```typescript
+// Generated types (example):
+declare function calculate(args: { a: number; b: number }): Promise<{ sum: number }>;
+declare namespace math {
+  function add(args: { a: number; b: number }): Promise<{ result: number }>;
+  function multiply(args: { a: number; b: number }): Promise<{ result: number }>;
+}
+```
+
+If the LLM writes invalid TypeScript (type errors, calling undefined functions, etc.), the validation fails and error messages are returned, allowing the LLM to fix the code.
+
+**Security:**
+
+- Code execution happens in a sandboxed environment using vm2
+- Functions can only call registered functions
+- No access to file system, network, or other Node.js APIs unless explicitly provided
+- TypeScript validation prevents many common errors before execution
+
 ### Creating Custom Plugins
 
 ```typescript
@@ -897,7 +1044,7 @@ Usage:
 ```typescript
 import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier, ToolOptions, AgentOptions, ToolEventCallback } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
-import { taskListPlugin, defTaskList } from 'lmthing/plugins';
+import { taskListPlugin, defTaskList, functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from 'lmthing/plugins';
 ```
 
 ## Dependencies
