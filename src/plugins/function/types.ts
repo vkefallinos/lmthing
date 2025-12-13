@@ -82,3 +82,47 @@ export interface CompositeFunctionDefinition<TInput = any, TOutput = any> {
   execute: (args: TInput) => TOutput | Promise<TOutput>;
   options: FunctionOptions<TInput, TOutput>;
 }
+
+/**
+ * Options for function agent definition
+ */
+export interface FunctionAgentOptions<TInput = any, TOutput = any> {
+  /** Required response schema for output validation */
+  responseSchema: z.ZodType<TOutput>;
+  /** Optional custom system prompt for the agent */
+  system?: string;
+  /** Optional model override for the agent */
+  model?: any;
+  /** Optional plugins for the agent */
+  plugins?: readonly any[];
+  /** Optional callback before agent execution */
+  beforeCall?: FunctionBeforeCallback<TInput, TOutput>;
+  /** Optional callback after successful execution */
+  onSuccess?: FunctionSuccessCallback<TInput, TOutput>;
+  /** Optional callback when agent throws */
+  onError?: FunctionErrorCallback<TInput>;
+}
+
+/**
+ * Function agent definition stored in registry
+ */
+export interface FunctionAgentDefinition<TInput = any, TOutput = any> {
+  name: string;
+  description: string;
+  inputSchema: z.ZodType<TInput>;
+  responseSchema: z.ZodType<TOutput>;
+  execute: (args: TInput, prompt: any) => void | Promise<void>;
+  options: FunctionAgentOptions<TInput, TOutput>;
+  isAgent: true;
+}
+
+/**
+ * Helper type for composite function agent definitions
+ */
+export interface CompositeFunctionAgentDefinition<TInput = any, TOutput = any> {
+  name: string;
+  description: string;
+  inputSchema: z.ZodType<TInput>;
+  execute: (args: TInput, prompt: any) => void | Promise<void>;
+  options: FunctionAgentOptions<TInput, TOutput>;
+}

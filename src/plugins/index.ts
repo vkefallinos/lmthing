@@ -27,7 +27,7 @@
 
 // Built-in plugins
 export { taskListPlugin, defTaskList } from './taskList';
-export { functionPlugin, defFunction, func } from './function';
+export { functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from './function';
 
 // Plugin types
 export type { Task, TaskStatus, StartTaskResult, CompleteTaskResult } from './types';
@@ -38,6 +38,9 @@ export type {
   FunctionSuccessCallback,
   FunctionErrorCallback,
   CompositeFunctionDefinition,
+  FunctionAgentDefinition,
+  FunctionAgentOptions,
+  CompositeFunctionAgentDefinition,
   TypeScriptError,
   ValidationResult,
 } from './function';
