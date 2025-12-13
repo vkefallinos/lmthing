@@ -1,0 +1,177 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`FunctionPlugin > Sandbox execution > should execute valid code successfully > successful-execution-steps 1`] = `
+[
+  {
+    "activeTools": [
+      "runToolCode",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## calculate
+Add two numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate 10 + 5",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "code": "const result = await calculate({ a: 10, b: 5 });
+return result.sum;",
+          },
+          "toolCallId": "call_1",
+          "toolName": "runToolCode",
+          "type": "tool-call",
+        },
+        {
+          "text": "Calculating...",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<available_functions>
+# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## calculate
+Add two numbers
+- Parameters: any
+- Returns: any
+
+</available_functions>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculate 10 + 5",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Calculating...",
+              "type": "text",
+            },
+            {
+              "input": {
+                "code": "const result = await calculate({ a: 10, b: 5 });
+return result.sum;",
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "result": 15,
+                  "success": true,
+                },
+              },
+              "toolCallId": "call_1",
+              "toolName": "runToolCode",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Done",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`FunctionPlugin > defFunction - composite functions > should register composite functions > composite-function-system-prompt 1`] = `
+"# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## math (namespace)
+
+### math.add
+Add numbers
+- Parameters: any
+- Returns: any
+
+### math.multiply
+Multiply numbers
+- Parameters: any
+- Returns: any
+"
+`;
+
+exports[`FunctionPlugin > defFunction - composite functions > should register composite functions > composite-function-tools 1`] = `
+[
+  "runToolCode",
+]
+`;
+
+exports[`FunctionPlugin > defFunction - single functions > should register a function and generate system prompt > single-function-system-prompt 1`] = `
+"# Available Functions
+
+You can call these functions using TypeScript code via the runToolCode tool.
+All code is validated with TypeScript before execution.
+
+## calculate
+Add two numbers
+- Parameters: any
+- Returns: any
+"
+`;
+
+exports[`FunctionPlugin > defFunction - single functions > should register a function and generate system prompt > single-function-tools 1`] = `
+[
+  "runToolCode",
+]
+`;

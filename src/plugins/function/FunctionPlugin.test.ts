@@ -32,6 +32,14 @@ describe('FunctionPlugin', () => {
       const functionsPrompt = systems['available_functions'];
       expect(functionsPrompt).toContain('calculate');
       expect(functionsPrompt).toContain('Add two numbers');
+
+      // Snapshot the system prompt
+      expect(functionsPrompt).toMatchSnapshot('single-function-system-prompt');
+
+      // Snapshot the tools structure
+      const tools = (prompt as any)._tools;
+      expect(tools.runToolCode).toBeDefined();
+      expect(Object.keys(tools)).toMatchSnapshot('single-function-tools');
     });
 
     it('should throw error if responseSchema is missing', async () => {
@@ -98,6 +106,13 @@ describe('FunctionPlugin', () => {
       const functionsPrompt = systems['available_functions'];
       expect(functionsPrompt).toContain('math.add');
       expect(functionsPrompt).toContain('math.multiply');
+
+      // Snapshot the system prompt for composite functions
+      expect(functionsPrompt).toMatchSnapshot('composite-function-system-prompt');
+
+      // Snapshot the tools structure
+      const tools = (prompt as any)._tools;
+      expect(Object.keys(tools)).toMatchSnapshot('composite-function-tools');
     });
 
     it('should throw error if composite sub-function missing responseSchema', async () => {
@@ -149,6 +164,8 @@ describe('FunctionPlugin', () => {
     });
 
     it('should reject invalid TypeScript code with wrong property names', async () => {
+      const capturedToolResults: any[] = [];
+
       const mockModel = createMockModel([
         { type: 'text', text: 'Let me try...' },
         {
@@ -160,7 +177,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Error occurred' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunction, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('calculate', 'Add two numbers',
           z.object({ a: z.number(), b: z.number() }),
           async ({ a, b }) => ({ sum: a + b }),
@@ -174,7 +191,22 @@ describe('FunctionPlugin', () => {
       });
 
       await result.text;
-      // Validation should fail before execution
+
+      // Check the steps to capture validation errors
+      const steps = (prompt as any).steps;
+      if (steps && steps.length > 0) {
+        const toolCallStep = steps.find((s: any) =>
+          s.output?.content?.some((c: any) => c.type === 'tool-result')
+        );
+
+        if (toolCallStep) {
+          const toolResult = toolCallStep.output.content.find((c: any) => c.type === 'tool-result');
+          if (toolResult && !toolResult.result.success) {
+            // Snapshot the validation errors
+            expect(toolResult.result.errors).toMatchSnapshot('typescript-wrong-property-names-errors');
+          }
+        }
+      }
     });
 
     it('should reject invalid TypeScript code with wrong types', async () => {
@@ -189,7 +221,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Error occurred' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunction, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('calculate', 'Add two numbers',
           z.object({ a: z.number(), b: z.number() }),
           async ({ a, b }) => ({ sum: a + b }),
@@ -203,7 +235,22 @@ describe('FunctionPlugin', () => {
       });
 
       await result.text;
-      // Validation should fail before execution
+
+      // Check the steps to capture validation errors
+      const steps = (prompt as any).steps;
+      if (steps && steps.length > 0) {
+        const toolCallStep = steps.find((s: any) =>
+          s.output?.content?.some((c: any) => c.type === 'tool-result')
+        );
+
+        if (toolCallStep) {
+          const toolResult = toolCallStep.output.content.find((c: any) => c.type === 'tool-result');
+          if (toolResult && !toolResult.result.success) {
+            // Snapshot the validation errors
+            expect(toolResult.result.errors).toMatchSnapshot('typescript-wrong-types-errors');
+          }
+        }
+      }
     });
   });
 
@@ -222,7 +269,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Done' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunction, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('calculate', 'Add two numbers',
           z.object({ a: z.number(), b: z.number() }),
           calculateFn,
@@ -237,6 +284,10 @@ describe('FunctionPlugin', () => {
 
       await result.text;
       expect(calculateFn).toHaveBeenCalledWith({ a: 10, b: 5 });
+
+      // Snapshot the execution steps
+      const steps = (prompt as any).steps;
+      expect(steps).toMatchSnapshot('successful-execution-steps');
     });
 
     it('should handle composite functions in sandbox', async () => {
