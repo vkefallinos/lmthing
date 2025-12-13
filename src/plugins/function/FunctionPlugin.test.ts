@@ -839,4 +839,74 @@ describe('FunctionPlugin', () => {
       expect(steps).toMatchSnapshot('agent-beforeCall-shortcircuit-steps');
     });
   });
+
+  describe('defFunction + defFunctionAgent - mixed usage', () => {
+    it('should allow functions and agents to work together in the same registry', async () => {
+      const calculateFn = vi.fn(async ({ a, b }) => ({ sum: a + b }));
+      const childMockModel = createMockModel([
+        { type: 'text', text: '{"analysis": "Numbers are positive", "recommendation": "Use addition"}' }
+      ]);
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Let me analyze and calculate...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: {
+            code: `
+              const analysis = await analyzer({ data: "5 and 3" });
+              const result = await calculate({ a: 5, b: 3 });
+              return { analysis, result };
+            `
+          }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunction, defFunctionAgent, $ }) => {
+        // Register a regular function
+        defFunction('calculate', 'Add two numbers',
+          z.object({ a: z.number(), b: z.number() }),
+          calculateFn,
+          { responseSchema: z.object({ sum: z.number() }) }
+        );
+
+        // Register an agent
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          async ({ data }, childPrompt) => {
+            childPrompt.$`Analyze: ${data}`;
+          },
+          {
+            responseSchema: z.object({
+              analysis: z.string(),
+              recommendation: z.string()
+            }),
+            model: childMockModel as any
+          }
+        );
+
+        $`Use both the analyzer and calculator`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      // Verify both were called
+      expect(calculateFn).toHaveBeenCalledWith({ a: 5, b: 3 });
+
+      // Check system prompt includes both
+      const systems = (prompt as any).systems;
+      const functionsPrompt = systems['available_functions'];
+      expect(functionsPrompt).toContain('calculate');
+      expect(functionsPrompt).toContain('analyzer (agent)');
+
+      // Snapshot the execution steps
+      const steps = (prompt as any).steps;
+      expect(steps).toMatchSnapshot('mixed-function-agent-execution-steps');
+    });
+  });
 });
