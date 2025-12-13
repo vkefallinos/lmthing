@@ -538,7 +538,8 @@ Return only the JSON object in your response, without any additional text or exp
   protected _zodToJsonSchema(schema: z.ZodType<any>): any {
     // Basic conversion - handles common Zod types
     if (schema instanceof z.ZodObject) {
-      const shape = schema._def.shape();
+      // In Zod v4, _def.shape is an object, not a function
+      const shape = typeof schema._def.shape === 'function' ? schema._def.shape() : schema._def.shape;
       const properties: any = {};
       const required: string[] = [];
 

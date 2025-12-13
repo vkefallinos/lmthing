@@ -81,7 +81,25 @@ exports[`Agent Response Schema > Composite agent with response schema > should c
                         "content": "<responseFormat>
 You are a data processor. Be precise and accurate.
 
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "result": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "result",
+    "timestamp"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                         "role": "system",
                       },
@@ -233,7 +251,28 @@ exports[`Agent Response Schema > Composite agent with response schema > should h
                             "prompt": [
                               {
                                 "content": "<responseFormat>
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "status": {
+      "type": "string"
+    },
+    "errors": {
+      "type": "array",
+      "items": {
+        "type": "any"
+      }
+    }
+  },
+  "required": [
+    "status",
+    "errors"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                                 "role": "system",
                               },
@@ -407,7 +446,28 @@ exports[`Agent Response Schema > Composite agent with response schema > should v
                             "prompt": [
                               {
                                 "content": "<responseFormat>
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "findings": {
+      "type": "array",
+      "items": {
+        "type": "any"
+      }
+    },
+    "confidence": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "findings",
+    "confidence"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                                 "role": "system",
                               },
@@ -444,7 +504,25 @@ You must respond with a valid JSON object that matches the expected schema.
                             "prompt": [
                               {
                                 "content": "<responseFormat>
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "summary",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                                 "role": "system",
                               },
@@ -575,7 +653,32 @@ exports[`Agent Response Schema > Response schema instruction formatting > should
                     "prompt": [
                       {
                         "content": "<responseFormat>
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Person name"
+    },
+    "age": {
+      "type": "number",
+      "description": "Person age"
+    },
+    "active": {
+      "type": "boolean",
+      "description": "Whether person is active"
+    }
+  },
+  "required": [
+    "name",
+    "age",
+    "active"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                         "role": "system",
                       },
@@ -708,7 +811,27 @@ exports[`Agent Response Schema > Single agent with response schema > should acce
                         "content": "<responseFormat>
 You are a data analyst.
 
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string",
+      "description": "Summary of the analysis"
+    },
+    "score": {
+      "type": "number",
+      "description": "Score from 0-100"
+    }
+  },
+  "required": [
+    "summary",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                         "role": "system",
                       },
@@ -839,7 +962,27 @@ exports[`Agent Response Schema > Single agent with response schema > should add 
                     "prompt": [
                       {
                         "content": "<responseFormat>
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "formatted": {
+      "type": "string",
+      "description": "The formatted text"
+    },
+    "length": {
+      "type": "number",
+      "description": "Length of original text"
+    }
+  },
+  "required": [
+    "formatted",
+    "length"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                         "role": "system",
                       },
@@ -974,7 +1117,25 @@ exports[`Agent Response Schema > Single agent with response schema > should incl
                         "prompt": [
                           {
                             "content": "<responseFormat>
-You must respond with a valid JSON object that matches the expected schema.
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "summary": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "summary",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
 </responseFormat>",
                             "role": "system",
                           },
