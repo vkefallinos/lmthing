@@ -565,12 +565,12 @@ Return only the JSON object in your response, without any additional text or exp
     } else if (schema instanceof z.ZodArray) {
       return {
         type: 'array',
-        items: this._zodToJsonSchema(schema._def.type)
+        items: this._zodToJsonSchema((schema as any)._def.element)
       };
     } else if (schema instanceof z.ZodOptional) {
-      return this._zodToJsonSchema(schema._def.innerType);
+      return this._zodToJsonSchema((schema as any)._def.innerType);
     } else if (schema instanceof z.ZodNullable) {
-      return { ...this._zodToJsonSchema(schema._def.innerType), nullable: true };
+      return { ...this._zodToJsonSchema((schema as any)._def.innerType), nullable: true };
     } else {
       // Fallback for unknown types
       return { type: 'any' };

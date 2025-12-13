@@ -262,7 +262,7 @@ You must respond with a valid JSON object that matches this schema:
     "errors": {
       "type": "array",
       "items": {
-        "type": "any"
+        "type": "string"
       }
     }
   },
@@ -454,7 +454,7 @@ You must respond with a valid JSON object that matches this schema:
     "findings": {
       "type": "array",
       "items": {
-        "type": "any"
+        "type": "string"
       }
     },
     "confidence": {
