@@ -52,6 +52,9 @@ describe('Agent Response Schema', () => {
       expect(steps.some(step =>
         step.output?.content?.some((c: any) => c.type === 'tool-call' && c.toolName === 'analyst')
       )).toBe(true);
+
+      // Snapshot test
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should include validation error when response does not match schema', async () => {
@@ -94,6 +97,9 @@ describe('Agent Response Schema', () => {
       // The agent should still execute but return validation error
       const steps = prompt.steps;
       expect(steps.length).toBeGreaterThan(0);
+
+      // Snapshot test
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should add schema instruction to agent system prompt', async () => {
@@ -131,6 +137,9 @@ describe('Agent Response Schema', () => {
 
       await result.text;
       expect(prompt.steps.length).toBeGreaterThan(0);
+
+      // Snapshot test
+      expect(prompt.steps).toMatchSnapshot();
     });
   });
 
@@ -201,6 +210,9 @@ describe('Agent Response Schema', () => {
 
       await result.text;
       expect(prompt.steps.length).toBeGreaterThan(0);
+
+      // Snapshot test
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should handle validation errors in composite agents', async () => {
@@ -251,6 +263,9 @@ describe('Agent Response Schema', () => {
       await result.text;
       // Should complete despite validation error
       expect(prompt.steps.length).toBeGreaterThan(0);
+
+      // Snapshot test
+      expect(prompt.steps).toMatchSnapshot();
     });
 
     it('should combine system prompt with schema instruction', async () => {
@@ -294,6 +309,9 @@ describe('Agent Response Schema', () => {
 
       await result.text;
       expect(prompt.steps.length).toBeGreaterThan(0);
+
+      // Snapshot test
+      expect(prompt.steps).toMatchSnapshot();
     });
   });
 
@@ -339,6 +357,9 @@ describe('Agent Response Schema', () => {
 
       await result.text;
       expect(prompt.steps.length).toBeGreaterThan(0);
+
+      // Snapshot test
+      expect(prompt.steps).toMatchSnapshot();
     });
   });
 });
