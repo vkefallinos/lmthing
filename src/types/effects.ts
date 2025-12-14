@@ -6,6 +6,8 @@ import type { PromptContext } from './core';
 
 /**
  * Step modifier function type
+ *
+ * @category Hooks
  */
 export type StepModifier = (
   aspect: 'messages' | 'tools' | 'systems' | 'variables',
@@ -14,6 +16,8 @@ export type StepModifier = (
 
 /**
  * Effect definition for StatefulPrompt
+ *
+ * @category Hooks
  */
 export interface Effect {
   id: number;
@@ -23,6 +27,8 @@ export interface Effect {
 
 /**
  * Step modifications accumulator for StatefulPrompt
+ *
+ * @category Types
  */
 export interface StepModifications {
   messages?: any[];

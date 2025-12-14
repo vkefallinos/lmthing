@@ -7,6 +7,8 @@ import type { Plugin } from './plugins';
 /**
  * Options for defAgent and agent functions
  *
+ * @category Agents
+ *
  * @property model - Override the language model for this agent
  * @property responseSchema - Optional Zod schema for validating/formatting agent responses
  * @property system - Custom system prompt for the agent

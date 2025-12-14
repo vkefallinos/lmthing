@@ -4,6 +4,8 @@
 
 /**
  * Collection utility for tools
+ *
+ * @category Types
  */
 export interface ToolCollection {
   has(name: string): boolean;
@@ -14,6 +16,8 @@ export interface ToolCollection {
 
 /**
  * Collection utility for systems
+ *
+ * @category Types
  */
 export interface SystemCollection {
   has(name: string): boolean;
@@ -24,6 +28,8 @@ export interface SystemCollection {
 
 /**
  * Collection utility for variables
+ *
+ * @category Types
  */
 export interface VariableCollection {
   has(name: string): boolean;

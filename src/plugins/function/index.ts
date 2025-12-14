@@ -54,6 +54,8 @@ import type { FunctionOptions, CompositeFunctionDefinition, FunctionAgentOptions
 /**
  * Helper function to create a sub-function definition for use with defFunction arrays.
  *
+ * @category Plugins
+ *
  * @example
  * import { func } from 'lmthing/plugins';
  *
@@ -80,6 +82,8 @@ export function func<TInput = any, TOutput = any>(
 
 /**
  * Helper function to create a sub-agent definition for use with defFunctionAgent arrays.
+ *
+ * @category Plugins
  *
  * @example
  * import { funcAgent } from 'lmthing/plugins';

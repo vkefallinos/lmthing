@@ -18,6 +18,8 @@ import { createToolCollection, createSystemCollection, createVariableCollection 
 
 /**
  * Definition for a sub-tool used within a composite tool.
+ *
+ * @category Tools
  */
 export interface SubToolDefinition {
   name: string;
@@ -29,6 +31,8 @@ export interface SubToolDefinition {
 
 /**
  * Helper function to create a sub-tool definition for use with defTool arrays.
+ *
+ * @category Tools
  *
  * @example
  * defTool('file', 'File operations', [
@@ -55,6 +59,8 @@ export function tool(
 
 /**
  * Definition for a sub-agent used within a composite agent.
+ *
+ * @category Agents
  */
 export interface SubAgentDefinition {
   name: string;
@@ -66,6 +72,8 @@ export interface SubAgentDefinition {
 
 /**
  * Helper function to create a sub-agent definition for use with defAgent arrays.
+ *
+ * @category Agents
  *
  * @example
  * defAgent('specialists', 'Specialist agents', [
@@ -93,6 +101,8 @@ export function agent(
  * Result object for step modifications via prepareStep hooks.
  * Used by defEffect with stepModifier to modify step behavior.
  *
+ * @category Hooks
+ *
  * @property system - Override the system prompt for this step
  * @property activeTools - Limit which tools are available for this step
  * @property activeSystems - Filter which system parts to include (by name)
@@ -117,6 +127,8 @@ export interface DefHookResult {
  * - defEffect: For running effects based on dependency changes
  * - Re-execution of promptFn on each step
  * - Definition reconciliation
+ *
+ * @category Core
  */
 export class StatefulPrompt extends StreamTextBuilder {
   protected variables: Record<string, {
@@ -185,6 +197,8 @@ export class StatefulPrompt extends StreamTextBuilder {
   /**
    * Define state that persists across prompt re-executions
    *
+   * @category Hooks
+   *
    * @param key - Unique identifier for the state
    * @param initialValue - Initial value for the state
    * @returns Tuple of [stateProxy, setterFunction]
@@ -195,6 +209,8 @@ export class StatefulPrompt extends StreamTextBuilder {
 
   /**
    * Define an effect that runs based on dependency changes
+   *
+   * @category Hooks
    *
    * @param callback - Function to run when dependencies change
    * @param dependencies - Optional array of dependencies to track
@@ -279,6 +295,21 @@ export class StatefulPrompt extends StreamTextBuilder {
     this.systems[name] = part;
   }
 
+  /**
+   * Define a variable that will be included in the system prompt.
+   *
+   * @category Definitions
+   *
+   * @param name - Variable name (used as XML tag)
+   * @param value - Variable value (string or will be converted)
+   * @returns Proxy object that can be used in templates
+   *
+   * @example
+   * ```typescript
+   * const userName = prompt.def('USER_NAME', 'Alice');
+   * prompt.$`Hello ${userName}`;
+   * ```
+   */
   def(name: string, value: string) {
     this._definitionTracker.mark('def', name);
     this.addVariable(name, value, 'string');
@@ -286,6 +317,15 @@ export class StatefulPrompt extends StreamTextBuilder {
     return this.createProxy(tag, 'def', name);
   }
 
+  /**
+   * Define a data variable with YAML formatting.
+   *
+   * @category Definitions
+   *
+   * @param name - Variable name (used as XML tag)
+   * @param value - Data to be serialized as YAML
+   * @returns Proxy object that can be used in templates
+   */
   defData(name: string, value: any) {
     this._definitionTracker.mark('defData', name);
     this.addVariable(name, value, 'data');
@@ -293,6 +333,15 @@ export class StatefulPrompt extends StreamTextBuilder {
     return this.createProxy(tag, 'defData', name);
   }
 
+  /**
+   * Define a system prompt section.
+   *
+   * @category Definitions
+   *
+   * @param name - System section name (used as XML tag)
+   * @param value - System prompt content
+   * @returns Proxy object that can be used in templates
+   */
   defSystem(name: string, value: string) {
     this._definitionTracker.mark('defSystem', name);
     this.addSystemPart(name, value);
@@ -300,6 +349,14 @@ export class StatefulPrompt extends StreamTextBuilder {
     return this.createProxy(tag, 'defSystem', name);
   }
 
+  /**
+   * Add a message to the conversation.
+   *
+   * @category Definitions
+   *
+   * @param role - Message role (user or assistant)
+   * @param content - Message content
+   */
   defMessage(role: 'user' | 'assistant', content: string) {
     // Prevent duplicate user messages
     if (role === 'user' && this._executedOnce) {
@@ -310,6 +367,8 @@ export class StatefulPrompt extends StreamTextBuilder {
 
   /**
    * Define a tool for the LLM to use.
+   *
+   * @category Tools
    *
    * @overload Single tool: defTool(name, description, inputSchema, execute, options?)
    * @overload Composite tool: defTool(name, description, subTools[])
@@ -580,6 +639,8 @@ Return only the JSON object in your response, without any additional text or exp
   /**
    * Define an agent for the LLM to delegate tasks to.
    *
+   * @category Agents
+   *
    * @overload Single agent: defAgent(name, description, inputSchema, execute, options)
    * @overload Composite agent: defAgent(name, description, subAgents[])
    *
@@ -758,6 +819,20 @@ Return only the JSON object in your response, without any additional text or exp
     });
   }
 
+  /**
+   * Tagged template literal for adding user messages.
+   *
+   * @category Definitions
+   *
+   * @param strings - Template strings array
+   * @param values - Template values (can include definition proxies)
+   *
+   * @example
+   * ```typescript
+   * const userName = prompt.def('USER_NAME', 'Alice');
+   * prompt.$`Hello ${userName}`;
+   * ```
+   */
   $(strings: TemplateStringsArray, ...values: any[]) {
     const content = strings.reduce((acc, str, i) => {
       if (values[i] !== undefined) {
@@ -855,6 +930,8 @@ Return only the JSON object in your response, without any additional text or exp
   /**
    * Get the list of reminded items that had their .remind() method called.
    * Returns an array of { type, name } objects where type is 'def', 'defData', 'defSystem', 'defTool', or 'defAgent'.
+   *
+   * @category Core
    */
   getRemindedItems() {
     return [...this._remindedItems];

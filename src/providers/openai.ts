@@ -6,6 +6,8 @@ import { defineProvider, BaseProviderConfig } from './factory';
  *
  * Supports GPT-4, GPT-3.5, and other OpenAI models
  *
+ * @category Providers
+ *
  * @see https://sdk.vercel.ai/providers/ai-sdk-providers/openai
  */
 
@@ -40,6 +42,8 @@ const module = defineProvider<OpenAIConfig, typeof OpenAIModelsObj>({
 /**
  * Create an OpenAI provider instance
  *
+ * @category Providers
+ *
  * @param config - Configuration options for OpenAI
  * @returns OpenAI provider instance
  *
@@ -57,11 +61,15 @@ export const createOpenAIProvider = module.createProvider;
 /**
  * Default OpenAI provider instance
  * Uses environment variables for configuration
+ *
+ * @category Providers
  */
 export const openai = module.provider;
 
 /**
  * Common OpenAI model identifiers
+ *
+ * @category Providers
  */
 export const OpenAIModels = OpenAIModelsObj;
 

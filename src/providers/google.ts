@@ -6,6 +6,8 @@ import { defineProvider, BaseProviderConfig } from './factory';
  *
  * Supports Gemini models
  *
+ * @category Providers
+ *
  * @see https://sdk.vercel.ai/providers/ai-sdk-providers/google-generative-ai
  */
 
@@ -28,6 +30,8 @@ const module = defineProvider({
 /**
  * Create a Google Generative AI provider instance
  *
+ * @category Providers
+ *
  * @param config - Configuration options for Google Generative AI
  * @returns Google Generative AI provider instance
  *
@@ -45,11 +49,15 @@ export const createGoogleProvider = module.createProvider;
 /**
  * Default Google Generative AI provider instance
  * Uses environment variables for configuration
+ *
+ * @category Providers
  */
 export const google = module.provider;
 
 /**
  * Common Google Gemini model identifiers
+ *
+ * @category Providers
  */
 export const GoogleModels = module.models;
 

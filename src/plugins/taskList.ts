@@ -25,6 +25,8 @@ import type { Task, TaskStatus, StartTaskResult, CompleteTaskResult } from './ty
 /**
  * Creates a managed task list with tools and effects.
  *
+ * @category Plugins
+ *
  * @param this - The StatefulPrompt instance (automatically bound)
  * @param tasks - Initial array of tasks
  * @returns Tuple of [taskList, setTaskList] for accessing and updating tasks
@@ -161,6 +163,8 @@ Use "startTask" to begin a pending task and "completeTask" when finished.
  * Task List Plugin
  *
  * Export this plugin object to use with runPrompt:
+ *
+ * @category Plugins
  *
  * @example
  * import { taskListPlugin } from 'lmthing/plugins';

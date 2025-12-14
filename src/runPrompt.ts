@@ -8,6 +8,8 @@ import type { Plugin, MergePlugins, PromptWithPlugins } from "./types";
  * Helper function to create a plugin array without requiring 'as const'.
  * This preserves the tuple type for better TypeScript inference.
  *
+ * @category Plugins
+ *
  * @example
  * import { taskListPlugin, greetingPlugin } from 'lmthing/plugins';
  *
@@ -23,6 +25,8 @@ export function createPluginArray<P extends Plugin[]>(...plugins: P): P {
 
 /**
  * Configuration options for runPrompt
+ *
+ * @category Core
  */
 export interface PromptConfig<P extends readonly Plugin[] = []> {
   model: ModelInput;
@@ -98,6 +102,9 @@ function createPromptProxyWithPlugins<P extends readonly Plugin[]>(
 
 /**
  * Runs a prompt with optional plugins.
+ * Main entry point for running prompts with lmthing.
+ *
+ * @category Core
  *
  * @param promptFn - Async function that configures the prompt using def*, defState, defEffect, etc.
  * @param config - Configuration including model, options, and plugins

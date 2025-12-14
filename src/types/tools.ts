@@ -7,17 +7,23 @@
  * - undefined: output is returned as is
  * - string: returned string is used as the tool output
  * - object: stringified or formatted according to responseSchema
+ *
+ * @category Tools
  */
 export type ToolCallbackResult = undefined | string | Record<string, any>;
 
 /**
  * Tool event callback signature
  * Receives input and output, returns optional modified output
+ *
+ * @category Tools
  */
 export type ToolEventCallback = (input: any, output: any) => Promise<ToolCallbackResult> | ToolCallbackResult;
 
 /**
  * Options for defTool and tool functions
+ *
+ * @category Tools
  *
  * @property responseSchema - Optional Zod schema for validating/formatting tool responses
  * @property onSuccess - Callback fired when tool executes successfully
