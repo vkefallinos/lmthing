@@ -1,3 +1,5 @@
+import { Resettable } from '../types';
+
 /**
  * Definition types that can be tracked
  */
@@ -8,7 +10,7 @@ export type DefinitionType = 'def' | 'defData' | 'defSystem' | 'defTool' | 'defA
  * This enables reconciliation - removing definitions that are no longer defined
  * after a re-execution of the prompt function.
  */
-export class DefinitionTracker {
+export class DefinitionTracker implements Resettable {
   private seen = new Set<string>();
 
   /**

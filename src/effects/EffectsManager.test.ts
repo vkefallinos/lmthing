@@ -67,7 +67,7 @@ describe('EffectsManager', () => {
 
     // Second call with same dep - should not run
     // Need to re-register to update dependencies array reference
-    manager.clear();
+    manager.reset();
     manager.register(callback, [dep]);
     manager.process(context, stepModifier);
     expect(callback).toHaveBeenCalledTimes(2); // First run after clear
@@ -90,7 +90,7 @@ describe('EffectsManager', () => {
     expect(callback).toHaveBeenCalledTimes(1);
 
     // Change the dependency array by clearing and re-registering
-    manager.clear();
+    manager.reset();
     dep = 2;
     manager.register(callback, [dep]);
     manager.process(context, stepModifier);
@@ -107,7 +107,7 @@ describe('EffectsManager', () => {
     manager.process(context, stepModifier);
 
     // Clear and register with different length
-    manager.clear();
+    manager.reset();
     manager.register(callback, [1, 2]);
     manager.process(context, stepModifier);
 
@@ -123,7 +123,7 @@ describe('EffectsManager', () => {
 
     expect(manager.getEffects()).toHaveLength(2);
 
-    manager.clear();
+    manager.reset();
 
     expect(manager.getEffects()).toHaveLength(0);
   });

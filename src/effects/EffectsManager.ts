@@ -1,10 +1,10 @@
-import { Effect, PromptContext, StepModifier } from '../types';
+import { Effect, PromptContext, StepModifier, Resettable } from '../types';
 
 /**
  * EffectsManager handles effect registration and execution.
  * Similar to React's useEffect hook pattern.
  */
-export class EffectsManager {
+export class EffectsManager implements Resettable {
   private effects: Effect[] = [];
   private previousDeps = new Map<number, any[]>();
   private idCounter = 0;
@@ -115,11 +115,18 @@ export class EffectsManager {
   }
 
   /**
-   * Clear all effects and reset state.
+   * Reset the effects manager, clearing all effects and counters.
    */
-  clear(): void {
+  reset(): void {
     this.effects = [];
     this.previousDeps.clear();
     this.idCounter = 0;
+  }
+
+  /**
+   * @deprecated Use reset() instead. Will be removed in next major version.
+   */
+  clear(): void {
+    this.reset();
   }
 }

@@ -1060,7 +1060,7 @@ Return only the JSON object in your response, without any additional text or exp
           this._clearDefinitions();
 
           // Clear effects so they can be re-registered during re-execution
-          this._effectsManager.clear();
+          this._effectsManager.reset();
 
           // Re-execute promptFn
           const promptMethods = this._getPromptMethods();

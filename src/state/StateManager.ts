@@ -1,8 +1,10 @@
+import { Resettable } from '../types';
+
 /**
  * StateManager handles state persistence across prompt re-executions.
  * Similar to React's useState hook pattern.
  */
-export class StateManager {
+export class StateManager implements Resettable {
   private store = new Map<string, any>();
 
   /**
@@ -54,9 +56,16 @@ export class StateManager {
   }
 
   /**
-   * Clear all state
+   * Reset the state manager, clearing all stored state.
+   */
+  reset(): void {
+    this.store.clear();
+  }
+
+  /**
+   * @deprecated Use reset() instead. Will be removed in next major version.
    */
   clear(): void {
-    this.store.clear();
+    this.reset();
   }
 }
