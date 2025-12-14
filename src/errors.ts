@@ -6,6 +6,8 @@
 /**
  * Base error class for all lmthing errors.
  * Provides consistent error structure with error codes.
+ *
+ * @category Errors
  */
 export class LmthingError extends Error {
   constructor(
@@ -21,6 +23,8 @@ export class LmthingError extends Error {
 
 /**
  * Error thrown when provider resolution fails.
+ *
+ * @category Errors
  *
  * @example
  * ```typescript
@@ -46,6 +50,8 @@ export class ProviderError extends LmthingError {
 /**
  * Error thrown when input validation fails.
  * Used for schema validation, config validation, etc.
+ *
+ * @category Errors
  */
 export class ValidationError extends LmthingError {
   constructor(
@@ -61,6 +67,8 @@ export class ValidationError extends LmthingError {
 
 /**
  * Error thrown when a plugin fails.
+ *
+ * @category Errors
  */
 export class PluginError extends LmthingError {
   constructor(
@@ -76,6 +84,8 @@ export class PluginError extends LmthingError {
 
 /**
  * Error thrown when prompt execution fails.
+ *
+ * @category Errors
  */
 export class PromptError extends LmthingError {
   constructor(
@@ -91,6 +101,8 @@ export class PromptError extends LmthingError {
 /**
  * Error codes used throughout lmthing.
  * Use these constants instead of string literals for consistency.
+ *
+ * @category Errors
  */
 export const ErrorCodes = {
   // Provider errors
@@ -113,4 +125,9 @@ export const ErrorCodes = {
   PLUGIN_METHOD_FAILED: 'PLUGIN_METHOD_FAILED',
 } as const;
 
+/**
+ * Type for error code constants.
+ *
+ * @category Errors
+ */
 export type ErrorCode = typeof ErrorCodes[keyof typeof ErrorCodes];

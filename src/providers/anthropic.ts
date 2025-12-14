@@ -6,6 +6,8 @@ import { defineProvider, BaseProviderConfig } from './factory';
  *
  * Supports Claude models including Claude 3.5 Sonnet, Claude 3 Opus, and Claude 3 Haiku
  *
+ * @category Providers
+ *
  * @see https://sdk.vercel.ai/providers/ai-sdk-providers/anthropic
  */
 
@@ -27,6 +29,8 @@ const module = defineProvider({
 /**
  * Create an Anthropic provider instance
  *
+ * @category Providers
+ *
  * @param config - Configuration options for Anthropic
  * @returns Anthropic provider instance
  *
@@ -44,11 +48,15 @@ export const createAnthropicProvider = module.createProvider;
 /**
  * Default Anthropic provider instance
  * Uses environment variables for configuration
+ *
+ * @category Providers
  */
 export const anthropic = module.provider;
 
 /**
  * Common Anthropic model identifiers
+ *
+ * @category Providers
  */
 export const AnthropicModels = module.models;
 

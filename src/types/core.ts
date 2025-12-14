@@ -6,6 +6,8 @@ import type { ToolCollection, SystemCollection, VariableCollection } from './col
 
 /**
  * Interface for the proxy objects returned by def, defSystem, defTool, defAgent
+ *
+ * @category Types
  */
 export interface DefinitionProxy {
   name: string;
@@ -17,6 +19,8 @@ export interface DefinitionProxy {
 /**
  * Interface for managers that can be reset to their initial state.
  * Used by StateManager, EffectsManager, and DefinitionTracker.
+ *
+ * @category Types
  */
 export interface Resettable {
   /**
@@ -28,6 +32,8 @@ export interface Resettable {
 
 /**
  * Information about the last tool call
+ *
+ * @category Types
  */
 export interface LastToolInfo {
   toolName: string;
@@ -37,6 +43,8 @@ export interface LastToolInfo {
 
 /**
  * Interface for the prompt context passed to effects
+ *
+ * @category Types
  */
 export interface PromptContext {
   messages: any[];

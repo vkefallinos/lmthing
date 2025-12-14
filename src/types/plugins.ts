@@ -8,6 +8,8 @@ import type { StatefulPrompt } from '../StatefulPrompt';
  * A plugin method that receives StatefulPrompt as `this` context.
  * Plugin methods can use all StatefulPrompt methods like defState, defTool, etc.
  *
+ * @category Plugins
+ *
  * @example
  * function defTaskList(this: StatefulPrompt, tasks: Task[]) {
  *   const [taskList, setTaskList] = this.defState('taskList', tasks);
@@ -21,6 +23,8 @@ export type PluginMethod<Args extends any[] = any[], Return = any> =
 /**
  * A plugin is an object containing named plugin methods.
  * Each method receives the StatefulPrompt instance as `this` when called.
+ *
+ * @category Plugins
  *
  * @example
  * export const taskListPlugin = {
@@ -50,6 +54,8 @@ type BoundPlugin<P extends Plugin> = {
  * Utility type to merge multiple plugin types into a single intersection type.
  * Used to combine methods from multiple plugins into one extended prompt type.
  * The 'this' parameter is removed from all plugin methods since they are pre-bound.
+ *
+ * @category Plugins
  */
 export type MergePlugins<P extends readonly Plugin[]> =
   P extends readonly [infer First extends Plugin, ...infer Rest extends readonly Plugin[]]
@@ -64,5 +70,7 @@ export type MergePlugins<P extends readonly Plugin[]> =
  * Extended StatefulPrompt type with plugin methods merged in.
  * This type is what the user's prompt function receives.
  * Plugin methods have their 'this' parameter removed since they are pre-bound.
+ *
+ * @category Plugins
  */
 export type PromptWithPlugins<P extends readonly Plugin[]> = StatefulPrompt & MergePlugins<P>;

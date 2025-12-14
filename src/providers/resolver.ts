@@ -9,6 +9,8 @@ import { ProviderError, ErrorCodes } from '../errors';
  * Supports built-in providers, custom OpenAI-compatible providers,
  * and model aliases configured via environment variables.
  *
+ * @category Providers
+ *
  * @param model - Either a LanguageModelV2 instance, a string in the format "provider:modelId", or an alias name
  * @returns A LanguageModelV2 instance
  * @throws Error if the provider is not found or the format is invalid
@@ -94,5 +96,7 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
 
 /**
  * Type for model input - can be either a model instance or a string identifier
+ *
+ * @category Providers
  */
 export type ModelInput = LanguageModelV2 | string;
