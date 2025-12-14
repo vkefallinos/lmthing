@@ -1,4 +1,5 @@
 import { createAnthropic } from '@ai-sdk/anthropic';
+import { defineProvider, BaseProviderConfig } from './factory';
 
 /**
  * Anthropic Provider Configuration
@@ -8,10 +9,20 @@ import { createAnthropic } from '@ai-sdk/anthropic';
  * @see https://sdk.vercel.ai/providers/ai-sdk-providers/anthropic
  */
 
-export interface AnthropicConfig {
-  apiKey?: string;
-  baseURL?: string;
-}
+export interface AnthropicConfig extends BaseProviderConfig {}
+
+const module = defineProvider({
+  name: 'anthropic',
+  envKey: 'ANTHROPIC_API_KEY',
+  sdkFactory: createAnthropic,
+  models: {
+    CLAUDE_3_5_SONNET: 'claude-3-5-sonnet-20241022',
+    CLAUDE_3_5_SONNET_LEGACY: 'claude-3-5-sonnet-20240620',
+    CLAUDE_3_OPUS: 'claude-3-opus-20240229',
+    CLAUDE_3_SONNET: 'claude-3-sonnet-20240229',
+    CLAUDE_3_HAIKU: 'claude-3-haiku-20240307',
+  },
+});
 
 /**
  * Create an Anthropic provider instance
@@ -28,28 +39,17 @@ export interface AnthropicConfig {
  * const model = anthropic('claude-3-5-sonnet-20241022');
  * ```
  */
-export function createAnthropicProvider(config?: AnthropicConfig) {
-  return createAnthropic({
-    apiKey: config?.apiKey || process.env.ANTHROPIC_API_KEY,
-    baseURL: config?.baseURL,
-  });
-}
+export const createAnthropicProvider = module.createProvider;
 
 /**
  * Default Anthropic provider instance
  * Uses environment variables for configuration
  */
-export const anthropic = createAnthropicProvider();
+export const anthropic = module.provider;
 
 /**
  * Common Anthropic model identifiers
  */
-export const AnthropicModels = {
-  CLAUDE_3_5_SONNET: 'claude-3-5-sonnet-20241022',
-  CLAUDE_3_5_SONNET_LEGACY: 'claude-3-5-sonnet-20240620',
-  CLAUDE_3_OPUS: 'claude-3-opus-20240229',
-  CLAUDE_3_SONNET: 'claude-3-sonnet-20240229',
-  CLAUDE_3_HAIKU: 'claude-3-haiku-20240307',
-} as const;
+export const AnthropicModels = module.models;
 
 export type AnthropicModel = typeof AnthropicModels[keyof typeof AnthropicModels];

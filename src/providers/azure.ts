@@ -1,4 +1,5 @@
 import { createAzure } from '@ai-sdk/azure';
+import { defineProvider, BaseProviderConfig } from './factory';
 
 /**
  * Azure OpenAI Provider Configuration
@@ -8,11 +9,21 @@ import { createAzure } from '@ai-sdk/azure';
  * @see https://sdk.vercel.ai/providers/ai-sdk-providers/azure
  */
 
-export interface AzureConfig {
-  apiKey?: string;
+export interface AzureConfig extends BaseProviderConfig {
   resourceName?: string;
-  baseURL?: string;
 }
+
+const module = defineProvider<AzureConfig, {}>({
+  name: 'azure',
+  envKey: 'AZURE_API_KEY',
+  sdkFactory: createAzure,
+  mapConfig: (config) => ({
+    apiKey: config.apiKey,
+    resourceName: config.resourceName || process.env.AZURE_RESOURCE_NAME,
+    baseURL: config.baseURL,
+  }),
+  models: {},
+});
 
 /**
  * Create an Azure OpenAI provider instance
@@ -30,16 +41,10 @@ export interface AzureConfig {
  * const model = azure('your-deployment-name');
  * ```
  */
-export function createAzureProvider(config?: AzureConfig) {
-  return createAzure({
-    apiKey: config?.apiKey || process.env.AZURE_API_KEY,
-    resourceName: config?.resourceName || process.env.AZURE_RESOURCE_NAME,
-    baseURL: config?.baseURL,
-  });
-}
+export const createAzureProvider = module.createProvider;
 
 /**
  * Default Azure OpenAI provider instance
  * Uses environment variables for configuration
  */
-export const azure = createAzureProvider();
+export const azure = module.provider;

@@ -1,4 +1,5 @@
 import { createAmazonBedrock } from '@ai-sdk/amazon-bedrock';
+import { defineProvider } from './factory';
 
 /**
  * Amazon Bedrock Provider Configuration
@@ -15,42 +16,7 @@ export interface BedrockConfig {
   sessionToken?: string;
 }
 
-/**
- * Create an Amazon Bedrock provider instance
- *
- * @param config - Configuration options for Amazon Bedrock
- * @returns Amazon Bedrock provider instance
- *
- * @example
- * ```typescript
- * const bedrock = createBedrockProvider({
- *   region: 'us-east-1',
- *   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
- *   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
- * });
- *
- * const model = bedrock('anthropic.claude-3-5-sonnet-20241022-v2:0');
- * ```
- */
-export function createBedrockProvider(config?: BedrockConfig) {
-  return createAmazonBedrock({
-    region: config?.region || process.env.AWS_REGION || 'us-east-1',
-    accessKeyId: config?.accessKeyId || process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: config?.secretAccessKey || process.env.AWS_SECRET_ACCESS_KEY,
-    sessionToken: config?.sessionToken || process.env.AWS_SESSION_TOKEN,
-  });
-}
-
-/**
- * Default Amazon Bedrock provider instance
- * Uses environment variables for configuration
- */
-export const bedrock = createBedrockProvider();
-
-/**
- * Common Amazon Bedrock model identifiers
- */
-export const BedrockModels = {
+const BedrockModelsObj = {
   // Anthropic Claude models
   CLAUDE_3_5_SONNET_V2: 'anthropic.claude-3-5-sonnet-20241022-v2:0',
   CLAUDE_3_5_SONNET: 'anthropic.claude-3-5-sonnet-20240620-v1:0',
@@ -72,5 +38,48 @@ export const BedrockModels = {
   MISTRAL_7B: 'mistral.mistral-7b-instruct-v0:2',
   MIXTRAL_8X7B: 'mistral.mixtral-8x7b-instruct-v0:1',
 } as const;
+
+const module = defineProvider<BedrockConfig, typeof BedrockModelsObj>({
+  name: 'bedrock',
+  envKey: 'AWS_ACCESS_KEY_ID',
+  sdkFactory: createAmazonBedrock,
+  mapConfig: (config) => ({
+    region: config.region || process.env.AWS_REGION || 'us-east-1',
+    accessKeyId: config.accessKeyId || process.env.AWS_ACCESS_KEY_ID,
+    secretAccessKey: config.secretAccessKey || process.env.AWS_SECRET_ACCESS_KEY,
+    sessionToken: config.sessionToken || process.env.AWS_SESSION_TOKEN,
+  }),
+  models: BedrockModelsObj,
+});
+
+/**
+ * Create an Amazon Bedrock provider instance
+ *
+ * @param config - Configuration options for Amazon Bedrock
+ * @returns Amazon Bedrock provider instance
+ *
+ * @example
+ * ```typescript
+ * const bedrock = createBedrockProvider({
+ *   region: 'us-east-1',
+ *   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+ *   secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
+ * });
+ *
+ * const model = bedrock('anthropic.claude-3-5-sonnet-20241022-v2:0');
+ * ```
+ */
+export const createBedrockProvider = module.createProvider;
+
+/**
+ * Default Amazon Bedrock provider instance
+ * Uses environment variables for configuration
+ */
+export const bedrock = module.provider;
+
+/**
+ * Common Amazon Bedrock model identifiers
+ */
+export const BedrockModels = BedrockModelsObj;
 
 export type BedrockModel = typeof BedrockModels[keyof typeof BedrockModels];
