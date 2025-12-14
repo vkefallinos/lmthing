@@ -4,6 +4,7 @@ import { resolve } from 'path';
 import { existsSync } from 'fs';
 import { runPrompt } from './runPrompt';
 import { createMockModel, MockContent } from './test/createMockModel';
+import { LmthingError } from './errors';
 
 export const VALID_EXTENSION = '.lmt.mjs';
 
@@ -16,10 +17,11 @@ export interface LmtModule {
   mock?: MockContent[];
 }
 
-export class CliError extends Error {
+export class CliError extends LmthingError {
   constructor(message: string, public exitCode: number = 1) {
-    super(message);
+    super(message, 'CLI_ERROR');
     this.name = 'CliError';
+    Object.setPrototypeOf(this, CliError.prototype);
   }
 }
 

@@ -1,5 +1,16 @@
 export { runPrompt, createPluginArray } from './runPrompt';
 
+// Export error classes
+export {
+  LmthingError,
+  ProviderError,
+  ValidationError,
+  PluginError,
+  PromptError,
+  ErrorCodes,
+  type ErrorCode
+} from './errors';
+
 // Export prompt functionality (StatefulPrompt is now the main Prompt class)
 export {
   StatefulPrompt,

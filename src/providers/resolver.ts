@@ -1,6 +1,7 @@
 import { LanguageModelV2 } from '@ai-sdk/provider';
 import { providers } from './index';
 import { getCustomProvider, isCustomProvider, listCustomProviders } from './custom';
+import { ProviderError, ErrorCodes } from '../errors';
 
 /**
  * Resolves a model identifier to a LanguageModelV2 instance
@@ -51,8 +52,10 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
       return resolveModel(aliasValue);
     }
 
-    throw new Error(
-      `Model alias "${model}" not found. Please set the environment variable ${aliasKey} (e.g., ${aliasKey}=openai:gpt-4o)`
+    throw new ProviderError(
+      `Model alias "${model}" not found. Please set the environment variable ${aliasKey} (e.g., ${aliasKey}=openai:gpt-4o)`,
+      ErrorCodes.PROVIDER_NOT_CONFIGURED,
+      { alias: model, envVar: aliasKey }
     );
   }
 
@@ -80,10 +83,12 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
   // Provider not found
   const builtInProviders = Object.keys(providers);
   const customProviders = listCustomProviders();
-  const allProviders = [...builtInProviders, ...customProviders].join(', ');
+  const allProviders = [...builtInProviders, ...customProviders];
 
-  throw new Error(
-    `Unknown provider: "${providerName}". Available providers: ${allProviders}`
+  throw new ProviderError(
+    `Unknown provider: "${providerName}". Available providers: ${allProviders.join(', ')}`,
+    ErrorCodes.UNKNOWN_PROVIDER,
+    { provider: providerName, available: allProviders }
   );
 }
 
