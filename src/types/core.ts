@@ -2,7 +2,16 @@
  * Core type definitions for lmthing prompts.
  */
 
+import type { ZodType } from 'zod';
 import type { ToolCollection, SystemCollection, VariableCollection } from './collections';
+
+/**
+ * Type alias for Zod schemas used in tool and agent definitions.
+ * Using ZodType<any> allows any Zod schema while providing basic type info.
+ *
+ * @category Types
+ */
+export type ZodSchema<T = any> = ZodType<T>;
 
 /**
  * Interface for the proxy objects returned by def, defSystem, defTool, defAgent

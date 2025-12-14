@@ -3,6 +3,8 @@
  */
 
 import type { Plugin } from './plugins';
+import type { ZodSchema } from './core';
+import type { ModelInput } from '../providers/resolver';
 
 /**
  * Options for defAgent and agent functions
@@ -15,9 +17,9 @@ import type { Plugin } from './plugins';
  * @property plugins - Additional plugins for the agent context
  */
 export interface AgentOptions {
-  model?: any;  // ModelInput from providers/resolver
-  responseSchema?: any;  // Zod schema
+  model?: ModelInput;
+  responseSchema?: ZodSchema;
   system?: string;
   plugins?: readonly Plugin[];
-  [key: string]: any;  // Allow additional options
+  [key: string]: unknown;  // Allow additional options
 }
