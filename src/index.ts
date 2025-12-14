@@ -42,7 +42,7 @@ export type {
   PluginMethod,
   MergePlugins,
   PromptWithPlugins
-} from './types';
+} from './types/index';
 
 // Export PromptConfig from runPrompt
 export type { PromptConfig } from './runPrompt';
