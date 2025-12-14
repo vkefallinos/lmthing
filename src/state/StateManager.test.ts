@@ -52,7 +52,7 @@ describe('StateManager', () => {
     manager.set('a', 1);
     manager.set('b', 2);
 
-    manager.clear();
+    manager.reset();
 
     expect(manager.has('a')).toBe(false);
     expect(manager.has('b')).toBe(false);

@@ -9,6 +9,18 @@ export interface DefinitionProxy {
 }
 
 /**
+ * Interface for managers that can be reset to their initial state.
+ * Used by StateManager, EffectsManager, and DefinitionTracker.
+ */
+export interface Resettable {
+  /**
+   * Reset the manager to its initial state.
+   * Clears all stored data and resets any internal counters.
+   */
+  reset(): void;
+}
+
+/**
  * Interface for the prompt context passed to effects
  */
 export interface PromptContext {
