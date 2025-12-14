@@ -24,13 +24,24 @@ export {
 
 // Export types for the stateful prompt system
 export type {
+  // Core types
   DefinitionProxy,
   PromptContext,
+  LastToolInfo,
+  ZodSchema,
+  // Collection types
   ToolCollection,
   SystemCollection,
   VariableCollection,
-  LastToolInfo,
+  SystemEntry,
+  VariableEntry,
+  VariableType,
+  ToolEntry,
+  // Effect types
   StepModifier,
+  StepModifierItems,
+  Effect,
+  StepModifications,
   // Tool options & callbacks
   ToolOptions,
   ToolEventCallback,
@@ -43,6 +54,9 @@ export type {
   MergePlugins,
   PromptWithPlugins
 } from './types/index';
+
+// Export definition types for advanced usage
+export type { DefinitionType } from './definitions';
 
 // Export PromptConfig from runPrompt
 export type { PromptConfig } from './runPrompt';

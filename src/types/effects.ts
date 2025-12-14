@@ -2,16 +2,30 @@
  * Effect system type definitions.
  */
 
+import type { CoreMessage } from 'ai';
 import type { PromptContext } from './core';
+import type { SystemEntry, VariableEntry, ToolEntry } from './collections';
+
+/**
+ * Items that can be added via step modifier for each aspect
+ *
+ * @category Hooks
+ */
+export type StepModifierItems = {
+  messages: CoreMessage[];
+  tools: ToolEntry[];
+  systems: SystemEntry[];
+  variables: VariableEntry[];
+};
 
 /**
  * Step modifier function type
  *
  * @category Hooks
  */
-export type StepModifier = (
-  aspect: 'messages' | 'tools' | 'systems' | 'variables',
-  items: any[]
+export type StepModifier = <K extends keyof StepModifierItems>(
+  aspect: K,
+  items: StepModifierItems[K]
 ) => void;
 
 /**
@@ -22,7 +36,7 @@ export type StepModifier = (
 export interface Effect {
   id: number;
   callback: (prompt: PromptContext, step: StepModifier) => void;
-  dependencies?: any[];
+  dependencies?: unknown[];
 }
 
 /**
@@ -31,8 +45,8 @@ export interface Effect {
  * @category Types
  */
 export interface StepModifications {
-  messages?: any[];
-  tools?: any[];
-  systems?: { name: string; value: string }[];
-  variables?: { name: string; type: string; value: any }[];
+  messages?: CoreMessage[];
+  tools?: ToolEntry[];
+  systems?: SystemEntry[];
+  variables?: VariableEntry[];
 }
