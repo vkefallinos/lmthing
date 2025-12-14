@@ -10,6 +10,7 @@ import type {
     ModelMessage
 } from 'ai';
 import { resolveModel, type ModelInput } from './providers/resolver';
+import { PromptError, ErrorCodes } from './errors';
 
 // Helper type for the options object
 export type StreamTextOptions = Parameters<typeof streamText>[0];
@@ -295,7 +296,10 @@ export class StreamTextBuilder {
      */
     public execute(): StreamTextResult<any, any> {
         if (!this._model) {
-            throw new Error('Model is required to execute streamText.');
+            throw new PromptError(
+                'Model is required to execute streamText',
+                ErrorCodes.MODEL_REQUIRED
+            );
         }
 
         // 1. Compose System Prompt
