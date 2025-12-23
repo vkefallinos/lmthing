@@ -17,7 +17,7 @@ describe('StateManager', () => {
 
   it('should create state accessor with initial value', () => {
     const manager = new StateManager();
-    const [value, setValue] = manager.createStateAccessor('count', 0);
+    const [value] = manager.createStateAccessor('count', 0);
 
     // Initial value should be accessible
     expect(String(value)).toBe('0');
@@ -33,7 +33,7 @@ describe('StateManager', () => {
 
   it('should update state via function setter', () => {
     const manager = new StateManager();
-    const [value, setValue] = manager.createStateAccessor('count', 10);
+    const [, setValue] = manager.createStateAccessor('count', 10);
 
     setValue((prev) => prev + 5);
     expect(manager.get('count')).toBe(15);
