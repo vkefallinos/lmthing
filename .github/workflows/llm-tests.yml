@@ -50,9 +50,7 @@ jobs:
         echo "Testing GitHub Models API integration..."
         npx lmthing run examples/github-models.lmt.mjs || echo "GitHub Models test failed (may need additional permissions)"
     
-    - name: Run LLM integration tests (if configured)
-      # Skip if no integration tests exist
-      if: hashFiles('tests/integration/*.test.ts') != ''
+    - name: Run LLM integration tests
       env:
         GITHUB_MODELS_API_KEY: ${{ secrets.GITHUB_TOKEN }}
         GITHUB_MODELS_API_BASE: https://models.inference.ai.azure.com
@@ -60,7 +58,7 @@ jobs:
         GITHUB_MODELS_API_NAME: github
       run: |
         echo "Running LLM integration tests..."
-        npm test -- --run llm-integration || echo "LLM integration tests skipped or failed"
+        npx vitest run src/llm-integration.test.ts
 
   test-with-mock-only:
     runs-on: ubuntu-latest
@@ -92,4 +90,3 @@ jobs:
       run: |
         echo "Testing mock examples..."
         npx lmthing run examples/mock-demo.lmt.mjs
-        npx lmthing run examples/github-models-mock.lmt.mjs
