@@ -15,6 +15,9 @@ import { StateManager } from './state';
 import { EffectsManager } from './effects';
 import { DefinitionTracker } from './definitions';
 import { createToolCollection, createSystemCollection, createVariableCollection } from './collections';
+import { createDefinitionProxy, type DefType } from './proxy';
+import { executeWithCallbacks } from './callbacks';
+import { createCompositeSchema, buildEnhancedDescription } from './composite';
 
 /**
  * Definition for a sub-tool used within a composite tool.
@@ -222,69 +225,19 @@ export class StatefulPrompt extends StreamTextBuilder {
     this._effectsManager.register(callback, dependencies);
   }
 
-  private createProxy(tag: string, type: 'def' | 'defData' | 'defSystem' | 'defTool' | 'defAgent', name: string) {
-    const self = this;
-    const handler = {
-      get(_target: any, prop: string | symbol) {
-        if (prop === 'value') {
-          return tag;
+  private createProxy(tag: string, type: DefType, name: string) {
+    return createDefinitionProxy({
+      tag,
+      type,
+      name,
+      onRemind: () => { this._remindedItems.push({ type, name }); },
+      onDisable: () => {
+        if (!this._definitionsToDisable) {
+          this._definitionsToDisable = new Set();
         }
-        if (prop === 'remind') {
-          return () => {
-            self._remindedItems.push({ type, name });
-            return tag;
-          };
-        }
-        if (prop === 'disable') {
-          return () => {
-            // This should only be called within a defEffect
-            // Mark this definition to be disabled for the next step
-            if (!self._definitionsToDisable) {
-              self._definitionsToDisable = new Set();
-            }
-            self._definitionsToDisable.add({ type, name });
-            return tag;
-          };
-        }
-        if (prop === 'toString' || prop === 'valueOf') {
-          return () => tag;
-        }
-        if (typeof prop === 'symbol' && prop === Symbol.toPrimitive) {
-          return () => tag;
-        }
-        return tag;
-      },
-      has(_target: any, prop: string | symbol) {
-        return prop === 'value' || prop === 'remind' || prop === 'disable' || prop === 'toString' || prop === 'valueOf' || prop === Symbol.toPrimitive;
-      },
-      ownKeys() {
-        return ['value', 'remind', 'disable'];
-      },
-      getOwnPropertyDescriptor(_target: any, prop: string) {
-        if (prop === 'value') {
-          return { enumerable: true, configurable: true, value: tag };
-        }
-        if (prop === 'remind') {
-          return { enumerable: true, configurable: true, value: () => {
-            self._remindedItems.push({ type, name });
-            return tag;
-          }};
-        }
-        if (prop === 'disable') {
-          return { enumerable: true, configurable: true, value: () => {
-            // This should only be called within a defEffect
-            // Mark this definition to be disabled for the next step
-            if (!self._definitionsToDisable) {
-              self._definitionsToDisable = new Set();
-            }
-            self._definitionsToDisable.add({ type, name });
-            return tag;
-          }};
-        }
-        return undefined;
+        this._definitionsToDisable.add({ type, name });
       }
-    };
-    return new Proxy({}, handler);
+    });
   }
 
   protected addVariable(name: string, value: any, type: 'string' | 'data') {
@@ -412,49 +365,7 @@ export class StatefulPrompt extends StreamTextBuilder {
    */
   protected _wrapToolExecute(execute: Function, options: ToolOptions): Function {
     return async (input: any, toolOptions?: any) => {
-      try {
-        // Call beforeCall hook if present
-        if (options.beforeCall) {
-          const beforeResult = await options.beforeCall(input, undefined);
-          // If hook returns undefined, continue with normal execution
-          // Otherwise, return the hook result
-          if (beforeResult !== undefined) {
-            return this._formatToolOutput(beforeResult, options);
-          }
-        }
-
-        // Execute the tool
-        let output = await execute(input, toolOptions);
-
-        // Call onSuccess hook if present
-        if (options.onSuccess) {
-          const successResult = await options.onSuccess(input, output);
-          // If hook returns undefined, use original output
-          // Otherwise, use the returned value
-          if (successResult !== undefined) {
-            output = successResult;
-          }
-        }
-
-        // Format output according to responseSchema if present
-        output = this._formatToolOutput(output, options);
-        return output;
-      } catch (error: any) {
-        let errorOutput: any = { error: error.message || String(error) };
-
-        // Call onError hook if present
-        if (options.onError) {
-          const errorResult = await options.onError(input, errorOutput);
-          // If hook returns undefined, use original error output
-          // Otherwise, use the returned value
-          if (errorResult !== undefined) {
-            errorOutput = errorResult;
-          }
-        }
-
-        errorOutput = this._formatToolOutput(errorOutput, options);
-        return errorOutput;
-      }
+      return executeWithCallbacks(execute, input, toolOptions, options, this._formatToolOutput.bind(this));
     };
   }
 
@@ -462,26 +373,9 @@ export class StatefulPrompt extends StreamTextBuilder {
    * Creates and registers a composite tool from an array of sub-tool definitions.
    */
   protected _registerCompositeTool(name: string, description: string, subTools: SubToolDefinition[]) {
-    // Build the discriminated union schema for calls
-    // Each call is: { name: 'subToolName', args: { ...subToolArgs } }
-    const callSchemas = subTools.map(subTool => {
-      return z.object({
-        name: z.literal(subTool.name).describe(`Call the "${subTool.name}" sub-tool`),
-        args: subTool.inputSchema.describe(subTool.description)
-      });
-    });
+    const compositeSchema = createCompositeSchema(subTools, 'sub-tool');
+    const enhancedDescription = buildEnhancedDescription(description, subTools, 'sub-tools');
 
-    // Create the composite input schema
-    const compositeSchema = z.object({
-      calls: z.array(z.union(callSchemas as any as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
-        .describe('Array of sub-tool calls to execute')
-    });
-
-    // Build enhanced description with sub-tool documentation
-    const subToolDocs = subTools.map(st => `  - ${st.name}: ${st.description}`).join('\n');
-    const enhancedDescription = `${description}\n\nAvailable sub-tools:\n${subToolDocs}`;
-
-    // Create the composite execute function
     const compositeExecute = async (args: { calls: Array<{ name: string; args: any }> }, options?: any) => {
       const results: Array<{ name: string; result: any }> = [];
 
@@ -495,50 +389,11 @@ export class StatefulPrompt extends StreamTextBuilder {
           continue;
         }
 
-        try {
-          // Call beforeCall hook if present
-          if (subTool.options?.beforeCall) {
-            const beforeResult = await subTool.options.beforeCall(call.args, undefined);
-            // If hook returns undefined, continue with normal execution
-            // Otherwise, use the returned value
-            if (beforeResult !== undefined) {
-              results.push({ name: call.name, result: this._formatToolOutput(beforeResult, subTool.options) });
-              continue;
-            }
-          }
-
-          // Execute the sub-tool
-          let result = await subTool.execute(call.args, options);
-
-          // Call onSuccess hook if present
-          if (subTool.options?.onSuccess) {
-            const successResult = await subTool.options.onSuccess(call.args, result);
-            // If hook returns undefined, use original result
-            // Otherwise, use the returned value
-            if (successResult !== undefined) {
-              result = successResult;
-            }
-          }
-
-          // Format output according to responseSchema if present
-          result = this._formatToolOutput(result, subTool.options);
-          results.push({ name: call.name, result });
-        } catch (error: any) {
-          let result: any = { error: error.message || String(error) };
-
-          // Call onError hook if present
-          if (subTool.options?.onError) {
-            const errorResult = await subTool.options.onError(call.args, result);
-            // If hook returns undefined, use original error result
-            // Otherwise, use the returned value
-            if (errorResult !== undefined) {
-              result = errorResult;
-            }
-          }
-
-          result = this._formatToolOutput(result, subTool.options);
-          results.push({ name: call.name, result });
-        }
+        const result = await executeWithCallbacks(
+          subTool.execute, call.args, options,
+          subTool.options, this._formatToolOutput.bind(this)
+        );
+        results.push({ name: call.name, result });
       }
 
       return { results };
@@ -727,24 +582,8 @@ Return only the JSON object in your response, without any additional text or exp
    * Creates and registers a composite agent from an array of sub-agent definitions.
    */
   protected _registerCompositeAgent(name: string, description: string, subAgents: SubAgentDefinition[]) {
-    // Build the discriminated union schema for calls
-    // Each call is: { name: 'subAgentName', args: { ...subAgentArgs } }
-    const callSchemas = subAgents.map(subAgent => {
-      return z.object({
-        name: z.literal(subAgent.name).describe(`Delegate to the "${subAgent.name}" agent`),
-        args: subAgent.inputSchema.describe(subAgent.description)
-      });
-    });
-
-    // Create the composite input schema
-    const compositeSchema = z.object({
-      calls: z.array(z.union(callSchemas as any as [z.ZodTypeAny, z.ZodTypeAny, ...z.ZodTypeAny[]]))
-        .describe('Array of sub-agent calls to execute')
-    });
-
-    // Build enhanced description with sub-agent documentation
-    const subAgentDocs = subAgents.map(sa => `  - ${sa.name}: ${sa.description}`).join('\n');
-    const enhancedDescription = `${description}\n\nAvailable sub-agents:\n${subAgentDocs}`;
+    const compositeSchema = createCompositeSchema(subAgents, 'agent');
+    const enhancedDescription = buildEnhancedDescription(description, subAgents, 'sub-agents');
 
     // Create the composite execute function
     const compositeExecute = async (args: { calls: Array<{ name: string; args: any }> }) => {
