@@ -18,7 +18,7 @@ export const mock = [
 
 export default async ({ def, defSystem, $ }) => {
   defSystem('role', 'You are a helpful AI assistant running on GitHub Models API.');
-  
+
   const topic = def('TOPIC', 'GitHub Models API');
   $`Explain what ${topic} is in 2-3 sentences.`;
 };
