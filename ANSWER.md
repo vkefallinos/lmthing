@@ -172,7 +172,7 @@ test.skipIf(!hasGitHubModels)('real LLM test', async () => {
 
 1. **examples/github-models.lmt.mjs** - Real GitHub Models usage
 2. **examples/github-models-mock.lmt.mjs** - Mock version for testing
-3. **.github/workflows/llm-tests.example.yml** - Complete CI workflow
+3. **.github/workflows/llm-tests.yml** - Active CI workflow for testing
 4. **docs/GITHUB_MODELS_CI.md** - Comprehensive documentation
 
 ## Rate Limits & Best Practices
@@ -213,7 +213,7 @@ test.skipIf(!hasGitHubModels)('real LLM test', async () => {
 
 1. Review `docs/GITHUB_MODELS_CI.md` for detailed setup
 2. Try `examples/github-models-mock.lmt.mjs` locally
-3. Copy `.github/workflows/llm-tests.example.yml` to your workflows
+3. The workflow is now active at `.github/workflows/llm-tests.yml`
 4. Configure GitHub Models environment variables
 5. Test in your CI pipeline
 
@@ -225,7 +225,7 @@ test.skipIf(!hasGitHubModels)('real LLM test', async () => {
 - `examples/github-models.lmt.mjs` - Real usage example
 - `examples/github-models-mock.lmt.mjs` - Mock testing example
 - `examples/README.md` - Updated with GitHub Models info
-- `.github/workflows/llm-tests.example.yml` - Example workflow
+- `.github/workflows/llm-tests.yml` - Active workflow for LLM testing
 - `src/providers/custom.test.ts` - Added GitHub Models tests
 
 All changes are minimal, focused, and non-breaking. The existing test suite (248 tests) continues to pass without modification.

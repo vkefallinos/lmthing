@@ -1,16 +1,11 @@
-name: Example - LLM Integration Tests
+name: LLM Integration Tests
 
-# This is an example workflow showing how to use GitHub Models API
-# with lmthing in GitHub Actions CI/CD.
-#
-# To use this in your project:
-# 1. Copy this file to .github/workflows/llm-tests.yml
-# 2. Adjust the configuration to match your needs
-# 3. Consider rate limits and only run on main branch pushes
+# This workflow tests lmthing with GitHub Models API and mock models.
+# The GitHub Models tests run on all branches to validate the integration.
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, master, 'copilot/**' ]
   pull_request:
     branches: [ main, master ]
   workflow_dispatch:  # Allow manual triggering
@@ -18,9 +13,6 @@ on:
 jobs:
   test-with-github-models:
     runs-on: ubuntu-latest
-    
-    # Only run on main branch to avoid excessive API usage
-    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     
     strategy:
       matrix:
