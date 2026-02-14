@@ -17,10 +17,12 @@ These examples use mock models for demonstration and testing:
 
 - **mock-demo.lmt.mjs** - Simple demo showing basic CLI usage
 - **mock-tools.lmt.mjs** - Demonstrates tool definition and usage
+- **github-models-mock.lmt.mjs** - GitHub Models API structure with mock
 
 ```bash
 npx lmthing run examples/mock-demo.lmt.mjs
 npx lmthing run examples/mock-tools.lmt.mjs
+npx lmthing run examples/github-models-mock.lmt.mjs
 ```
 
 ### Real Model Examples (requires API key)
@@ -36,6 +38,25 @@ These examples require an `OPENAI_API_KEY` environment variable:
 export OPENAI_API_KEY=your-key-here
 npx lmthing run examples/hello.lmt.mjs
 ```
+
+### GitHub Models API Example (for CI/CD)
+
+This example uses GitHub Models API, which is perfect for testing in CI/CD:
+
+- **github-models.lmt.mjs** - GitHub Models API integration example
+
+```bash
+# Configure GitHub Models API
+export GITHUB_MODELS_API_KEY=your-github-token
+export GITHUB_MODELS_API_BASE=https://models.inference.ai.azure.com
+export GITHUB_MODELS_API_TYPE=openai
+export GITHUB_MODELS_API_NAME=github
+
+# Run the example
+npx lmthing run examples/github-models.lmt.mjs
+```
+
+For detailed setup instructions for CI/CD, see [../docs/GITHUB_MODELS_CI.md](../docs/GITHUB_MODELS_CI.md).
 
 ## File Format
 

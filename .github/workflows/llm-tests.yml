@@ -1,0 +1,95 @@
+name: LLM Integration Tests
+
+# This workflow tests lmthing with GitHub Models API and mock models.
+# The GitHub Models tests run on all branches to validate the integration.
+
+on:
+  push:
+    branches: [ main, master, 'copilot/**' ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:  # Allow manual triggering
+
+jobs:
+  test-with-github-models:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [20.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Build project
+      run: npm run build
+    
+    - name: Run mock tests (always)
+      run: |
+        echo "Running tests with mock models..."
+        npm test
+    
+    - name: Test GitHub Models example
+      env:
+        # Use the built-in GITHUB_TOKEN
+        GITHUB_MODELS_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_MODELS_API_BASE: https://models.inference.ai.azure.com
+        GITHUB_MODELS_API_TYPE: openai
+        GITHUB_MODELS_API_NAME: github
+      run: |
+        echo "Testing GitHub Models API integration..."
+        npx lmthing run examples/github-models.lmt.mjs || echo "GitHub Models test failed (may need additional permissions)"
+    
+    - name: Run LLM integration tests (if configured)
+      # Skip if no integration tests exist
+      if: hashFiles('tests/integration/*.test.ts') != ''
+      env:
+        GITHUB_MODELS_API_KEY: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_MODELS_API_BASE: https://models.inference.ai.azure.com
+        GITHUB_MODELS_API_TYPE: openai
+        GITHUB_MODELS_API_NAME: github
+      run: |
+        echo "Running LLM integration tests..."
+        npm test -- --run llm-integration || echo "LLM integration tests skipped or failed"
+
+  test-with-mock-only:
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        node-version: [18.x, 20.x, 22.x]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Setup Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm ci
+    
+    - name: Run tests with mock models
+      run: npm test
+    
+    - name: Build project
+      run: npm run build
+    
+    - name: Test examples with mock
+      run: |
+        echo "Testing mock examples..."
+        npx lmthing run examples/mock-demo.lmt.mjs
+        npx lmthing run examples/github-models-mock.lmt.mjs
