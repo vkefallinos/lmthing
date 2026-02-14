@@ -258,6 +258,27 @@ With these environment variables set, you can use the custom provider in your mo
 }
 ```
 
+**GitHub Models API (for CI/CD):**
+
+GitHub provides free access to various AI models through the GitHub Models API, which is perfect for testing in CI/CD pipelines. This is particularly useful if you have GitHub Copilot Pro or want to test with real LLMs in GitHub Actions.
+
+```bash
+# GitHub Models API configuration
+GITHUB_MODELS_API_KEY=your-github-token
+GITHUB_MODELS_API_BASE=https://models.inference.ai.azure.com
+GITHUB_MODELS_API_TYPE=openai
+GITHUB_MODELS_API_NAME=github  # Optional display name
+```
+
+Usage:
+```ts
+{
+  model: 'github:gpt-4o-mini', // Available: gpt-4o, gpt-4o-mini, o1-preview, o1-mini, Phi-3-*, etc.
+}
+```
+
+For detailed CI/CD setup instructions, see [docs/GITHUB_MODELS_CI.md](./docs/GITHUB_MODELS_CI.md).
+
 **Model Aliases:**
 
 You can create model aliases using environment variables to make model selection more flexible and easier to change across your application:

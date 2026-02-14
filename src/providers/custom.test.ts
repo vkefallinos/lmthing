@@ -349,5 +349,36 @@ describe('Custom Providers', () => {
         prefix: 'PERPLEXITY',
       });
     });
+
+    it('should configure GitHub Models provider', () => {
+      process.env.GITHUB_MODELS_API_KEY = 'github-token-xyz';
+      process.env.GITHUB_MODELS_API_BASE = 'https://models.inference.ai.azure.com';
+      process.env.GITHUB_MODELS_API_TYPE = 'openai';
+      process.env.GITHUB_MODELS_API_NAME = 'github';
+
+      const configs = scanCustomProviders();
+      const config = configs.find(c => c.name === 'github');
+
+      expect(config).toEqual({
+        name: 'github',
+        apiKey: 'github-token-xyz',
+        baseURL: 'https://models.inference.ai.azure.com',
+        prefix: 'GITHUB_MODELS',
+      });
+    });
+
+    it('should configure GitHub Models provider with GITHUB_TOKEN', () => {
+      process.env.GITHUB_MODELS_API_KEY = 'ghp_abcdef123456';
+      process.env.GITHUB_MODELS_API_BASE = 'https://models.inference.ai.azure.com';
+      process.env.GITHUB_MODELS_API_TYPE = 'openai';
+
+      const configs = scanCustomProviders();
+      const config = configs.find(c => c.prefix === 'GITHUB_MODELS');
+
+      expect(config).toBeDefined();
+      expect(config?.name).toBe('github_models');
+      expect(config?.apiKey).toBe('ghp_abcdef123456');
+      expect(config?.baseURL).toBe('https://models.inference.ai.azure.com');
+    });
   });
 });
