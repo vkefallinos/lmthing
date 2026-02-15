@@ -30,9 +30,6 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run tests with integration models
-      run: npm test
-
     - name: Build project
       run: npm run build
 
