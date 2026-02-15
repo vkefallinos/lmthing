@@ -39,6 +39,7 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/plugins/taskList.ts` | Built-in task list plugin with `defTaskList` |
 | `src/plugins/function/` | Built-in function plugin with `defFunction` and `defFunctionAgent` |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
+| `tests/integration/` | Integration tests with real LLM APIs |
 
 ### Internal Modules (StatefulPrompt Implementation)
 
@@ -420,6 +421,31 @@ setCount(prev => prev + 1);     // Function update
 setUser(prev => ({ ...prev, age: 30 }));
 ```
 
+### getState
+
+Get the current value of any state key without creating a new state accessor:
+
+```typescript
+// Create state in one part of the code
+const [count, setCount] = prompt.defState('counter', 0);
+
+// Later, access the current value without needing the original reference
+const currentValue = prompt.getState<number>('counter'); // 0
+
+setCount(5);
+const updatedValue = prompt.getState<number>('counter'); // 5
+
+// Useful for accessing state from plugins or effects
+prompt.defEffect(() => {
+  const currentCount = prompt.getState<number>('counter');
+  console.log('Count is:', currentCount);
+}, []);
+```
+
+**When to use `getState` vs `defState`:**
+- Use `defState` when you need both read and write access to state
+- Use `getState` when you only need to read the current value (e.g., in effects, tools, or plugins)
+
 ### defEffect
 
 Similar to React's `useEffect`, runs effects based on dependencies:
@@ -671,6 +697,33 @@ Tests use Vitest snapshots (`expect(steps).toMatchSnapshot()`) to verify step st
 npm test -- -u
 ```
 
+### Integration Tests
+
+Integration tests test lmthing with real LLM APIs. These tests require an API key and are opt-in via environment variable.
+
+**Running Integration Tests:**
+
+```bash
+# Set the model to use for testing
+LM_TEST_MODEL=openai:gpt-4o-mini npm test -- --run tests/integration
+LM_TEST_MODEL=anthropic:claude-3-5-sonnet-20241022 npm test -- --run tests/integration
+```
+
+**Integration Test Files:**
+
+- `tests/integration/defAgent.test.ts` - Agent integration tests
+- `tests/integration/defFunction.test.ts` - Function plugin integration tests
+- `tests/integration/defHooks.test.ts` - State and effect integration tests
+- `tests/integration/defTaskList.test.ts` - Task list plugin integration tests
+- `tests/integration/defTool.test.ts` - Tool integration tests
+- `tests/integration/defVariables.test.ts` - Variable and system part integration tests
+
+**Test Configuration:**
+
+- Tests require `LM_TEST_MODEL` environment variable to be set
+- Default timeout is 90 seconds for LLM calls
+- Tests are skipped if no model is configured
+
 ## Development Workflow
 
 ### Build
@@ -786,9 +839,61 @@ const { result } = await runPrompt(async ({ defTaskList, $ }) => {
 
 **taskListPlugin** (`src/plugins/taskList.ts`):
 - Provides `defTaskList(tasks)` method
-- Creates `startTask` and `completeTask` tools automatically
+- Creates `startTask`, `completeTask`, and `failTask` tools automatically
 - Updates system prompt with task status via `defEffect`
 - Returns `[taskList, setTaskList]` tuple for state access
+
+**Task List Tools:**
+
+The plugin automatically creates three tools for managing tasks:
+
+```typescript
+import { runPrompt } from 'lmthing';
+import { taskListPlugin } from 'lmthing/plugins';
+
+const { result } = await runPrompt(async ({ defTaskList, $ }) => {
+  const [tasks, setTasks] = defTaskList([
+    { id: '1', name: 'Research the topic', status: 'pending' },
+    { id: '2', name: 'Write implementation', status: 'pending' },
+    { id: '3', name: 'Test the implementation', status: 'pending' },
+  ]);
+
+  $`Complete the tasks. Use startTask when beginning work,
+    completeTask when done, and failTask if there's an error.`;
+}, {
+  model: 'openai:gpt-4o',
+  plugins: [taskListPlugin]
+});
+```
+
+**Available Tools:**
+- `startTask(taskId)` - Mark a task as in-progress. Can restart failed tasks.
+- `completeTask(taskId)` - Mark a task as completed
+- `failTask(taskId, reason?)` - Mark a task as failed with optional reason
+
+**Task Status Values:**
+- `pending` - Task not yet started
+- `in_progress` - Task currently being worked on
+- `completed` - Task finished successfully
+- `failed` - Task failed (can be restarted with startTask)
+
+**System Prompt Updates:**
+
+The plugin automatically updates the system prompt with current task status:
+
+```
+## Current Task Status
+
+### In Progress (1)
+  - [1] Research the topic
+
+### Pending (2)
+  - [2] Write implementation
+  - [3] Test the implementation
+
+### Completed (0)
+  (none)
+```
 
 **functionPlugin** (`src/plugins/function/`):
 - Provides `defFunction()` and `defFunctionAgent()` methods
@@ -1050,10 +1155,12 @@ import { taskListPlugin, defTaskList, functionPlugin, defFunction, defFunctionAg
 ## Dependencies
 
 ### Runtime
-- `ai` (^5.0.0) - Vercel AI SDK core
-- `@ai-sdk/*` - Provider packages
+- `ai` (^6.0.0) - Vercel AI SDK core
+- `@ai-sdk/*` - Provider packages (v3/v4)
+- `@ai-sdk/openai-compatible` - OpenAI-compatible provider support
 - `zod` (^4.1.13) - Schema validation
 - `js-yaml` (^4.1.1) - YAML serialization
+- `vm2` (^3.9.19) - Sandboxed code execution for function plugin
 
 ### Development
 - `vitest` (^4.0.15) - Test framework
