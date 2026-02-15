@@ -2,6 +2,7 @@
  * LLM Integration Test for defTaskGraph (DAG)
  *
  * Tests the task graph plugin with real LLMs.
+ * Validates that the task graph state is correct after execution.
  *
  * Running:
  * LM_TEST_MODEL=openai:gpt-4o-mini npm test -- --run tests/integration/defTaskGraph
@@ -10,6 +11,7 @@
 import { describe, it, expect } from 'vitest';
 import { runPrompt } from '../../src/runPrompt';
 import { taskGraphPlugin } from '../../src/plugins';
+import type { TaskNode } from '../../src/plugins/types';
 import {
   hasTestModel,
   TEST_MODEL,
@@ -23,7 +25,7 @@ describe('defTaskGraph Integration Tests', () => {
   it.skipIf(!hasTestModel)(`executes a linear dependency chain (${modelDisplay})`, { timeout: TEST_TIMEOUT }, async () => {
     console.log(`\n=== Testing defTaskGraph linear chain with ${modelDisplay} ===`);
 
-    const { result } = await runPrompt(async ({ defTaskGraph, defSystem, $ }) => {
+    const { result, prompt } = await runPrompt(async ({ defTaskGraph, defSystem, $ }) => {
       defSystem('role', `You are a task executor. You have access to updateTaskStatus and getUnblockedTasks tools.
 IMPORTANT: Use task IDs (like "research", "write", "review") when calling updateTaskStatus.
 First set a task to "in_progress", then to "completed" with an output_result.
@@ -50,14 +52,22 @@ Execute tasks in dependency order: research first, then write, then review.`);
     const text = await result.text;
     console.log(`  > LLM Response: ${text}`);
 
+    // Verify response is non-empty
     expect(text.length).toBeGreaterThan(0);
+
+    // Verify final task graph state: all tasks should be completed
+    const finalGraph = prompt.getState<TaskNode[]>('taskGraph');
+    console.log(`  > Final graph state: ${finalGraph?.map(t => `${t.id}=${t.status}`).join(', ')}`);
+    expect(finalGraph).toBeDefined();
+    expect(finalGraph?.every(t => t.status === 'completed')).toBe(true);
+
     console.log(`  > Test passed!\n`);
   });
 
   it.skipIf(!hasTestModel)(`discovers unblocked tasks in a DAG (${modelDisplay})`, { timeout: TEST_TIMEOUT }, async () => {
     console.log(`\n=== Testing defTaskGraph getUnblockedTasks with ${modelDisplay} ===`);
 
-    const { result } = await runPrompt(async ({ defTaskGraph, defSystem, $ }) => {
+    const { result, prompt } = await runPrompt(async ({ defTaskGraph, defSystem, $ }) => {
       defSystem('role', `You are a project manager. You have access to getUnblockedTasks and updateTaskStatus tools.
 Use getUnblockedTasks to discover which tasks are ready, then execute them.
 Use task IDs like "setup" and "deploy" when calling updateTaskStatus.`);
@@ -80,14 +90,23 @@ Use task IDs like "setup" and "deploy" when calling updateTaskStatus.`);
     const text = await result.text;
     console.log(`  > LLM Response: ${text}`);
 
+    // Verify response is non-empty
     expect(text.length).toBeGreaterThan(0);
+
+    // Verify the setup task was completed
+    const finalGraph = prompt.getState<TaskNode[]>('taskGraph');
+    console.log(`  > Final graph state: ${finalGraph?.map(t => `${t.id}=${t.status}`).join(', ')}`);
+    expect(finalGraph).toBeDefined();
+    const setupTask = finalGraph!.find(t => t.id === 'setup');
+    expect(setupTask?.status).toBe('completed');
+
     console.log(`  > Test passed!\n`);
   });
 
   it.skipIf(!hasTestModel)(`handles dependency-blocked task correctly (${modelDisplay})`, { timeout: TEST_TIMEOUT }, async () => {
     console.log(`\n=== Testing defTaskGraph dependency blocking with ${modelDisplay} ===`);
 
-    const { result } = await runPrompt(async ({ defTaskGraph, defSystem, $ }) => {
+    const { result, prompt } = await runPrompt(async ({ defTaskGraph, defSystem, $ }) => {
       defSystem('role', `You are a task executor. You have access to updateTaskStatus and getUnblockedTasks tools.
 Use task IDs like "data" and "analysis" when calling updateTaskStatus.
 When a task cannot be started due to unmet dependencies, the tool will tell you.`);
@@ -110,7 +129,21 @@ When a task cannot be started due to unmet dependencies, the tool will tell you.
     const text = await result.text;
     console.log(`  > LLM Response: ${text}`);
 
+    // Verify response is non-empty
     expect(text.length).toBeGreaterThan(0);
+
+    // Verify final task graph state: both tasks should be completed
+    const finalGraph = prompt.getState<TaskNode[]>('taskGraph');
+    console.log(`  > Final graph state: ${finalGraph?.map(t => `${t.id}=${t.status}`).join(', ')}`);
+    expect(finalGraph).toBeDefined();
+    expect(finalGraph?.every(t => t.status === 'completed')).toBe(true);
+
+    // Verify context propagation: analysis should have input_context from data
+    const analysisTask = finalGraph?.find(t => t.id === 'analysis');
+    console.log(`  > Analysis input_context: ${analysisTask?.input_context}`);
+    expect(analysisTask?.input_context).toBeDefined();
+    expect(analysisTask?.input_context).toContain('Collect Data');
+
     console.log(`  > Test passed!\n`);
   });
 });
