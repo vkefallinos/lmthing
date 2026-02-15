@@ -41,6 +41,7 @@ jobs:
         ZAI_API_BASE: https://api.z.ai/api/coding/paas/v4
         ZAI_API_TYPE: openai
         ZAI_API_NAME: zai
+        LM_TEST_MODEL: zai:glm-4.5
       run: |
         echo "Testing mock examples..."
         npx lmthing run examples/mock-demo.lmt.mjs
