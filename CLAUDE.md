@@ -37,6 +37,7 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
 | `src/plugins/` | Plugin system for extending StatefulPrompt |
 | `src/plugins/taskList.ts` | Built-in task list plugin with `defTaskList` |
+| `src/plugins/taskGraph.ts` | Built-in task graph (DAG) plugin with `defTaskGraph` |
 | `src/plugins/function/` | Built-in function plugin with `defFunction` and `defFunctionAgent` |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
 | `tests/integration/` | Integration tests with real LLM APIs |
@@ -715,6 +716,7 @@ LM_TEST_MODEL=anthropic:claude-3-5-sonnet-20241022 npm test -- --run tests/integ
 - `tests/integration/defFunction.test.ts` - Function plugin integration tests
 - `tests/integration/defHooks.test.ts` - State and effect integration tests
 - `tests/integration/defTaskList.test.ts` - Task list plugin integration tests
+- `tests/integration/defTaskGraph.test.ts` - Task graph (DAG) plugin integration tests
 - `tests/integration/defTool.test.ts` - Tool integration tests
 - `tests/integration/defVariables.test.ts` - Variable and system part integration tests
 
@@ -895,6 +897,95 @@ The plugin automatically updates the system prompt with current task status:
   (none)
 ```
 
+**taskGraphPlugin** (`src/plugins/taskGraph.ts`):
+- Provides `defTaskGraph(tasks)` method for dependency-aware task management using a DAG
+- Creates `generateTaskGraph`, `getUnblockedTasks`, and `updateTaskStatus` tools automatically
+- Validates task graph for cycles and missing references using Kahn's algorithm
+- Normalizes symmetric `dependencies`/`unblocks` relationships
+- Propagates `output_result` from completed tasks as `input_context` to downstream tasks
+- Updates system prompt with DAG status via `defEffect`
+- Returns `[taskGraph, setTaskGraph]` tuple for state access
+
+**Task Graph Tools:**
+
+The plugin automatically creates three tools for managing the DAG:
+
+```typescript
+import { runPrompt } from 'lmthing';
+import { taskGraphPlugin } from 'lmthing/plugins';
+
+const { result } = await runPrompt(async ({ defTaskGraph, $ }) => {
+  const [graph, setGraph] = defTaskGraph([
+    { id: 'research', title: 'Research', description: 'Research the topic',
+      status: 'pending', dependencies: [], unblocks: ['write'],
+      required_capabilities: ['web-search'] },
+    { id: 'write', title: 'Write', description: 'Write the report',
+      status: 'pending', dependencies: ['research'], unblocks: [],
+      required_capabilities: ['writing'] },
+  ]);
+
+  $`Execute the task graph. Use getUnblockedTasks to find ready tasks and updateTaskStatus to track progress.`;
+}, {
+  model: 'openai:gpt-4o',
+  plugins: [taskGraphPlugin]
+});
+```
+
+**Available Tools:**
+- `generateTaskGraph(tasks)` - Create or replace the task DAG. Validates for cycles and missing references.
+- `getUnblockedTasks()` - Get all tasks whose dependencies are fully completed and are ready to start.
+- `updateTaskStatus(taskId, status, output_result?)` - Update task status to `in_progress`, `completed`, or `failed`. Automatically unblocks downstream tasks on completion.
+
+**TaskNode Interface:**
+```typescript
+interface TaskNode {
+  id: string;                     // Unique identifier
+  title: string;                  // Concise task name
+  description: string;            // Detailed execution instructions
+  status: TaskNodeStatus;         // 'pending' | 'in_progress' | 'completed' | 'failed'
+  dependencies: string[];         // IDs of upstream tasks that must complete first
+  unblocks: string[];             // IDs of downstream tasks waiting on this one
+  required_capabilities: string[];// e.g., ["database", "web-search"]
+  assigned_subagent?: string;     // Subagent handling this task
+  input_context?: string;         // Context from upstream tasks (auto-propagated)
+  output_result?: string;         // Summary/artifact produced upon completion
+}
+```
+
+**Task Status Values:**
+- `pending` - Task not yet started
+- `in_progress` - Task currently being worked on
+- `completed` - Task finished successfully (downstream tasks may be unblocked)
+- `failed` - Task failed
+
+**System Prompt Updates:**
+
+The plugin automatically updates the system prompt with current DAG status:
+
+```
+## Task Graph Status
+
+### In Progress (1)
+  - [research] Research [web-search]
+
+### Ready to Start (0)
+  (none)
+
+### Blocked / Pending (1)
+  - [write] Write (depends on: research) [writing]
+
+### Completed (0)
+  (none)
+
+Use "getUnblockedTasks" to find tasks ready for execution, "updateTaskStatus" to update task progress.
+```
+
+**DAG Validation Utilities (exported):**
+- `detectCycles(tasks)` - Detects circular dependencies using Kahn's algorithm
+- `validateTaskGraph(tasks)` - Validates graph consistency (duplicate IDs, missing refs, cycles)
+- `normalizeTaskGraph(tasks)` - Ensures symmetric dependency/unblocks relationships
+- `getUnblockedTasks(tasks)` - Returns tasks with all dependencies completed
+
 **functionPlugin** (`src/plugins/function/`):
 - Provides `defFunction()` and `defFunctionAgent()` methods
 - Enables LLM to call functions via TypeScript code execution
@@ -1073,12 +1164,9 @@ export const customPlugin = { defCustomFeature };
 
 ### Not Yet Implemented
 
-The README documents `defDynamicTaskList` which is not yet implemented. When implementing:
-1. Add as a plugin method
-2. Store state appropriately
-3. Process via defEffect
-4. Add comprehensive tests
-5. Update README if behavior changes
+The `defDynamicTaskList` concept from PROPOSAL.md has been addressed by `taskGraphPlugin` (`defTaskGraph`),
+which provides dependency-aware DAG-based task management with automatic unblocking,
+context propagation, and cycle detection — covering and extending the originally planned dynamic task functionality.
 
 ## Common Tasks
 
@@ -1149,7 +1237,7 @@ Usage:
 ```typescript
 import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier, ToolOptions, AgentOptions, ToolEventCallback } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
-import { taskListPlugin, defTaskList, functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from 'lmthing/plugins';
+import { taskListPlugin, defTaskList, taskGraphPlugin, defTaskGraph, functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from 'lmthing/plugins';
 ```
 
 ## Dependencies

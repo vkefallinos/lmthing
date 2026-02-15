@@ -27,10 +27,14 @@
 
 // Built-in plugins
 export { taskListPlugin, defTaskList } from './taskList';
+export { taskGraphPlugin, defTaskGraph, detectCycles, validateTaskGraph, normalizeTaskGraph, getUnblockedTasks } from './taskGraph';
 export { functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from './function';
 
 // Plugin types
-export type { Task, TaskStatus, StartTaskResult, CompleteTaskResult, FailTaskResult } from './types';
+export type {
+  Task, TaskStatus, StartTaskResult, CompleteTaskResult, FailTaskResult,
+  TaskNode, TaskNodeStatus, GenerateTaskGraphResult, GetUnblockedTasksResult, UpdateTaskStatusResult,
+} from './types';
 export type {
   FunctionDefinition,
   FunctionOptions,

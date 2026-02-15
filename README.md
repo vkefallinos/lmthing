@@ -877,6 +877,97 @@ The plugin automatically adds a system message showing task status via `defEffec
 Use "startTask" to begin a pending task and "completeTask" when finished.
 ```
 
+### Using the Task Graph Plugin
+
+The built-in task graph plugin provides `defTaskGraph` for dependency-aware task management using a Directed Acyclic Graph (DAG). Unlike `defTaskList` which manages a flat list of tasks, `defTaskGraph` supports task dependencies, automatic unblocking, and context propagation between tasks.
+
+```typescript
+import { runPrompt } from 'lmthing';
+import { taskGraphPlugin } from 'lmthing/plugins';
+
+const { result } = await runPrompt(async ({ defTaskGraph, $ }) => {
+  const [graph, setGraph] = defTaskGraph([
+    { id: 'research', title: 'Research', description: 'Research the topic',
+      status: 'pending', dependencies: [], unblocks: ['write'],
+      required_capabilities: ['web-search'] },
+    { id: 'write', title: 'Write', description: 'Write the report',
+      status: 'pending', dependencies: ['research'], unblocks: ['review'],
+      required_capabilities: ['writing'] },
+    { id: 'review', title: 'Review', description: 'Review the final report',
+      status: 'pending', dependencies: ['write'], unblocks: [],
+      required_capabilities: ['review'] },
+  ]);
+
+  $`Execute the task graph. Use getUnblockedTasks to find ready tasks and updateTaskStatus to track progress.`;
+}, {
+  model: 'openai:gpt-4o',
+  plugins: [taskGraphPlugin]
+});
+```
+
+**TaskNode interface:**
+```typescript
+interface TaskNode {
+  id: string;                     // Unique identifier
+  title: string;                  // Concise task name
+  description: string;            // Detailed execution instructions
+  status: TaskNodeStatus;         // 'pending' | 'in_progress' | 'completed' | 'failed'
+  dependencies: string[];         // IDs of upstream tasks that must complete first
+  unblocks: string[];             // IDs of downstream tasks waiting on this one
+  required_capabilities: string[];// e.g., ["database", "web-search"]
+  assigned_subagent?: string;     // Subagent handling this task
+  input_context?: string;         // Context from upstream tasks (auto-propagated)
+  output_result?: string;         // Summary/artifact produced upon completion
+}
+```
+
+**Automatically Registered Tools:**
+
+- **`generateTaskGraph`**: Create or replace the task DAG with cycle detection and validation
+  ```typescript
+  { tasks: TaskNode[] }
+  // Returns: { success: boolean, message: string, taskCount: number, tasks: TaskNode[] }
+  ```
+
+- **`getUnblockedTasks`**: Get tasks whose dependencies are fully completed
+  ```typescript
+  {}
+  // Returns: { success: boolean, message: string, tasks: TaskNode[] }
+  ```
+
+- **`updateTaskStatus`**: Update task status with automatic downstream unblocking
+  ```typescript
+  { taskId: string, status: 'in_progress' | 'completed' | 'failed', output_result?: string }
+  // Returns: { success: boolean, taskId: string, message: string, newlyUnblockedTasks?: TaskNode[] }
+  ```
+
+**Key Features:**
+
+- **Dependency Enforcement**: Tasks cannot start until all upstream dependencies are completed
+- **Automatic Unblocking**: When a task completes, downstream tasks with all dependencies met are automatically unblocked
+- **Context Propagation**: `output_result` from completed tasks is automatically passed as `input_context` to downstream tasks
+- **Cycle Detection**: The graph is validated for circular dependencies using Kahn's algorithm
+- **Graph Normalization**: Dependencies and unblocks relationships are kept symmetric automatically
+
+**System Prompt Updates:**
+
+The plugin automatically adds a system message showing DAG status via `defEffect`:
+
+```
+## Task Graph Status
+
+### In Progress (1)
+  - [research] Research [web-search]
+
+### Blocked / Pending (1)
+  - [write] Write (depends on: research) [writing]
+
+### Completed (0)
+  (none)
+
+Use "getUnblockedTasks" to find tasks ready for execution, "updateTaskStatus" to update task progress.
+```
+
 ### Using the Function Plugin
 
 The built-in function plugin provides `defFunction` and `defFunctionAgent` for defining functions that the LLM can call via TypeScript code execution. Unlike `defTool`, which uses JSON for arguments, functions are called through TypeScript code with compile-time type checking.
