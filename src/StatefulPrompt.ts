@@ -211,6 +211,18 @@ export class StatefulPrompt extends StreamTextBuilder {
   }
 
   /**
+   * Get the current value of a state key
+   *
+   * @category Hooks
+   *
+   * @param key - The state key to retrieve
+   * @returns The current value of the state, or undefined if not set
+   */
+  getState<T>(key: string): T | undefined {
+    return this._stateManager.get<T>(key);
+  }
+
+  /**
    * Define an effect that runs based on dependency changes
    *
    * @category Hooks
@@ -807,6 +819,7 @@ Return only the JSON object in your response, without any additional text or exp
       defTool: this.defTool.bind(this),
       defAgent: this.defAgent.bind(this),
       defState: this.defState.bind(this),
+      getState: this.getState.bind(this),
       defEffect: this.defEffect.bind(this),
       defMessage: this.defMessage.bind(this),
       // Plugin methods (already bound in setPlugins)

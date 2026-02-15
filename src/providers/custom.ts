@@ -1,4 +1,4 @@
-import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
 /**
  * Custom Provider Configuration
@@ -109,23 +109,28 @@ export function scanCustomProviders(): CustomProviderConfig[] {
  * ```
  */
 export function createCustomProvider(config: CustomProviderConfig) {
-  return createOpenAI({
+  return createOpenAICompatible({
+    name: config.name,
     apiKey: config.apiKey,
     baseURL: config.baseURL,
+    queryParams: {
+      'api-version': '1.0.0',
+    },
+    
   });
 }
 
 /**
  * Registry of custom providers loaded from environment variables
  */
-let customProvidersRegistry: Map<string, ReturnType<typeof createOpenAI>> | null = null;
+let customProvidersRegistry: Map<string, ReturnType<typeof createOpenAICompatible>> | null = null;
 
 /**
  * Gets or initializes the custom providers registry
  *
  * @returns Map of custom provider names to provider instances
  */
-export function getCustomProviders(): Map<string, ReturnType<typeof createOpenAI>> {
+export function getCustomProviders(): Map<string, ReturnType<typeof createOpenAICompatible>> {
   if (!customProvidersRegistry) {
     customProvidersRegistry = new Map();
     const configs = scanCustomProviders();
