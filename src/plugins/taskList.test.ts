@@ -10,12 +10,43 @@ import { createMockModel } from '../test/createMockModel';
 import { taskListPlugin } from './taskList';
 import type { Task, TaskStatus } from './types';
 
-// Test helper to create a StatefulPrompt with mock model
+// Test helper to create a StatefulPrompt with mock model and proxy wrapper
+// Similar to how runPrompt creates proxies for plugin methods
 function createTestPrompt() {
   const mockModel = createMockModel([]);
   const prompt = new StatefulPrompt(mockModel);
   prompt.setPlugins([taskListPlugin]);
-  return prompt;
+
+  // Create a proxy that provides access to plugin methods (similar to runPrompt)
+  const boundPluginMethods: Record<string, Function> = {};
+  for (const plugin of [taskListPlugin]) {
+    for (const [methodName, method] of Object.entries(plugin)) {
+      if (typeof method === 'function') {
+        boundPluginMethods[methodName] = method.bind(prompt);
+      }
+    }
+  }
+
+  const proxiedPrompt = new Proxy(prompt, {
+    get(target, prop) {
+      if (typeof prop === 'string' && prop in boundPluginMethods) {
+        return boundPluginMethods[prop];
+      }
+      const value = target[prop as keyof StatefulPrompt];
+      if (typeof value === 'function') {
+        return value.bind(target);
+      }
+      return value;
+    },
+    has(target, prop) {
+      if (typeof prop === 'string' && prop in boundPluginMethods) {
+        return true;
+      }
+      return prop in target;
+    }
+  }) as StatefulPrompt & { defTaskList: typeof taskListPlugin.defTaskList };
+
+  return proxiedPrompt;
 }
 
 describe('taskListPlugin', () => {
@@ -27,11 +58,10 @@ describe('taskListPlugin', () => {
   });
 
   describe('defTaskList', () => {
-    let prompt: StatefulPrompt;
+    let prompt: ReturnType<typeof createTestPrompt>;
 
     beforeEach(() => {
-      prompt = new StatefulPrompt(createMockModel([]));
-      prompt.setPlugins([taskListPlugin]);
+      prompt = createTestPrompt();
     });
 
     it('should create an empty task list by default', () => {
@@ -103,7 +133,7 @@ describe('taskListPlugin', () => {
   });
 
   describe('startTask tool', () => {
-    let prompt: StatefulPrompt;
+    let prompt: ReturnType<typeof createTestPrompt>;
     let startTool: ReturnType<typeof prompt.getTools>['startTask'];
 
     beforeEach(() => {
@@ -148,12 +178,14 @@ describe('taskListPlugin', () => {
     });
 
     it('should restart a failed task', async () => {
-      prompt.defTaskList([
+      // Create a fresh prompt with a failed task
+      const freshPrompt = createTestPrompt();
+      freshPrompt.defTaskList([
         { id: '1', name: 'Failed Task', status: 'failed' }
       ]);
 
-      const startTool2 = prompt.getTools().startTask;
-      const result = await startTool2!.execute({ taskId: '1' });
+      const freshStartTool = freshPrompt.getTools().startTask;
+      const result = await freshStartTool!.execute({ taskId: '1' });
 
       expect(result.success).toBe(true);
       expect(result.message).toContain('Restarted failed task');
@@ -170,7 +202,7 @@ describe('taskListPlugin', () => {
   });
 
   describe('completeTask tool', () => {
-    let prompt: StatefulPrompt;
+    let prompt: ReturnType<typeof createTestPrompt>;
     let completeTool: ReturnType<typeof prompt.getTools>['completeTask'];
 
     beforeEach(() => {
@@ -221,7 +253,7 @@ describe('taskListPlugin', () => {
   });
 
   describe('failTask tool', () => {
-    let prompt: StatefulPrompt;
+    let prompt: ReturnType<typeof createTestPrompt>;
     let failTool: ReturnType<typeof prompt.getTools>['failTask'];
 
     beforeEach(() => {
@@ -292,7 +324,7 @@ describe('taskListPlugin', () => {
   });
 
   describe('task status transitions', () => {
-    let prompt: StatefulPrompt;
+    let prompt: ReturnType<typeof createTestPrompt>;
 
     beforeEach(() => {
       prompt = createTestPrompt();
@@ -348,7 +380,7 @@ describe('taskListPlugin', () => {
   });
 
   describe('defEffect integration', () => {
-    let prompt: StatefulPrompt;
+    let prompt: ReturnType<typeof createTestPrompt>;
 
     beforeEach(() => {
       prompt = createTestPrompt();
@@ -368,7 +400,7 @@ describe('taskListPlugin', () => {
   });
 
   describe('edge cases', () => {
-    let prompt: StatefulPrompt;
+    let prompt: ReturnType<typeof createTestPrompt>;
 
     beforeEach(() => {
       prompt = createTestPrompt();
