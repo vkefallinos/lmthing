@@ -1,6 +1,6 @@
 name: LLM Integration Tests
 
-# This workflow tests lmthing with mock models.
+# This workflow tests lmthing with integration models.
 
 on:
   push:
@@ -10,7 +10,7 @@ on:
   workflow_dispatch:  # Allow manual triggering
 
 jobs:
-  test-with-mock-only:
+  test-with-integration-only:
     runs-on: ubuntu-latest
 
     strategy:
@@ -30,18 +30,18 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Run tests with mock models
+    - name: Run tests with integration models
       run: npm test
 
     - name: Build project
       run: npm run build
 
-    - name: Test examples with mock
+    - name: Test examples with integration
       env:
         ZAI_API_BASE: https://api.z.ai/api/coding/paas/v4
         ZAI_API_TYPE: openai
         ZAI_API_NAME: zai
         LM_TEST_MODEL: zai:glm-4.5
       run: |
-        echo "Testing mock examples..."
-        npx lmthing run examples/mock-demo.lmt.mjs
+        echo "Testing integration examples..."
+        npm test -- --run tests/integration 
