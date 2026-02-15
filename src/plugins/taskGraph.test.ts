@@ -462,10 +462,9 @@ describe('taskGraphPlugin', () => {
     });
 
     it('should return tasks after dependencies are completed via state update', async () => {
-      prompt.defTaskGraph(createLinearGraph());
+      const [, setGraph] = prompt.defTaskGraph(createLinearGraph());
 
       // Complete task A via state update
-      const [, setGraph] = prompt.defTaskGraph(createLinearGraph());
       setGraph(prev => prev.map(t => t.id === 'a' ? { ...t, status: 'completed' as const } : t));
 
       const tool = prompt.getTools().getUnblockedTasks;

@@ -377,12 +377,13 @@ export function defTaskGraph(
         ...(output_result !== undefined ? { output_result } : {}),
       };
 
-      setTaskGraph(prev => prev.map(t => t.id === taskId ? updatedTask : t));
-
-      // If completed, check for newly unblocked downstream tasks
+      // If completed, check for newly unblocked downstream tasks and
+      // propagate output_result as input_context in a single state update
       let newlyUnblockedTasks: TaskNode[] = [];
       if (status === 'completed') {
-        const updatedGraph = getCurrentGraph().map(t => t.id === taskId ? updatedTask : t);
+        // Compute the updated graph to find newly unblocked tasks
+        const currentGraph2 = getCurrentGraph();
+        const updatedGraph = currentGraph2.map(t => t.id === taskId ? updatedTask : t);
         const completedIds = new Set(
           updatedGraph.filter(t => t.status === 'completed').map(t => t.id)
         );
@@ -393,19 +394,22 @@ export function defTaskGraph(
           return t.dependencies.every(d => completedIds.has(d));
         });
 
-        // Propagate output_result as input_context to downstream tasks
-        if (output_result && newlyUnblockedTasks.length > 0) {
-          setTaskGraph(prev => prev.map(t => {
-            if (newlyUnblockedTasks.some(u => u.id === t.id)) {
-              const existingContext = t.input_context ? t.input_context + '\n\n' : '';
-              return {
-                ...t,
-                input_context: existingContext + `[From ${task.title}]: ${output_result}`,
-              };
-            }
-            return t.id === taskId ? updatedTask : t;
-          }));
-        }
+        const unblockedIds = new Set(newlyUnblockedTasks.map(u => u.id));
+
+        // Single state update: apply task completion + context propagation
+        setTaskGraph(prev => prev.map(t => {
+          if (t.id === taskId) return updatedTask;
+          if (output_result && unblockedIds.has(t.id)) {
+            const existingContext = t.input_context ? t.input_context + '\n\n' : '';
+            return {
+              ...t,
+              input_context: existingContext + `[From ${task.title}]: ${output_result}`,
+            };
+          }
+          return t;
+        }));
+      } else {
+        setTaskGraph(prev => prev.map(t => t.id === taskId ? updatedTask : t));
       }
 
       const message = status === 'completed' && newlyUnblockedTasks.length > 0
