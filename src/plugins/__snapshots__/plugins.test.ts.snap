@@ -597,6 +597,7 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
     "activeTools": [
       "startTask",
       "completeTask",
+      "failTask",
     ],
     "input": {
       "prompt": [
@@ -633,6 +634,7 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
     "activeTools": [
       "startTask",
       "completeTask",
+      "failTask",
     ],
     "input": {
       "prompt": [
@@ -670,6 +672,11 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
                 "value": {
                   "message": "Started task: "Test Task"",
                   "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Test Task",
+                    "status": "in_progress",
+                  },
                   "taskId": "1",
                 },
               },
@@ -704,6 +711,7 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
     "activeTools": [
       "startTask",
       "completeTask",
+      "failTask",
     ],
     "input": {
       "prompt": [
@@ -741,6 +749,11 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
                 "value": {
                   "message": "Started task: "Test Task"",
                   "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Test Task",
+                    "status": "in_progress",
+                  },
                   "taskId": "1",
                 },
               },
@@ -776,6 +789,11 @@ exports[`Plugin System > taskListPlugin > should create a task list with startTa
                 "value": {
                   "message": "Completed task: "Test Task"",
                   "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Test Task",
+                    "status": "completed",
+                  },
                   "taskId": "1",
                 },
               },
@@ -807,6 +825,7 @@ exports[`Plugin System > taskListPlugin > should handle starting a non-existent 
     "activeTools": [
       "startTask",
       "completeTask",
+      "failTask",
     ],
     "input": {
       "prompt": [
@@ -839,6 +858,7 @@ exports[`Plugin System > taskListPlugin > should handle starting a non-existent 
     "activeTools": [
       "startTask",
       "completeTask",
+      "failTask",
     ],
     "input": {
       "prompt": [
@@ -870,7 +890,7 @@ exports[`Plugin System > taskListPlugin > should handle starting a non-existent 
               "output": {
                 "type": "json",
                 "value": {
-                  "message": "Task with ID "nonexistent" not found",
+                  "message": "Task with ID "nonexistent" not found. Available task IDs: 1",
                   "success": false,
                   "taskId": "nonexistent",
                 },
@@ -903,6 +923,7 @@ exports[`Plugin System > taskListPlugin > should include task list in system pro
     "activeTools": [
       "startTask",
       "completeTask",
+      "failTask",
     ],
     "input": {
       "prompt": [

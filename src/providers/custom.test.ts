@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
 import {
   scanCustomProviders,
   createCustomProvider,
@@ -13,20 +13,33 @@ import {
 describe('Custom Providers', () => {
   let originalEnv: NodeJS.ProcessEnv;
 
-  beforeEach(() => {
-    // Save original environment
+  beforeAll(() => {
+    // Save original environment before any tests run
     originalEnv = { ...process.env };
+  });
+
+  beforeEach(() => {
+    // Clear all environment variables that could interfere with tests
+    // Keep only essential Node.js variables
+    const essentialVars = ['NODE_ENV', 'PATH', 'HOME', 'USER', 'USERNAME', 'TMPDIR', 'TEMP'];
+    Object.keys(process.env).forEach(key => {
+      if (!essentialVars.includes(key)) {
+        delete process.env[key];
+      }
+    });
 
     // Clear the registry before each test
     resetCustomProvidersRegistry();
   });
 
   afterEach(() => {
-    // Restore original environment
-    process.env = originalEnv;
-
     // Clear the registry after each test
     resetCustomProvidersRegistry();
+  });
+
+  afterAll(() => {
+    // Restore original environment after all tests complete
+    process.env = originalEnv;
   });
 
   describe('scanCustomProviders', () => {
