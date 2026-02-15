@@ -56,6 +56,24 @@ export class StateManager implements Resettable {
   }
 
   /**
+   * Get all state keys currently stored.
+   */
+  keys(): string[] {
+    return Array.from(this.store.keys());
+  }
+
+  /**
+   * Get a snapshot of all current state as a plain object.
+   */
+  snapshot(): Record<string, any> {
+    const result: Record<string, any> = {};
+    for (const [key, value] of this.store.entries()) {
+      result[key] = value;
+    }
+    return result;
+  }
+
+  /**
    * Reset the state manager, clearing all stored state.
    */
   reset(): void {

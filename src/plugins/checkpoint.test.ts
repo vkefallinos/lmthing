@@ -155,4 +155,32 @@ describe('checkpointPlugin', () => {
 
     await result.text;
   });
+
+  it('should save state snapshot with actual state values', async () => {
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Hello!' },
+    ]);
+
+    let manager: CheckpointManager | undefined;
+
+    const { result } = await runPrompt(
+      async ({ defCheckpoint, defState, $ }) => {
+        manager = defCheckpoint();
+        const [counter, setCounter] = defState('counter', 42);
+        const [name, setName] = defState('name', 'Alice');
+
+        const cp = manager.save('with-state');
+
+        // Verify the snapshot contains actual state values
+        expect(cp.stateSnapshot).toBeDefined();
+        expect(cp.stateSnapshot['counter']).toBe(42);
+        expect(cp.stateSnapshot['name']).toBe('Alice');
+
+        $`Hello`;
+      },
+      { model: mockModel, plugins: [checkpointPlugin] }
+    );
+
+    await result.text;
+  });
 });

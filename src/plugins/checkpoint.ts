@@ -90,12 +90,17 @@ export function defCheckpoint(
       // Collect all current state (excluding internal checkpoint state)
       const currentCheckpoints = promptRef.getState<Checkpoint[]>(CHECKPOINTS_STATE_KEY) || [];
 
-      // Get all state keys by checking the state manager
-      // We snapshot all user-defined state
+      // Get a snapshot of all state
+      const fullSnapshot = promptRef.getStateSnapshot();
       const stateSnapshot: Record<string, any> = {};
 
-      // Access all state keys through the prompt's state
-      // We iterate through known state by using getState
+      // Copy all state except the internal checkpoints key
+      for (const [key, value] of Object.entries(fullSnapshot)) {
+        if (key !== CHECKPOINTS_STATE_KEY) {
+          stateSnapshot[key] = JSON.parse(JSON.stringify(value));
+        }
+      }
+
       // Store the snapshot with label
       const checkpoint: Checkpoint = {
         label,
