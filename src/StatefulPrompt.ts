@@ -788,6 +788,16 @@ Return only the JSON object in your response, without any additional text or exp
     return [...this._remindedItems];
   }
 
+  /**
+   * Get the registered tools for testing purposes.
+   * Returns a map of tool name to tool definition.
+   *
+   * @category Testing
+   */
+  getTools() {
+    return { ...this._tools };
+  }
+
   // Stateful-specific methods
 
   /**
