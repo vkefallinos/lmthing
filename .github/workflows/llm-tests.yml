@@ -38,6 +38,7 @@ jobs:
 
     - name: Test examples with integration
       env:
+        ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
         ZAI_API_BASE: https://api.z.ai/api/coding/paas/v4
         ZAI_API_TYPE: openai
         ZAI_API_NAME: zai
