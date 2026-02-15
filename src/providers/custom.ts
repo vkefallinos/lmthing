@@ -1,4 +1,5 @@
 import { createOpenAI } from '@ai-sdk/openai';
+import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 
 /**
  * Custom Provider Configuration
@@ -109,9 +110,14 @@ export function scanCustomProviders(): CustomProviderConfig[] {
  * ```
  */
 export function createCustomProvider(config: CustomProviderConfig) {
-  return createOpenAI({
+  return createOpenAICompatible({
+    name: config.name,
     apiKey: config.apiKey,
     baseURL: config.baseURL,
+    queryParams: {
+      'api-version': '1.0.0',
+    },
+    
   });
 }
 

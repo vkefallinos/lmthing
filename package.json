@@ -49,6 +49,7 @@
     "@ai-sdk/groq": "^2.0.32",
     "@ai-sdk/mistral": "^2.0.25",
     "@ai-sdk/openai": "^2.0.77",
+    "@ai-sdk/openai-compatible": "^2.0.30",
     "ai": "^5.0.0",
     "js-yaml": "^4.1.1",
     "vm2": "^3.9.19",

@@ -78,6 +78,11 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
   if (isCustomProvider(providerName)) {
     const customProvider = getCustomProvider(providerName);
     if (customProvider) {
+      // GitHub Models API doesn't support Responses API yet, use chat API
+      // Check if provider has a .chat() method and use it for known incompatible providers
+      if (providerName === 'github' && typeof (customProvider as any).chat === 'function') {
+        return (customProvider as any).chat(modelId);
+      }
       return customProvider(modelId);
     }
   }
