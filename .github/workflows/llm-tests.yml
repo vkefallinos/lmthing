@@ -37,6 +37,10 @@ jobs:
       run: npm run build
 
     - name: Test examples with mock
+      env:
+        ZAI_API_BASE: https://api.z.ai/api/coding/paas/v4
+        ZAI_API_TYPE: openai
+        ZAI_API_NAME: zai
       run: |
         echo "Testing mock examples..."
         npx lmthing run examples/mock-demo.lmt.mjs
