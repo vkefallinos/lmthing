@@ -4,7 +4,7 @@ import { getCustomProvider, isCustomProvider, listCustomProviders } from './cust
 import { ProviderError, ErrorCodes } from '../errors';
 
 /**
- * Resolves a model identifier to a LanguageModelV2 instance
+ * Resolves a model identifier to a LanguageModel instance
  *
  * Supports built-in providers, custom OpenAI-compatible providers,
  * and model aliases configured via environment variables.
@@ -81,9 +81,9 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
       // GitHub Models API doesn't support Responses API yet, use chat API
       // Check if provider has a .chat() method and use it for known incompatible providers
       if (providerName === 'github' && typeof (customProvider as any).chat === 'function') {
-        return (customProvider as any).chat(modelId);
+        return (customProvider as any).chat(modelId) as unknown as LanguageModelV2;
       }
-      return customProvider(modelId);
+      return customProvider(modelId) as unknown as LanguageModelV2;
     }
   }
 

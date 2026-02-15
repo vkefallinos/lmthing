@@ -30,7 +30,7 @@ export { taskListPlugin, defTaskList } from './taskList';
 export { functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from './function';
 
 // Plugin types
-export type { Task, TaskStatus, StartTaskResult, CompleteTaskResult } from './types';
+export type { Task, TaskStatus, StartTaskResult, CompleteTaskResult, FailTaskResult } from './types';
 export type {
   FunctionDefinition,
   FunctionOptions,

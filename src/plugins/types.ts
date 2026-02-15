@@ -28,6 +28,7 @@ export interface StartTaskResult {
   success: boolean;
   taskId: string;
   message?: string;
+  task?: Task;
 }
 
 /**
@@ -37,4 +38,15 @@ export interface CompleteTaskResult {
   success: boolean;
   taskId: string;
   message?: string;
+  task?: Task;
+}
+
+/**
+ * Result of failing a task
+ */
+export interface FailTaskResult {
+  success: boolean;
+  taskId: string;
+  message?: string;
+  task?: Task;
 }
