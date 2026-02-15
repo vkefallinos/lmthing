@@ -81,9 +81,9 @@ export function resolveModel(model: LanguageModelV3 | string): LanguageModelV3 {
       // GitHub Models API doesn't support Responses API yet, use chat API
       // Check if provider has a .chat() method and use it for known incompatible providers
       if (providerName === 'github' && typeof (customProvider as any).chat === 'function') {
-        return (customProvider as any).chat(modelId) as unknown as LanguageModelV2;
+        return (customProvider as any).chat(modelId) as unknown as LanguageModelV3;
       }
-      return customProvider(modelId) as unknown as LanguageModelV2;
+      return customProvider(modelId) as unknown as LanguageModelV3;
     }
   }
 
