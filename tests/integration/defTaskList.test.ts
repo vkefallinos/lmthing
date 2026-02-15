@@ -24,7 +24,7 @@ describe('defTaskList Integration Tests', () => {
     console.log(`\n=== Testing defTaskList with ${modelDisplay} ===`);
 
     const { result } = await runPrompt(async ({ defTaskList, defSystem, $ }) => {
-      defSystem('role', `You are a project manager. You have access to startTask and completeTask tools.
+      defSystem('role', `You are a project manager. You have access to startTask, completeTask, and failTask tools.
 IMPORTANT: Use the task ID (number like "1", "2", "3") NOT the task name when calling tools.
 For example: startTask({ taskId: "1" }) not startTask({ taskId: "Set up project" })`);
 
@@ -51,7 +51,7 @@ For example: startTask({ taskId: "1" }) not startTask({ taskId: "Set up project"
     console.log(`\n=== Testing defTaskList multiple tasks with ${modelDisplay} ===`);
 
     const { result } = await runPrompt(async ({ defTaskList, defSystem, $ }) => {
-      defSystem('role', `You are a task executor. Use startTask and completeTask tools.
+      defSystem('role', `You are a task executor. Use startTask, completeTask, and failTask tools.
 IMPORTANT: Always use the task ID (like "1", "2", "3") NEVER the task name.
 Example: startTask({ taskId: "1" }) and completeTask({ taskId: "1" })`);
 
@@ -74,21 +74,21 @@ Example: startTask({ taskId: "1" }) and completeTask({ taskId: "1" })`);
     console.log(`  > Test passed!\n`);
   });
 
-  it.skipIf(!hasTestModel)(`updates task list state (${modelDisplay})`, { timeout: TEST_TIMEOUT }, async () => {
-    console.log(`\n=== Testing defTaskList state updates with ${modelDisplay} ===`);
+  it.skipIf(!hasTestModel)(`handles task failure and recovery (${modelDisplay})`, { timeout: TEST_TIMEOUT }, async () => {
+    console.log(`\n=== Testing defTaskList failTask with ${modelDisplay} ===`);
 
     const { result } = await runPrompt(async ({ defTaskList, defSystem, $ }) => {
-      defSystem('role', `You are a project manager managing tasks.
-IMPORTANT: Always use task IDs (numbers like "1", "2") when calling startTask or completeTask.
-NEVER use the task name - always use the ID shown in brackets.`);
+      defSystem('role', `You are a project manager. Use startTask, completeTask, and failTask tools.
+IMPORTANT: Always use task IDs (numbers like "1", "2") when calling tools.
+When a task fails, use failTask with a reason, then you can restart it with startTask.`);
 
       const [tasks, setTasks] = defTaskList([
-        { id: '1', name: 'Research', status: 'pending' },
-        { id: '2', name: 'Design', status: 'pending' },
-        { id: '3', name: 'Implement', status: 'pending' }
+        { id: '1', name: 'Download data', status: 'pending' },
+        { id: '2', name: 'Process data', status: 'pending' },
+        { id: '3', name: 'Upload results', status: 'pending' }
       ]);
 
-      $`Start task ID "1" (Research), complete it, then start task ID "2" (Design). Report the status of all tasks.`;
+      $`Start task "1" (Download data), then fail it with reason "Network timeout". Then restart it and complete it. Tell me what happened.`;
     }, {
       model: TEST_MODEL,
       plugins: [taskListPlugin]
