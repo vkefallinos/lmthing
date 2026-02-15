@@ -6,8 +6,8 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { StatefulPrompt } from '../StatefulPrompt';
-import { createMockModel } from '../test/createMockModel';
+import { StatefulPrompt } from '../../StatefulPrompt';
+import { createMockModel } from '../../test/createMockModel';
 import {
   taskGraphPlugin,
   detectCycles,
@@ -15,7 +15,7 @@ import {
   normalizeTaskGraph,
   getUnblockedTasks,
 } from './taskGraph';
-import type { TaskNode } from './types';
+import type { TaskNode } from '../types';
 
 // Test helper to create a StatefulPrompt with mock model and proxy wrapper
 // Similar to how runPrompt creates proxies for plugin methods

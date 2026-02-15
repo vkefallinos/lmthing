@@ -19,8 +19,8 @@
  */
 
 import { z } from 'zod';
-import type { StatefulPrompt } from '../StatefulPrompt';
-import type { Task, TaskStatus, StartTaskResult, CompleteTaskResult, FailTaskResult } from './types';
+import type { StatefulPrompt } from '../../StatefulPrompt';
+import type { Task, TaskStatus, StartTaskResult, CompleteTaskResult, FailTaskResult } from '../types';
 
 const TASK_LIST_STATE_KEY = 'taskList';
 

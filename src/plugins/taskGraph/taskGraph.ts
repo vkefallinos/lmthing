@@ -24,14 +24,14 @@
  */
 
 import { z } from 'zod';
-import type { StatefulPrompt } from '../StatefulPrompt';
+import type { StatefulPrompt } from '../../StatefulPrompt';
 import type {
   TaskNode,
   TaskNodeStatus,
   GenerateTaskGraphResult,
   GetUnblockedTasksResult,
   UpdateTaskStatusResult,
-} from './types';
+} from '../types';
 
 const TASK_GRAPH_STATE_KEY = 'taskGraph';
 
