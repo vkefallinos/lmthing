@@ -2,7 +2,7 @@
  * Effect system type definitions.
  */
 
-import type { CoreMessage } from 'ai';
+import type { ModelMessage } from 'ai';
 import type { PromptContext } from './core';
 import type { SystemEntry, VariableEntry, ToolEntry } from './collections';
 
@@ -12,7 +12,7 @@ import type { SystemEntry, VariableEntry, ToolEntry } from './collections';
  * @category Hooks
  */
 export type StepModifierItems = {
-  messages: CoreMessage[];
+  messages: ModelMessage[];
   tools: ToolEntry[];
   systems: SystemEntry[];
   variables: VariableEntry[];
@@ -45,7 +45,7 @@ export interface Effect {
  * @category Types
  */
 export interface StepModifications {
-  messages?: CoreMessage[];
+  messages?: ModelMessage[];
   tools?: ToolEntry[];
   systems?: SystemEntry[];
   variables?: VariableEntry[];

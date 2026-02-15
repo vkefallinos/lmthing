@@ -1,6 +1,6 @@
-import { MockLanguageModelV2 } from 'ai/test';
+import { MockLanguageModelV3 } from 'ai/test';
 import { simulateReadableStream } from 'ai';
-import { LanguageModelV2FunctionTool, LanguageModelV2Message, LanguageModelV2ProviderDefinedTool, LanguageModelV2ToolChoice } from '@ai-sdk/provider';
+import { LanguageModelV3FunctionTool, LanguageModelV3Message, LanguageModelV3ProviderTool, LanguageModelV3ToolChoice } from '@ai-sdk/provider';
 
 /**
  * Type for mock content that can be text or tool calls
@@ -31,9 +31,9 @@ export interface MockModelConfig {
 export interface InputStep { 
   maxOutputTokens?: number;
   temperature?: number;
-  tools?: (LanguageModelV2FunctionTool | LanguageModelV2ProviderDefinedTool)[],
-  toolChoice?: LanguageModelV2ToolChoice,
-  prompt?: LanguageModelV2Message[],
+  tools?: (LanguageModelV3FunctionTool | LanguageModelV3ProviderTool)[],
+  toolChoice?: LanguageModelV3ToolChoice,
+  prompt?: LanguageModelV3Message[],
   includeRawChunks?: boolean;
 
 }
@@ -43,7 +43,7 @@ export interface InputStep {
  * 
  * @param content - Array of mock content items (text or tool calls) to be executed in order
  * @param config - Optional configuration for delays, usage, and streaming behavior
- * @returns A MockLanguageModelV2 instance that simulates LLM behavior
+ * @returns A MockLanguageModelV3 instance that simulates LLM behavior
  * 
  * @example
  * ```typescript
@@ -66,18 +66,35 @@ export function createMockModel(
   const { delay = 0, usage, streaming = true } = config;
   
   const defaultUsage = usage ? {
-    ...usage,
-    totalTokens: usage.inputTokens + usage.outputTokens,
+    inputTokens: {
+      total: usage.inputTokens,
+      noCache: undefined,
+      cacheRead: undefined,
+      cacheWrite: undefined,
+    },
+    outputTokens: {
+      total: usage.outputTokens,
+      text: undefined,
+      reasoning: undefined,
+    },
   } : {
-    inputTokens: 10,
-    outputTokens: 20,
-    totalTokens: 30,
+    inputTokens: {
+      total: 10,
+      noCache: undefined,
+      cacheRead: undefined,
+      cacheWrite: undefined,
+    },
+    outputTokens: {
+      total: 20,
+      text: undefined,
+      reasoning: undefined,
+    },
   };
 
   // Track which content index we're at across multiple doStream calls
   let currentContentIndex = 0;
   let inputSteps: InputStep[] = [];
-  const mockModel = new MockLanguageModelV2({
+  const mockModel = new MockLanguageModelV3({
     doStream: async (req) => {
       inputSteps.push(req);
       // Simulate delay if configured
@@ -126,10 +143,9 @@ export function createMockModel(
 
       return {
         stream: simulateReadableStream({ chunks }),
-        rawCall: { rawPrompt: null, rawSettings: {} },
       };
     },
-  }) as MockLanguageModelV2 & { steps: ()=>InputStep[] };
+  }) as MockLanguageModelV3 & { steps: ()=>InputStep[] };
 
   mockModel.steps = ()=>{return inputSteps}
   return mockModel ;
