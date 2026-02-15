@@ -1,4 +1,4 @@
-import { LanguageModelV2, LanguageModelV2Middleware } from '@ai-sdk/provider';
+import { LanguageModelV3, LanguageModelV3Middleware } from '@ai-sdk/provider';
 import { stepCountIs, streamText, wrapLanguageModel } from 'ai';
 import type {
     LanguageModel,
@@ -55,9 +55,9 @@ export class StreamTextBuilder {
     private _steps: Array<any> = [];
     private _agentStepsMap: Map<string, any[]> = new Map();
     private _currentActiveTools?: string[];
-    private _getMiddleware(): LanguageModelV2Middleware {
+    private _getMiddleware(): LanguageModelV3Middleware {
         return {
-            middlewareVersion: 'v2',
+            specificationVersion: 'v3',
             transformParams: async ({ params }) => {
               const lastMessage = params.prompt[params.prompt.length -1];
                 if(lastMessage.role === 'tool'){
@@ -191,7 +191,7 @@ export class StreamTextBuilder {
     }
     /**
      * Sets the language model.
-     * Accepts either a LanguageModelV2 instance or a string in "provider:modelId" format.
+     * Accepts either a LanguageModelV3 instance or a string in "provider:modelId" format.
      */
     public withModel(model: ModelInput): this {
         const resolvedModel = resolveModel(model);

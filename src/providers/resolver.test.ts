@@ -3,7 +3,7 @@ import { resolveModel } from './resolver';
 import { openai } from './openai';
 
 describe('resolveModel', () => {
-  it('should pass through a LanguageModelV2 instance unchanged', () => {
+  it('should pass through a LanguageModelV3 instance unchanged', () => {
     const model = openai('gpt-4o');
     const resolved = resolveModel(model);
     expect(resolved).toBe(model);

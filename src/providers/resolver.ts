@@ -1,18 +1,18 @@
-import { LanguageModelV2 } from '@ai-sdk/provider';
+import { LanguageModelV3 } from '@ai-sdk/provider';
 import { providers } from './index';
 import { getCustomProvider, isCustomProvider, listCustomProviders } from './custom';
 import { ProviderError, ErrorCodes } from '../errors';
 
 /**
- * Resolves a model identifier to a LanguageModelV2 instance
+ * Resolves a model identifier to a LanguageModelV3 instance
  *
  * Supports built-in providers, custom OpenAI-compatible providers,
  * and model aliases configured via environment variables.
  *
  * @category Providers
  *
- * @param model - Either a LanguageModelV2 instance, a string in the format "provider:modelId", or an alias name
- * @returns A LanguageModelV2 instance
+ * @param model - Either a LanguageModelV3 instance, a string in the format "provider:modelId", or an alias name
+ * @returns A LanguageModelV3 instance
  * @throws Error if the provider is not found or the format is invalid
  *
  * @example
@@ -34,7 +34,7 @@ import { ProviderError, ErrorCodes } from '../errors';
  * const model6 = resolveModel(openai('gpt-4o'));
  * ```
  */
-export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
+export function resolveModel(model: LanguageModelV3 | string): LanguageModelV3 {
   // If it's already a model instance, return it
   if (typeof model !== 'string') {
     return model;
@@ -99,4 +99,4 @@ export function resolveModel(model: LanguageModelV2 | string): LanguageModelV2 {
  *
  * @category Providers
  */
-export type ModelInput = LanguageModelV2 | string;
+export type ModelInput = LanguageModelV3 | string;
