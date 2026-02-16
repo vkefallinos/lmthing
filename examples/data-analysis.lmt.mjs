@@ -3,10 +3,10 @@
  *
  * Run with: npx lmthing run examples/data-analysis.lmt.mjs
  *
- * Demonstrates defData for structured data and defHook for step modifications
+ * Demonstrates defData for structured data and defEffect for step modifications
  */
 
-export default async ({ defSystem, def, defData, defHook, $ }) => {
+export default async ({ defSystem, def, defData, defEffect, $ }) => {
   defSystem('role', 'You are a data analyst assistant.');
   defSystem('guidelines', 'Always provide insights with supporting numbers.');
 
@@ -20,10 +20,9 @@ export default async ({ defSystem, def, defData, defHook, $ }) => {
 
   const companyName = def('COMPANY', 'Acme Corp');
 
-  // Add a hook to track step execution
-  defHook(({ stepNumber }) => {
+  // Add an effect to track step execution on every step
+  defEffect(({ stepNumber }) => {
     console.error(`[Step ${stepNumber}] Processing...`);
-    return {};
   });
 
   $`Analyze the quarterly sales data for ${companyName} (${salesData}).

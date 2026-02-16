@@ -523,9 +523,11 @@ npx lmthing run <file.lmt.mjs>
 - `config` (required) - Configuration object with `model` property
 - `mock` (optional) - Mock response array when using `model: 'mock'`
 
+**Note:** Built-in plugins (`defTaskList`, `defTaskGraph`, `defFunction`, `defFunctionAgent`) are automatically available in all `.lmt.mjs` files.
+
 ```javascript
 // myagent.lmt.mjs
-export default async ({ def, defTool, defSystem, $ }) => {
+export default async ({ def, defTool, defSystem, defTaskList, defFunction, $ }) => {
   defSystem('role', 'You are a helpful assistant.');
   const name = def('NAME', 'World');
   $`Say hello to ${name}`;
@@ -818,22 +820,46 @@ Middleware in `_getMiddleware()` transforms agent responses:
 
 The plugin system allows extending `StatefulPrompt` with additional methods. Plugins are implemented in `src/plugins/`.
 
-### Using Plugins
+### Auto-Loaded Built-in Plugins
+
+Built-in plugins are **automatically loaded** on every `runPrompt()` call - no imports or configuration needed:
 
 ```typescript
 import { runPrompt } from 'lmthing';
-import { taskListPlugin } from 'lmthing/plugins';
+// No need to import built-in plugins!
 
-const { result } = await runPrompt(async ({ defTaskList, $ }) => {
-  const [tasks, setTasks] = defTaskList([
-    { id: '1', name: 'Research the topic', status: 'pending' },
-    { id: '2', name: 'Write implementation', status: 'pending' },
-  ]);
+const { result } = await runPrompt(async ({ defTaskList, defTaskGraph, defFunction, $ }) => {
+  // All built-in plugin methods are available
+  const [tasks, setTasks] = defTaskList([...]);
+  const [graph, setGraph] = defTaskGraph([...]);
+  defFunction('calculate', 'Add numbers', schema, handler);
 
-  $`Complete the tasks using startTask and completeTask tools.`;
+  $`Complete the tasks using the available tools.`;
+}, {
+  model: 'openai:gpt-4o'
+  // No plugins array needed for built-in plugins!
+});
+```
+
+**Built-in plugins that are auto-loaded:**
+- `taskListPlugin` - Provides `defTaskList()` for simple task lists
+- `taskGraphPlugin` - Provides `defTaskGraph()` for dependency-aware DAG tasks
+- `functionPlugin` - Provides `defFunction()` and `defFunctionAgent()` for TypeScript-validated function execution
+
+### Using Custom Plugins
+
+For custom plugins, pass them via the `plugins` config option:
+
+```typescript
+import { runPrompt } from 'lmthing';
+import { customPlugin } from './customPlugin';
+
+const { result } = await runPrompt(async ({ defCustomFeature, $ }) => {
+  // Both built-in plugins AND customPlugin are available
+  defCustomFeature();
 }, {
   model: 'openai:gpt-4o',
-  plugins: [taskListPlugin]
+  plugins: [customPlugin]
 });
 ```
 
@@ -851,7 +877,7 @@ The plugin automatically creates three tools for managing tasks:
 
 ```typescript
 import { runPrompt } from 'lmthing';
-import { taskListPlugin } from 'lmthing/plugins';
+// No need to import taskListPlugin - it's auto-loaded!
 
 const { result } = await runPrompt(async ({ defTaskList, $ }) => {
   const [tasks, setTasks] = defTaskList([
@@ -863,8 +889,8 @@ const { result } = await runPrompt(async ({ defTaskList, $ }) => {
   $`Complete the tasks. Use startTask when beginning work,
     completeTask when done, and failTask if there's an error.`;
 }, {
-  model: 'openai:gpt-4o',
-  plugins: [taskListPlugin]
+  model: 'openai:gpt-4o'
+  // No plugins array needed!
 });
 ```
 
@@ -912,7 +938,7 @@ The plugin automatically creates three tools for managing the DAG:
 
 ```typescript
 import { runPrompt } from 'lmthing';
-import { taskGraphPlugin } from 'lmthing/plugins';
+// No need to import taskGraphPlugin - it's auto-loaded!
 
 const { result } = await runPrompt(async ({ defTaskGraph, $ }) => {
   const [graph, setGraph] = defTaskGraph([
@@ -926,8 +952,8 @@ const { result } = await runPrompt(async ({ defTaskGraph, $ }) => {
 
   $`Execute the task graph. Use getUnblockedTasks to find ready tasks and updateTaskStatus to track progress.`;
 }, {
-  model: 'openai:gpt-4o',
-  plugins: [taskGraphPlugin]
+  model: 'openai:gpt-4o'
+  // No plugins array needed!
 });
 ```
 
@@ -1002,29 +1028,38 @@ The `defFunction` method allows you to define JavaScript/TypeScript functions th
 **Single Function:**
 
 ```typescript
-import { functionPlugin } from 'lmthing/plugins';
+import { runPrompt } from 'lmthing';
+import { z } from 'zod';
+// No need to import functionPlugin - it's auto-loaded!
 
-defFunction(
-  'calculate',
-  'Add two numbers',
-  z.object({ a: z.number(), b: z.number() }),
-  async ({ a, b }) => ({ sum: a + b }),
-  {
-    responseSchema: z.object({ sum: z.number() }),
-    beforeCall: async (input) => {
-      console.log('Calling with:', input);
-      return undefined; // Continue execution
-    },
-    onSuccess: async (input, output) => {
-      console.log('Result:', output);
-      return undefined; // Use original output
-    },
-    onError: async (input, error) => {
-      console.error('Error:', error);
-      return { fallback: true };
+const { result } = await runPrompt(async ({ defFunction, $ }) => {
+  defFunction(
+    'calculate',
+    'Add two numbers',
+    z.object({ a: z.number(), b: z.number() }),
+    async ({ a, b }) => ({ sum: a + b }),
+    {
+      responseSchema: z.object({ sum: z.number() }),
+      beforeCall: async (input) => {
+        console.log('Calling with:', input);
+        return undefined; // Continue execution
+      },
+      onSuccess: async (input, output) => {
+        console.log('Result:', output);
+        return undefined; // Use original output
+      },
+      onError: async (input, error) => {
+        console.error('Error:', error);
+        return { fallback: true };
+      }
     }
-  }
-);
+  );
+
+  $`Calculate 5 + 3 using the calculate function.`;
+}, {
+  model: 'openai:gpt-4o'
+  // No plugins array needed!
+});
 
 // LLM calls via TypeScript code:
 // const result = await calculate({ a: 5, b: 3 });
@@ -1034,18 +1069,24 @@ defFunction(
 **Composite Functions (Namespaces):**
 
 ```typescript
-import { functionPlugin, func } from 'lmthing/plugins';
+import { runPrompt } from 'lmthing';
+import { z } from 'zod';
+import { func } from 'lmthing/plugins'; // Need to import `func` helper for composite functions
 
-defFunction('math', 'Mathematical operations', [
-  func('add', 'Add numbers', z.object({ a: z.number(), b: z.number() }),
-    async ({ a, b }) => ({ result: a + b }),
-    { responseSchema: z.object({ result: z.number() }) }
-  ),
-  func('multiply', 'Multiply numbers', z.object({ a: z.number(), b: z.number() }),
-    async ({ a, b }) => ({ result: a * b }),
-    { responseSchema: z.object({ result: z.number() }) }
-  )
-]);
+const { result } = await runPrompt(async ({ defFunction, $ }) => {
+  defFunction('math', 'Mathematical operations', [
+    func('add', 'Add numbers', z.object({ a: z.number(), b: z.number() }),
+      async ({ a, b }) => ({ result: a + b }),
+      { responseSchema: z.object({ result: z.number() }) }
+    ),
+    func('multiply', 'Multiply numbers', z.object({ a: z.number(), b: z.number() }),
+      async ({ a, b }) => ({ result: a * b }),
+      { responseSchema: z.object({ result: z.number() }) }
+    )
+  ]);
+
+  $`Use the math functions to calculate.`;
+}, { model: 'openai:gpt-4o' });
 
 // LLM calls via TypeScript code:
 // const sum = await math.add({ a: 5, b: 3 });
@@ -1067,21 +1108,29 @@ The `defFunctionAgent` method works like `defFunction` but spawns child agents i
 **Single Function Agent:**
 
 ```typescript
-defFunctionAgent(
-  'researcher',
-  'Research topics in depth',
-  z.object({ topic: z.string() }),
-  async ({ topic }, agentPrompt) => {
-    agentPrompt.$`Research: ${topic}`;
-  },
-  {
-    model: 'openai:gpt-4o',
-    responseSchema: z.object({
-      findings: z.array(z.string()),
-      confidence: z.number()
-    })
-  }
-);
+import { runPrompt } from 'lmthing';
+import { z } from 'zod';
+// No need to import functionPlugin - it's auto-loaded!
+
+const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+  defFunctionAgent(
+    'researcher',
+    'Research topics in depth',
+    z.object({ topic: z.string() }),
+    async ({ topic }, agentPrompt) => {
+      agentPrompt.$`Research: ${topic}`;
+    },
+    {
+      model: 'openai:gpt-4o',
+      responseSchema: z.object({
+        findings: z.array(z.string()),
+        confidence: z.number()
+      })
+    }
+  );
+
+  $`Use the researcher agent to look up quantum computing.`;
+}, { model: 'openai:gpt-4o' });
 
 // LLM calls via TypeScript code:
 // const research = await researcher({ topic: 'quantum computing' });
@@ -1091,18 +1140,24 @@ defFunctionAgent(
 **Composite Function Agents:**
 
 ```typescript
-import { functionPlugin, funcAgent } from 'lmthing/plugins';
+import { runPrompt } from 'lmthing';
+import { z } from 'zod';
+import { funcAgent } from 'lmthing/plugins'; // Need to import `funcAgent` helper for composite agents
 
-defFunctionAgent('specialists', 'Specialist agents', [
-  funcAgent('researcher', 'Research topics', z.object({ topic: z.string() }),
-    async ({ topic }, prompt) => { prompt.$`Research: ${topic}`; },
-    { responseSchema: z.object({ findings: z.array(z.string()) }) }
-  ),
-  funcAgent('analyst', 'Analyze data', z.object({ data: z.string() }),
-    async ({ data }, prompt) => { prompt.$`Analyze: ${data}`; },
-    { responseSchema: z.object({ summary: z.string(), score: z.number() }) }
-  )
-]);
+const { result } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+  defFunctionAgent('specialists', 'Specialist agents', [
+    funcAgent('researcher', 'Research topics', z.object({ topic: z.string() }),
+      async ({ topic }, prompt) => { prompt.$`Research: ${topic}`; },
+      { responseSchema: z.object({ findings: z.array(z.string()) }) }
+    ),
+    funcAgent('analyst', 'Analyze data', z.object({ data: z.string() }),
+      async ({ data }, prompt) => { prompt.$`Analyze: ${data}`; },
+      { responseSchema: z.object({ summary: z.string(), score: z.number() }) }
+    )
+  ]);
+
+  $`Use the specialists to research and analyze.`;
+}, { model: 'openai:gpt-4o' });
 
 // LLM calls via TypeScript code:
 // const research = await specialists.researcher({ topic: 'AI' });

@@ -46,11 +46,20 @@ Execute tasks in dependency order: research first, then write, then review.`);
       $`Execute all tasks in order. Start with "research" (set to in_progress, then completed), then "write", then "review". Complete all three tasks. Tell me when all tasks are done.`;
     }, {
       model: TEST_MODEL,
-      plugins: [taskGraphPlugin]
+      plugins: [taskGraphPlugin],
+      options: {
+        onStepFinish: async (stepResult) => {
+          console.log(`\n  > Step ${stepResult.stepNumber} finished:`);
+          console.log(`    - Text: ${stepResult.text?.slice(0, 100)}...`);
+          console.log(`    - Tool calls: ${stepResult.toolCalls?.map(tc => tc.toolName).join(', ') || 'none'}`);
+          console.log(`    - Tool results: ${stepResult.toolResults?.map(tr => tr.toolName).join(', ') || 'none'}`);
+          console.log(`    - Usage: ${stepResult.usage?.promptTokens} + ${stepResult.usage?.completionTokens} = ${stepResult.usage?.totalTokens} tokens`);
+        }
+      }
     });
 
     const text = await result.text;
-    console.log(`  > LLM Response: ${text}`);
+    console.log(`\n  > Full LLM Response: ${text}`);
 
     // Verify response is non-empty
     expect(text.length).toBeGreaterThan(0);

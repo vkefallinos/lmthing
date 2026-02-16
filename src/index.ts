@@ -1,5 +1,8 @@
 export { runPrompt, createPluginArray } from './runPrompt';
 
+// Re-export built-in plugins array for reference
+export { builtInPlugins } from './plugins';
+
 // Export error classes
 export {
   LmthingError,

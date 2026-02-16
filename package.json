@@ -26,6 +26,7 @@
     "build": "tsc && npm run build:cli",
     "build:cli": "esbuild src/cli.ts --bundle --platform=node --format=esm --outfile=dist/cli.js --packages=external",
     "dev": "tsc --watch",
+    "script": "node ./scripts/run-cli.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage"
@@ -51,6 +52,7 @@
     "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/openai-compatible": "^2.0.30",
     "ai": "^6.0.86",
+    "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
     "vm2": "^3.9.19",
     "zod": "^4.1.13",

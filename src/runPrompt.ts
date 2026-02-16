@@ -3,6 +3,7 @@ import { StatefulPrompt } from "./StatefulPrompt";
 import { StreamTextOptions } from "./StreamText";
 import { type ModelInput } from "./providers/resolver";
 import type { Plugin, MergePlugins, PromptWithPlugins } from "./types";
+import { builtInPlugins } from "./plugins";
 
 /**
  * Helper function to create a plugin array without requiring 'as const'.
@@ -31,19 +32,30 @@ export function createPluginArray<P extends Plugin[]>(...plugins: P): P {
 export interface PromptConfig<P extends readonly Plugin[] = []> {
   model: ModelInput;
   // Allow passing any streamText options except the ones we handle internally
-  options?: Partial<Omit<StreamTextOptions, 'model' | 'system' | 'messages' | 'tools' | 'onFinish' | 'onStepFinish' | 'prepareStep'>>;
+  options?: Partial<Omit<StreamTextOptions, 'model' | 'system' | 'messages' | 'tools' | 'prepareStep'>> & {
+    onFinish?: StreamTextOptions['onFinish'];
+    onStepFinish?: StreamTextOptions['onStepFinish'];
+  };
   /**
-   * Array of plugins to extend the prompt context with additional methods.
+   * Array of additional plugins to extend the prompt context.
+   * Built-in plugins (taskListPlugin, taskGraphPlugin, functionPlugin) are
+   * automatically included and don't need to be specified here.
+   *
    * Each plugin is an object containing methods that receive StatefulPrompt as `this`.
    *
-   * You can now pass plugins directly without requiring 'as const':
+   * @example
+   * // Built-in plugins are automatically available
+   * runPrompt(({ defTaskList, defTaskGraph, defFunction }) => {
+   *   // Use built-in plugin methods without importing them
+   * }, { model: 'openai:gpt-4o' });
    *
    * @example
-   * import { taskListPlugin } from 'lmthing/plugins';
+   * // Add custom plugins alongside built-in ones
+   * import { customPlugin } from './customPlugin';
    *
-   * runPrompt(({ defTaskList }) => {
-   *   defTaskList([{ id: '1', name: 'Task 1' }]);
-   * }, { model: 'openai:gpt-4o', plugins: [taskListPlugin] });
+   * runPrompt(({ defCustomFeature }) => {
+   *   // Both built-in and custom plugins are available
+   * }, { model: 'openai:gpt-4o', plugins: [customPlugin] });
    */
   plugins?: P;
 }
@@ -101,13 +113,16 @@ function createPromptProxyWithPlugins<P extends readonly Plugin[]>(
 }
 
 /**
- * Runs a prompt with optional plugins.
+ * Runs a prompt with plugins.
  * Main entry point for running prompts with lmthing.
+ *
+ * Built-in plugins (taskListPlugin, taskGraphPlugin, functionPlugin) are
+ * automatically loaded on every prompt instance.
  *
  * @category Core
  *
  * @param promptFn - Async function that configures the prompt using def*, defState, defEffect, etc.
- * @param config - Configuration including model, options, and plugins
+ * @param config - Configuration including model, options, and optional additional plugins
  * @returns Promise resolving to the result and prompt instance
  *
  * @example
@@ -118,13 +133,20 @@ function createPromptProxyWithPlugins<P extends readonly Plugin[]>(
  * }, { model: 'openai:gpt-4o' });
  *
  * @example
- * // With plugins
- * import { taskListPlugin } from 'lmthing/plugins';
- *
- * const { result } = await runPrompt(async ({ defTaskList, $ }) => {
- *   defTaskList([{ id: '1', name: 'Research' }]);
+ * // Built-in plugins are automatically available
+ * const { result } = await runPrompt(async ({ defTaskList, defTaskGraph, $ }) => {
+ *   const [tasks, setTasks] = defTaskList([{ id: '1', name: 'Research' }]);
+ *   const [graph, setGraph] = defTaskGraph([...]);
  *   $`Complete the tasks`;
- * }, { model: 'openai:gpt-4o', plugins: [taskListPlugin] });
+ * }, { model: 'openai:gpt-4o' });
+ *
+ * @example
+ * // Add custom plugins alongside built-in ones
+ * import { customPlugin } from './customPlugin';
+ *
+ * const { result } = await runPrompt(async ({ defCustomFeature, $ }) => {
+ *   // Both built-in plugins and customPlugin are available
+ * }, { model: 'openai:gpt-4o', plugins: [customPlugin] });
  */
 export const runPrompt = async <
   const P extends readonly Plugin[] = []
@@ -137,23 +159,35 @@ export const runPrompt = async <
 
   // Apply any additional options if provided
   if (config.options) {
-    prompt.withOptions(config.options);
+    const { onStepFinish, onFinish, ...otherOptions } = config.options;
+
+    // Wire up hooks through the builder's hook system
+    if (onStepFinish) {
+      prompt.addOnStepFinish(onStepFinish as any);
+    }
+    if (onFinish) {
+      prompt.addOnFinish(onFinish as any);
+    }
+
+    // Apply remaining options
+    prompt.withOptions(otherOptions);
   }
 
-  // Get plugins (default to empty array)
-  const plugins = (config.plugins ?? []) as P;
+  // Get plugins (default to empty array) and merge with built-in plugins
+  const userPlugins = (config.plugins ?? []) as P;
+  const allPlugins = [...builtInPlugins, ...userPlugins] as readonly Plugin[];
 
   // Set plugins on the prompt for re-execution support
-  prompt.setPlugins(plugins);
+  prompt.setPlugins(allPlugins);
 
   // Set the prompt function for re-execution
   prompt.setPromptFn(promptFn as (prompt: any) => Promise<void>);
 
   // Wrap prompt in a proxy that auto-binds methods (including plugin methods)
-  const proxiedPrompt = createPromptProxyWithPlugins(prompt, plugins);
+  const proxiedPrompt = createPromptProxyWithPlugins(prompt, allPlugins);
 
   // Execute the prompt function once to set up initial state
-  await promptFn(proxiedPrompt);
+  await promptFn(proxiedPrompt as any);
 
   // Run with stateful re-execution (will re-execute promptFn on subsequent steps)
   const result = prompt.run();
