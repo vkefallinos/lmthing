@@ -18,11 +18,15 @@ These examples use mock models for demonstration and testing:
 - **mock-demo.lmt.mjs** - Simple demo showing basic CLI usage
 - **mock-tools.lmt.mjs** - Demonstrates tool definition and usage
 - **github-models-mock.lmt.mjs** - GitHub Models API structure with mock
+- **issues-tasks.lmt.mjs** - Creates a task graph from the issues directory
+- **issues-tasks-simple.lmt.mjs** - Creates a simple task list from the issues directory
 
 ```bash
 npx lmthing run examples/mock-demo.lmt.mjs
 npx lmthing run examples/mock-tools.lmt.mjs
 npx lmthing run examples/github-models-mock.lmt.mjs
+npx lmthing run examples/issues-tasks.lmt.mjs
+npx lmthing run examples/issues-tasks-simple.lmt.mjs
 ```
 
 ### Real Model Examples (requires API key)
@@ -93,3 +97,24 @@ The prompt function receives these methods:
 | `defState(name, initial)` | Create state that persists across re-executions |
 | `defEffect(fn, deps)` | Run side effects based on dependencies |
 | `$(template)` | Add user message via template literal |
+
+## Task Management Examples
+
+The `issues-tasks` examples demonstrate how to use task management plugins to organize work:
+
+### issues-tasks.lmt.mjs (Task Graph)
+
+This example reads all markdown files from the `issues/` directory and creates a task graph using `defTaskGraph`. It demonstrates:
+- Loading data from files at runtime
+- Creating task nodes with dependencies
+- Using the task graph plugin for structured work management
+- Parsing markdown to extract task information
+
+### issues-tasks-simple.lmt.mjs (Task List)
+
+This example uses `defTaskList` for simpler task tracking without dependencies. It shows:
+- A more straightforward task management approach
+- How to initialize tasks from external data
+- Using `startTask` and `completeTask` tools
+
+Both examples use mock models so they can be run without API keys.
