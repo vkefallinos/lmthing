@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { runPrompt } from '../../runPrompt';
 import { functionPlugin, func, funcAgent } from './index';
 import { createMockModel } from '../../test/createMockModel';
+import { FunctionRegistry } from './FunctionRegistry';
+import { validateTypeScript } from './typeChecker';
 
 describe('FunctionPlugin', () => {
   describe('defFunction - single functions', () => {
@@ -286,6 +288,30 @@ describe('FunctionPlugin', () => {
       // Snapshot the complete execution steps
       expect(steps).toMatchSnapshot('typescript-validation-failed-wrong-types-steps');
     });
+
+    it('should support correction loop after TypeScript validation failure', async () => {
+      const registry = new FunctionRegistry();
+      registry.register({
+        name: 'calculate',
+        description: 'Add two numbers',
+        inputSchema: z.object({ a: z.number(), b: z.number() }),
+        responseSchema: z.object({ sum: z.number() }),
+        execute: async ({ a, b }) => ({ sum: a + b }),
+        options: { responseSchema: z.object({ sum: z.number() }) }
+      });
+
+      const firstAttempt = validateTypeScript(
+        'const result = await calculate({ x: 5, y: 3 });',
+        registry
+      );
+      const secondAttempt = validateTypeScript(
+        'const result = await calculate({ a: 5, b: 3 });\nreturn result.sum;',
+        registry
+      );
+
+      expect(firstAttempt.valid).toBe(false);
+      expect(secondAttempt.valid).toBe(true);
+    });
   });
 
   describe('Sandbox execution', () => {
@@ -322,6 +348,54 @@ describe('FunctionPlugin', () => {
       // Snapshot the execution steps
       const steps = (prompt as any).steps;
       expect(steps).toMatchSnapshot('successful-execution-steps');
+    });
+
+    it('should fail execution when function output violates response schema', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Running...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'return await calculate({ a: 10, b: 5 });' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
+        defFunction('calculate', 'Add two numbers',
+          z.object({ a: z.number(), b: z.number() }),
+          async ({ a, b }) => ({ total: a + b }),
+          { responseSchema: z.object({ sum: z.number() }) }
+        );
+
+        $`Calculate 10 + 5`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      const steps = (prompt as any).steps;
+      let toolResult: any = null;
+      for (const step of steps) {
+        if (step.input?.prompt) {
+          for (const message of step.input.prompt) {
+            if (message.role === 'tool' && message.content) {
+              for (const content of message.content) {
+                if (content.type === 'tool-result' && content.toolName === 'runToolCode') {
+                  toolResult = content;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      expect(toolResult).toBeDefined();
+      expect(toolResult.output.value.success).toBe(false);
+      expect(toolResult.output.value.message).toBe('Runtime error during execution.');
     });
 
     it('should handle composite functions in sandbox', async () => {
