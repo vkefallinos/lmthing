@@ -4,9 +4,17 @@ import { runPrompt } from '../../runPrompt';
 import { functionPlugin, func, funcAgent } from './index';
 import { createMockModel } from '../../test/createMockModel';
 
-function getRunToolCodeResults(prompt: any) {
-  const results: any[] = [];
-  const steps = (prompt as any).steps || [];
+type RunToolCodeResult = {
+  success: boolean;
+  message?: string;
+  result?: unknown;
+  errors?: unknown[];
+  error?: string;
+};
+
+function getRunToolCodeResults(prompt: { steps?: any[] }): RunToolCodeResult[] {
+  const results: RunToolCodeResult[] = [];
+  const steps = prompt.steps || [];
 
   for (const step of steps) {
     if (!step.input?.prompt) continue;
@@ -338,6 +346,8 @@ describe('FunctionPlugin', () => {
       await invalidResult.text;
       const invalidResults = getRunToolCodeResults(invalidPrompt);
       expect(invalidResults.some((result) => result.success === false)).toBe(true);
+      expect(invalidResults.some((result) => result.message === 'TypeScript validation failed. Fix the errors and try again.')).toBe(true);
+      expect(addFn).not.toHaveBeenCalled();
 
       const validModel = createMockModel([
         { type: 'text', text: 'Retrying...' },
@@ -568,7 +578,7 @@ describe('FunctionPlugin', () => {
 
     it('should execute onError callback on validation errors', async () => {
       const onErrorFn = vi.fn(async (input, error) => undefined);
-      const executeFn = vi.fn(async () => {
+      const executeFn = vi.fn(async (_args: { a: number; b: number }) => {
         throw new Error('Execution failed');
       });
 
@@ -707,8 +717,9 @@ describe('FunctionPlugin', () => {
       await result.text;
       const runToolCodeResults = getRunToolCodeResults(prompt);
       expect(runToolCodeResults).toHaveLength(1);
-      expect(runToolCodeResults[0].success).toBe(false);
-      expect(runToolCodeResults[0].message).toBe('Runtime error during execution.');
+      const firstResult = runToolCodeResults[0];
+      expect(firstResult.success).toBe(false);
+      expect(firstResult.message).toBe('Runtime error during execution.');
     });
   });
 
