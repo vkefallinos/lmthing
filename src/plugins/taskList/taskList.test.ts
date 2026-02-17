@@ -12,6 +12,11 @@ import { runPrompt } from '../../runPrompt';
 import { taskListPlugin } from './taskList';
 import type { Task, TaskStatus } from '../types';
 
+interface ToolResultValue {
+  success: boolean;
+  message?: string;
+}
+
 // Test helper to create a StatefulPrompt with mock model and proxy wrapper
 // Similar to how runPrompt creates proxies for plugin methods
 function createTestPrompt() {
@@ -497,10 +502,11 @@ describe('taskListPlugin', () => {
         .flatMap(step => step.input.prompt.filter(msg => msg.role === 'tool'))
         .flatMap(msg => Array.isArray(msg.content) ? msg.content : [])
         .filter(content => content.type === 'tool-result')
-        .map(content => (content.output as any).value);
+        .map(content => (content as { output?: { value?: ToolResultValue } }).output?.value)
+        .filter((value): value is ToolResultValue => !!value);
 
-      expect(toolOutputs.some(output => output.success === false && output.message.includes('still pending'))).toBe(true);
-      expect(toolOutputs.some(output => output.success === true && output.message.includes('Restarted failed task'))).toBe(true);
+      expect(toolOutputs.some(output => output.success === false && output.message?.includes('still pending'))).toBe(true);
+      expect(toolOutputs.some(output => output.success === true && output.message?.includes('Restarted failed task'))).toBe(true);
       expect(prompt.getState<Task[]>('taskList')?.[0].status).toBe('completed');
     });
 
