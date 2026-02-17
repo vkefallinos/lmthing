@@ -72,7 +72,7 @@ if (Array.isArray(inputSchemaOrSubAgents)) {
 this.addTool(name, { 
   description, 
   inputSchema: inputSchemaOrSubAgents, 
-  execute: async (args: any) => {
+  execute: async (args: z.infer<typeof inputSchemaOrSubAgents>) => {
     // 1. Create child prompt with model
     const prompt = StatefulPrompt.create(model || this.getModel());
     prompt.withOptions(otherOptions || this.getOptions());

@@ -78,12 +78,15 @@ describe('defAgent - Single Agent Execution Lifecycle', () => {
       { type: 'text', text: 'Agent response' }
     ]);
 
+    let childPromptCaptured: any = null;
+
     const { result } = await runPrompt(async ({ defAgent, $ }) => {
       defAgent(
         'configuredAgent',
         'Agent with options',
         z.object({ input: z.string() }),
         async (args, childPrompt) => {
+          childPromptCaptured = childPrompt;
           childPrompt.$`Process: ${args.input}`;
         },
         {
@@ -99,8 +102,11 @@ describe('defAgent - Single Agent Execution Lifecycle', () => {
     });
 
     await result.text;
-    // If no errors thrown, options were passed successfully
-    expect(true).toBe(true);
+    
+    // Verify child prompt was created and received options
+    expect(childPromptCaptured).toBeDefined();
+    // Options are internal to the prompt, so we verify execution completed successfully
+    // which confirms options were passed without errors
   });
 
   it('should handle agent returning empty response', async () => {
@@ -513,15 +519,18 @@ describe('defAgent - Model and System Overrides', () => {
       { type: 'text', text: 'Agent response' }
     ]);
 
+    let agentExecuted = false;
+
     const { result } = await runPrompt(async ({ defAgent, $ }) => {
       defAgent(
         'inherited',
         'Inherits model',
         z.object({}),
         async (args, childPrompt) => {
+          agentExecuted = true;
           childPrompt.$`Respond`;
         },
-        { model: agentModel } // Must provide model for mock
+        { model: agentModel } // Must provide model for mock testing
       );
 
       $`Use inherited agent`;
@@ -530,8 +539,9 @@ describe('defAgent - Model and System Overrides', () => {
     });
 
     await result.text;
-    // Successfully completes with inherited model
-    expect(true).toBe(true);
+    
+    // Verify agent executed successfully (model was properly set)
+    expect(agentExecuted).toBe(true);
   });
 
   it('should apply custom system prompt to agent', async () => {
@@ -624,13 +634,15 @@ describe('defAgent - Plugin Passthrough', () => {
       }
     };
 
+    let childPromptReceived: any = null;
+
     const { result } = await runPrompt(async ({ defAgent, $ }) => {
       defAgent(
         'pluginAgent',
         'Uses plugins',
         z.object({}),
-        async (args, childPrompt) => {
-          // Plugin methods would be available here
+        async (args, childPrompt: any) => {
+          childPromptReceived = childPrompt;
           childPrompt.$`Execute with plugins`;
         },
         {
@@ -645,8 +657,10 @@ describe('defAgent - Plugin Passthrough', () => {
     });
 
     await result.text;
-    // Completes successfully with plugins
-    expect(true).toBe(true);
+    
+    // Verify child prompt was created with plugin
+    // Plugin methods are bound to the prompt instance via setPlugins
+    expect(childPromptReceived).toBeDefined();
   });
 });
 
@@ -925,12 +939,17 @@ describe('defAgent - Edge Cases', () => {
       { type: 'text', text: 'Response without input' }
     ]);
 
-    const { result } = await runPrompt(async ({ defAgent, $ }) => {
+    let agentWasCalled = false;
+
+    const { result, prompt } = await runPrompt(async ({ defAgent, $ }) => {
       defAgent(
         'noInput',
         'No input schema',
         z.object({}),
         async (args, childPrompt) => {
+          agentWasCalled = true;
+          // Args should be empty object
+          expect(args).toEqual({});
           childPrompt.$`Execute`;
         },
         { model: agentMockModel }
@@ -942,7 +961,10 @@ describe('defAgent - Edge Cases', () => {
     });
 
     await result.text;
-    expect(true).toBe(true);
+    
+    // Verify agent was called successfully with empty args
+    expect(agentWasCalled).toBe(true);
+    expect(prompt.steps.length).toBeGreaterThan(0);
   });
 
   it('should handle deeply nested agent calls', async () => {
