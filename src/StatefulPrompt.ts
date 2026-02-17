@@ -998,8 +998,9 @@ Return only the JSON object in your response, without any additional text or exp
           // Clear definition tracking for new execution cycle
           this._clearDefinitions();
 
-          // Clear effects so they can be re-registered during re-execution
-          this._effectsManager.reset();
+          // Clear effects list so they can be re-registered during re-execution
+          // Note: Use clearEffects() instead of reset() to preserve dependency memory
+          this._effectsManager.clearEffects();
 
           // Re-execute promptFn
           const promptMethods = this._getPromptMethods();

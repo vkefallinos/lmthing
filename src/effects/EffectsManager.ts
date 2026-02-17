@@ -8,6 +8,7 @@ export class EffectsManager implements Resettable {
   private effects: Effect[] = [];
   private previousDeps = new Map<number, any[]>();
   private idCounter = 0;
+  private registrationOrder = 0; // Track order of registration within current cycle
 
   /**
    * Register an effect to run based on dependency changes.
@@ -20,7 +21,7 @@ export class EffectsManager implements Resettable {
     dependencies?: any[]
   ): void {
     const effect: Effect = {
-      id: this.idCounter++,
+      id: this.registrationOrder++, // Use registration order as stable ID
       callback,
       dependencies
     };
@@ -45,6 +46,9 @@ export class EffectsManager implements Resettable {
         effect.callback(context, stepModifier);
       }
     }
+    
+    // Reset registration order after processing for next cycle
+    this.registrationOrder = 0;
   }
 
   /**
@@ -115,12 +119,23 @@ export class EffectsManager implements Resettable {
   }
 
   /**
+   * Clear the effects list while preserving dependency memory.
+   * This allows effects to be re-registered on prompt re-execution
+   * while maintaining dependency tracking across steps.
+   */
+  clearEffects(): void {
+    this.effects = [];
+    // Registration order will reset on next process() call
+    // Keep previousDeps to maintain dependency memory
+  }
+
+  /**
    * Reset the effects manager, clearing all effects and counters.
    */
   reset(): void {
     this.effects = [];
     this.previousDeps.clear();
-    this.idCounter = 0;
+    this.registrationOrder = 0;
   }
 
   /**
