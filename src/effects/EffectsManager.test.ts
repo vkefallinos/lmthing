@@ -142,4 +142,76 @@ describe('EffectsManager', () => {
     expect(callback1).toHaveBeenCalledTimes(1);
     expect(callback2).toHaveBeenCalledTimes(1);
   });
+
+  describe('clearEffects()', () => {
+    it('should clear effects list but preserve dependency memory', () => {
+      const manager = new EffectsManager();
+      const callback = vi.fn();
+      const context = createMockContext();
+      const stepModifier = createMockStepModifier();
+
+      let dep = 1;
+
+      // Register and run effect
+      manager.register(callback, [dep]);
+      manager.process(context, stepModifier);
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      // Clear effects list only
+      manager.clearEffects();
+      expect(manager.getEffects()).toHaveLength(0);
+
+      // Re-register with same dependency value
+      manager.register(callback, [dep]);
+      manager.process(context, stepModifier);
+
+      // Should NOT run because dependency didn't change (memory preserved)
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('should run effect after clearEffects when dependency changes', () => {
+      const manager = new EffectsManager();
+      const callback = vi.fn();
+      const context = createMockContext();
+      const stepModifier = createMockStepModifier();
+
+      let dep = 1;
+
+      // Register and run effect
+      manager.register(callback, [dep]);
+      manager.process(context, stepModifier);
+      expect(callback).toHaveBeenCalledTimes(1);
+
+      // Clear effects list only
+      manager.clearEffects();
+
+      // Re-register with changed dependency
+      dep = 2;
+      manager.register(callback, [dep]);
+      manager.process(context, stepModifier);
+
+      // Should run because dependency changed
+      expect(callback).toHaveBeenCalledTimes(2);
+    });
+
+    it('should reset registration order after process', () => {
+      const manager = new EffectsManager();
+      const callback = vi.fn();
+      const context = createMockContext();
+      const stepModifier = createMockStepModifier();
+
+      manager.register(callback);
+      let firstEffects = manager.getEffects();
+      expect(firstEffects[0].id).toBe(0); // First registration
+
+      manager.process(context, stepModifier); // This resets registrationOrder
+
+      manager.clearEffects();
+      manager.register(callback);
+      let secondEffects = manager.getEffects();
+      
+      // After process, registration order resets, so new registration gets ID 0 again
+      expect(secondEffects[0].id).toBe(0);
+    });
+  });
 });
