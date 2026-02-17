@@ -4,6 +4,21 @@ import { runPrompt } from '../../runPrompt';
 import { functionPlugin, func, funcAgent } from './index';
 import { createMockModel } from '../../test/createMockModel';
 
+function getRunToolCodeResults(prompt: any) {
+  return prompt.steps
+    .flatMap((step: any) => step.input?.prompt || [])
+    .flatMap((message: any) => message.content || [])
+    .filter((content: any) => content.type === 'tool-result' && content.toolName === 'runToolCode');
+}
+
+function getMessageText(content: any): string {
+  if (typeof content === 'string') return content;
+  if (Array.isArray(content)) {
+    return content.map((part: any) => (typeof part === 'string' ? part : part?.text || '')).join('');
+  }
+  return '';
+}
+
 describe('FunctionPlugin', () => {
   describe('defFunction - single functions', () => {
     it('should register a function and generate system prompt', async () => {
@@ -683,9 +698,167 @@ describe('FunctionPlugin', () => {
 
       await result.text;
 
-      // Snapshot the execution steps
-      const steps = (prompt as any).steps;
-      expect(steps).toMatchSnapshot('agent-execution-steps');
+      const toolResults = getRunToolCodeResults(prompt as any);
+      expect(toolResults).toHaveLength(1);
+      expect(toolResults[0].output.value).toEqual({
+        success: true,
+        result: { summary: 'Test summary', score: 85 }
+      });
+    });
+
+    it('should propagate schema validation failures as runtime tool errors', async () => {
+      const childMockModel = createMockModel([
+        { type: 'text', text: '{"summary": 123, "score": "oops"}' }
+      ]);
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Analyzing...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: {
+            code: 'const result = await analyzer({ data: "test data" });\nreturn result;'
+          }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          async ({ data }, childPrompt) => {
+            childPrompt.$`Analyze this data: ${data}`;
+          },
+          {
+            responseSchema: z.object({ summary: z.string(), score: z.number() }),
+            model: childMockModel as any
+          }
+        );
+
+        $`Analyze test data`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      const toolResults = getRunToolCodeResults(prompt as any);
+      expect(toolResults).toHaveLength(1);
+      expect(toolResults[0].output.value.success).toBe(false);
+      expect(toolResults[0].output.value.error).toContain('Agent response validation failed');
+      expect(toolResults[0].output.value.message).toBe('Runtime error during execution.');
+    });
+
+    it('should keep error metadata stable across re-executions', async () => {
+      const childMockModel = createMockModel([
+        { type: 'text', text: '{"summary": 123, "score": "oops"}' },
+        { type: 'text', text: '{"summary": 456, "score": "bad"}' }
+      ]);
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'First try...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'await analyzer({ data: "first" });\nreturn "first";' }
+        },
+        { type: 'text', text: 'Second try...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_2',
+          toolName: 'runToolCode',
+          args: { code: 'await analyzer({ data: "second" });\nreturn "second";' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          async ({ data }, childPrompt) => {
+            childPrompt.$`Analyze this data: ${data}`;
+          },
+          {
+            responseSchema: z.object({ summary: z.string(), score: z.number() }),
+            model: childMockModel as any
+          }
+        );
+
+        $`Analyze test data`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      const toolResults = getRunToolCodeResults(prompt as any).filter(
+        (content: any) => content.output?.value?.success === false
+      );
+      expect(toolResults.length).toBeGreaterThanOrEqual(2);
+      const firstFailure = toolResults[toolResults.length - 2];
+      const secondFailure = toolResults[toolResults.length - 1];
+      expect(firstFailure.output.value).toMatchObject({
+        success: false,
+        message: 'Runtime error during execution.'
+      });
+      expect(secondFailure.output.value).toMatchObject({
+        success: false,
+        message: 'Runtime error during execution.'
+      });
+      expect(Object.keys(firstFailure.output.value).sort()).toEqual(
+        Object.keys(secondFailure.output.value).sort()
+      );
+      expect(firstFailure.output.value.error).toContain('Agent response validation failed');
+      expect(secondFailure.output.value.error).toContain('Agent response validation failed');
+    });
+
+    it('should type-check function-agent return shape before sandbox execution', async () => {
+      const childMockModel = createMockModel([
+        { type: 'text', text: '{"summary": "ok", "score": 99}' }
+      ]);
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Analyzing...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: {
+            code: 'const result = await analyzer({ data: "test data" });\nreturn result.nonexistent;'
+          }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('analyzer', 'Analyze data',
+          z.object({ data: z.string() }),
+          async ({ data }, childPrompt) => {
+            childPrompt.$`Analyze this data: ${data}`;
+          },
+          {
+            responseSchema: z.object({ summary: z.string(), score: z.number() }),
+            model: childMockModel as any
+          }
+        );
+
+        $`Analyze test data`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      const toolResults = getRunToolCodeResults(prompt as any);
+      expect(toolResults).toHaveLength(1);
+      expect(toolResults[0].output.value.success).toBe(false);
+      expect(toolResults[0].output.value.errors[0].message).toContain('nonexistent');
+      expect(childMockModel.steps()).toHaveLength(0);
     });
   });
 
@@ -749,6 +922,110 @@ describe('FunctionPlugin', () => {
           plugins: [functionPlugin]
         });
       }).rejects.toThrow('responseSchema');
+    });
+
+    it('should execute composite function-agent namespaces with per-agent options', async () => {
+      const tracePlugin = {
+        defTrace(this: any, label: string) {
+          this.defSystem('trace', `trace:${label}`);
+        }
+      };
+
+      const researcherExecute = vi.fn(async ({ topic }, childPrompt) => {
+        expect((childPrompt as any)._plugins).toEqual([tracePlugin]);
+        (childPrompt as any)._boundPluginMethods.defTrace('research');
+        childPrompt.$`Research: ${topic}`;
+      });
+      const analystExecute = vi.fn(async ({ data }, childPrompt) => {
+        expect((childPrompt as any)._plugins).toEqual([tracePlugin]);
+        (childPrompt as any)._boundPluginMethods.defTrace('analysis');
+        childPrompt.$`Analyze: ${data}`;
+      });
+
+      const researcherModel = createMockModel([
+        { type: 'text', text: '{"findings": ["fact-1", "fact-2"]}' }
+      ]);
+      const analystModel = createMockModel([
+        { type: 'text', text: '{"summary": "Looks good", "score": 91}' }
+      ]);
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Working...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: {
+            code: `
+              const research = await specialists.researcher({ topic: "AI" });
+              const analysis = await specialists.analyst({ data: "AI findings" });
+              return { research, analysis };
+            `
+          }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunctionAgent, $ }) => {
+        defFunctionAgent('specialists', 'Specialist agents', [
+          funcAgent('researcher', 'Research topics',
+            z.object({ topic: z.string() }),
+            researcherExecute,
+            {
+              responseSchema: z.object({ findings: z.array(z.string()) }),
+              model: researcherModel as any,
+              system: 'Research system prompt',
+              plugins: [tracePlugin]
+            }
+          ),
+          funcAgent('analyst', 'Analyze data',
+            z.object({ data: z.string() }),
+            analystExecute,
+            {
+              responseSchema: z.object({ summary: z.string(), score: z.number() }),
+              model: analystModel as any,
+              system: 'Analysis system prompt',
+              plugins: [tracePlugin]
+            }
+          )
+        ]);
+
+        $`Use specialist agents`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      expect(researcherExecute).toHaveBeenCalledWith({ topic: 'AI' }, expect.anything());
+      expect(analystExecute).toHaveBeenCalledWith({ data: 'AI findings' }, expect.anything());
+
+      const toolResults = getRunToolCodeResults(prompt as any);
+      expect(toolResults).toHaveLength(1);
+      expect(toolResults[0].output.value).toEqual({
+        success: true,
+        result: {
+          research: { findings: ['fact-1', 'fact-2'] },
+          analysis: { summary: 'Looks good', score: 91 }
+        }
+      });
+
+      const researcherStep = researcherModel.steps()[0];
+      const researcherSystem = researcherStep.prompt?.find((message: any) => message.role === 'system');
+      expect(researcherSystem).toBeDefined();
+      const researcherSystemText = getMessageText(researcherSystem?.content);
+      expect(researcherSystemText).toContain('Research system prompt');
+      expect(researcherSystemText).toContain('valid JSON');
+      expect(researcherSystemText).toContain('trace:research');
+
+      const analystStep = analystModel.steps()[0];
+      const analystSystem = analystStep.prompt?.find((message: any) => message.role === 'system');
+      expect(analystSystem).toBeDefined();
+      const analystSystemText = getMessageText(analystSystem?.content);
+      expect(analystSystemText).toContain('Analysis system prompt');
+      expect(analystSystemText).toContain('valid JSON');
+      expect(analystSystemText).toContain('trace:analysis');
     });
   });
 
