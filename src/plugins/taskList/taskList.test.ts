@@ -5,8 +5,10 @@
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { z } from 'zod';
 import { StatefulPrompt } from '../../StatefulPrompt';
 import { createMockModel } from '../../test/createMockModel';
+import { runPrompt } from '../../runPrompt';
 import { taskListPlugin } from './taskList';
 import type { Task, TaskStatus } from '../types';
 
@@ -448,6 +450,127 @@ describe('taskListPlugin', () => {
       expect(state?.[1].status).toBe('in_progress');
       expect(state?.[2].status).toBe('completed');
       expect(state?.[3].status).toBe('failed');
+    });
+  });
+
+  describe('mock-model step lifecycle validation', () => {
+    it('should expose initial task state and persist task updates across steps', async () => {
+      const mockModel = createMockModel([
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'startTask', args: { taskId: 't1' } },
+        { type: 'text', text: 'Task started' }
+      ]);
+
+      const initialTasks: Task[] = [
+        { id: 't1', name: 'Investigate plugin', status: 'pending' }
+      ];
+      let initialExposedStatus: TaskStatus | undefined;
+
+      const { result, prompt } = await runPrompt(async ({ defTaskList, $ }) => {
+        const [tasks] = defTaskList(initialTasks);
+        initialExposedStatus ??= tasks[0]?.status;
+        $`Start task t1`;
+      }, { model: mockModel, plugins: [taskListPlugin] });
+
+      await result.text;
+
+      expect(initialExposedStatus).toBe('pending');
+      expect(prompt.getState<Task[]>('taskList')?.[0].status).toBe('in_progress');
+    });
+
+    it('should enforce invalid transitions and allow restart from failed across steps', async () => {
+      const mockModel = createMockModel([
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'completeTask', args: { taskId: 't1' } },
+        { type: 'tool-call', toolCallId: 'c2', toolName: 'failTask', args: { taskId: 't1', reason: 'blocked' } },
+        { type: 'tool-call', toolCallId: 'c3', toolName: 'startTask', args: { taskId: 't1' } },
+        { type: 'tool-call', toolCallId: 'c4', toolName: 'completeTask', args: { taskId: 't1' } },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defTaskList, $ }) => {
+        defTaskList([{ id: 't1', name: 'Transition task', status: 'pending' }]);
+        $`Run full lifecycle for t1`;
+      }, { model: mockModel, plugins: [taskListPlugin] });
+
+      await result.text;
+
+      const toolOutputs = prompt.fullSteps
+        .flatMap(step => step.input.prompt.filter(msg => msg.role === 'tool'))
+        .flatMap(msg => Array.isArray(msg.content) ? msg.content : [])
+        .filter(content => content.type === 'tool-result')
+        .map(content => (content.output as any).value);
+
+      expect(toolOutputs.some(output => output.success === false && output.message.includes('still pending'))).toBe(true);
+      expect(toolOutputs.some(output => output.success === true && output.message.includes('Restarted failed task'))).toBe(true);
+      expect(prompt.getState<Task[]>('taskList')?.[0].status).toBe('completed');
+    });
+
+    it('should render updated task status into system step modifications via defEffect', async () => {
+      const prompt = createTestPrompt();
+      prompt.defTaskList([{ id: 't1', name: 'Render status', status: 'pending' }]);
+      await prompt.getTools().startTask!.execute({ taskId: 't1' });
+
+      (prompt as any)._processEffects({ messages: [], stepNumber: 2 });
+      const taskListSystem = (prompt as any)._stepModifications.systems?.[0]?.value as string;
+
+      expect(taskListSystem).toContain('## Current Task Status');
+      expect(taskListSystem).toContain('### In Progress (1)');
+      expect(taskListSystem).toContain('- [t1] Render status');
+      expect(taskListSystem).toContain('### Pending (0)');
+    });
+
+    it('should keep plugin tool definitions stable and avoid duplicate user messages during re-execution', async () => {
+      const mockModel = createMockModel([
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'startTask', args: { taskId: 't1' } },
+        { type: 'tool-call', toolCallId: 'c2', toolName: 'failTask', args: { taskId: 't1', reason: 'retry' } },
+        { type: 'text', text: 'Finished re-executions' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defTaskList, $ }) => {
+        defTaskList([{ id: 't1', name: 'Dedup task', status: 'pending' }]);
+        $`Manage task t1`;
+      }, { model: mockModel, plugins: [taskListPlugin] });
+
+      await result.text;
+
+      for (const step of prompt.fullSteps) {
+        const userMessages = step.input.prompt.filter(m => m.role === 'user');
+        expect(userMessages).toHaveLength(1);
+      }
+
+      for (const step of prompt.steps) {
+        expect(step.activeTools).toEqual(['startTask', 'completeTask', 'failTask']);
+        expect(new Set(step.activeTools).size).toBe(step.activeTools.length);
+      }
+
+      expect(Object.keys(prompt.getTools()).sort()).toEqual(['completeTask', 'failTask', 'startTask']);
+    });
+
+    it('should interoperate with def, defSystem, defState, and defTool in mixed scenarios', async () => {
+      const mockModel = createMockModel([
+        { type: 'tool-call', toolCallId: 'c1', toolName: 'startTask', args: { taskId: 't1' } },
+        { type: 'tool-call', toolCallId: 'c2', toolName: 'setMode', args: { mode: 'execution' } },
+        { type: 'text', text: 'Mixed scenario complete' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ def, defSystem, defState, defTool, defTaskList, $ }) => {
+        const project = def('PROJECT', 'Apollo');
+        defSystem('role', `Coordinate work for ${project}`);
+        const [, setMode] = defState('mode', 'planning');
+        defTaskList([{ id: 't1', name: 'Mixed task', status: 'pending' }]);
+        defTool('setMode', 'Set mode', z.object({ mode: z.string() }), async ({ mode }) => {
+          setMode(mode);
+          return { success: true, mode };
+        });
+
+        $`Work on ${project}`;
+      }, { model: mockModel, plugins: [taskListPlugin] });
+
+      await result.text;
+
+      expect(prompt.getState<string>('mode')).toBe('execution');
+      expect(prompt.getState<Task[]>('taskList')?.[0].status).toBe('in_progress');
+      expect(prompt.variables.PROJECT?.value).toBe('Apollo');
+      expect((prompt as any).systems.role).toContain('<PROJECT>');
     });
   });
 });
