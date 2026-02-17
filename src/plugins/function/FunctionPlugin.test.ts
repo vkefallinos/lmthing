@@ -590,6 +590,60 @@ describe('FunctionPlugin', () => {
       expect(beforeCallFn).toHaveBeenCalled();
       expect(executeFn).not.toHaveBeenCalled(); // Should be skipped
     });
+
+    it('should allow onError to recover from response schema validation errors', async () => {
+      const onErrorFn = vi.fn(async () => ({ sum: 0 }));
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Calculating...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await calculate({ a: 5, b: 3 });\nreturn result.sum;' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
+        defFunction('calculate', 'Add two numbers',
+          z.object({ a: z.number(), b: z.number() }),
+          async ({ a, b }) => ({ wrongProperty: a + b }),
+          {
+            responseSchema: z.object({ sum: z.number() }),
+            onError: onErrorFn
+          }
+        );
+
+        $`Calculate 5 + 3`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+      expect(onErrorFn).toHaveBeenCalled();
+
+      const steps = (prompt as any).steps;
+      let toolResult: any = null;
+      for (const step of steps) {
+        if (step.input?.prompt) {
+          for (const message of step.input.prompt) {
+            if (message.role === 'tool' && message.content) {
+              for (const content of message.content) {
+                if (content.type === 'tool-result' && content.toolName === 'runToolCode') {
+                  toolResult = content;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      expect(toolResult).toBeDefined();
+      expect(toolResult.output.value.success).toBe(true);
+      expect(toolResult.output.value.result).toBe(0);
+    });
   });
 
   describe('Security', () => {
@@ -981,6 +1035,146 @@ describe('FunctionPlugin', () => {
       // Snapshot the execution steps
       const steps = (prompt as any).steps;
       expect(steps).toMatchSnapshot('mixed-function-agent-execution-steps');
+    });
+  });
+
+  describe('defFunction integrations with other def* APIs', () => {
+    it('should coexist with defTool in the same execution flow', async () => {
+      const calculateFn = vi.fn(async ({ a, b }) => ({ sum: a + b }));
+      const echoToolFn = vi.fn(async ({ message }) => ({ echoed: message }));
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Using function...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await calculate({ a: 2, b: 3 });\nreturn result.sum;' }
+        },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_2',
+          toolName: 'echoTool',
+          args: { message: 'hello' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result } = await runPrompt(async ({ defFunction, defTool, $ }) => {
+        defFunction('calculate', 'Add two numbers',
+          z.object({ a: z.number(), b: z.number() }),
+          calculateFn,
+          { responseSchema: z.object({ sum: z.number() }) }
+        );
+
+        defTool(
+          'echoTool',
+          'Echo input message',
+          z.object({ message: z.string() }),
+          echoToolFn
+        );
+
+        $`Use both calculate and echoTool`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+      expect(calculateFn).toHaveBeenCalledWith({ a: 2, b: 3 });
+      expect(echoToolFn).toHaveBeenCalledWith({ message: 'hello' }, expect.anything());
+    });
+
+    it('should integrate with defState and defEffect across function-call re-execution', async () => {
+      const mockModel = createMockModel([
+        { type: 'text', text: 'First pass' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'await calculate({ a: 1, b: 2 });\nreturn "ok";' }
+        },
+        { type: 'text', text: 'Second pass' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunction, defState, defEffect, defSystem, getState, $ }) => {
+        const [, setCallCount] = defState('callCount', 0);
+        defSystem('call_count', `count:${getState<number>('callCount')}`);
+
+        defEffect(() => {
+          defSystem('effect_marker', `effect_count:${getState<number>('callCount')}`);
+        }, [getState<number>('callCount')]);
+
+        defFunction('calculate', 'Add two numbers',
+          z.object({ a: z.number(), b: z.number() }),
+          async ({ a, b }) => ({ sum: a + b }),
+          {
+            responseSchema: z.object({ sum: z.number() }),
+            onSuccess: async () => {
+              setCallCount(prev => prev + 1);
+            }
+          }
+        );
+
+        $`Call calculate once`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+      const systems = (prompt as any).systems;
+      expect(systems['call_count']).toContain('count:1');
+      expect(systems['effect_marker']).toContain('effect_count:1');
+    });
+
+    it('should integrate with def, defData, defSystem, and defMessage without breaking function execution', async () => {
+      const calculateFn = vi.fn(async ({ a, b }) => ({ sum: a + b }));
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Preparing...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await calculate({ a: 7, b: 8 });\nreturn result.sum;' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ def, defData, defSystem, defMessage, defFunction, $ }) => {
+        def('USER_NAME', 'Alice');
+        defData('SETTINGS', { mode: 'strict', retries: 2 });
+        defSystem('rules', 'Always follow tool output.');
+        defMessage('user', 'Additional context from defMessage');
+
+        defFunction('calculate', 'Add two numbers',
+          z.object({ a: z.number(), b: z.number() }),
+          calculateFn,
+          { responseSchema: z.object({ sum: z.number() }) }
+        );
+
+        $`Calculate with context`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+      expect(calculateFn).toHaveBeenCalledWith({ a: 7, b: 8 });
+
+      const systems = (prompt as any).systems;
+      const steps = (prompt as any).steps;
+      expect(systems['rules']).toContain('Always follow tool output.');
+      expect(systems['available_functions']).toContain('calculate');
+      const hasVariablesInSystemPrompt = steps.some((step: any) =>
+        step.input?.prompt?.some((message: any) =>
+          message.role === 'system' &&
+          typeof message.content === 'string' &&
+          message.content.includes('<USER_NAME>') &&
+          message.content.includes('<SETTINGS>')
+        )
+      );
+      expect(hasVariablesInSystemPrompt).toBe(true);
     });
   });
 });
