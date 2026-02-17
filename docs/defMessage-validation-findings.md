@@ -129,6 +129,18 @@ function getMessageContent(message: any): string {
 **Coverage Areas**:
 
 1. **User message insertion and deduplication** (3 tests)
+2. **Assistant message behavior** (3 tests)
+3. **Message ordering** (2 tests)
+4. **Edge cases** (6 tests)
+5. **Proxy variable interpolation** (3 tests)
+6. **Message history tracking** (4 tests)
+7. **Role handling** (2 tests)
+
+Total: 3 + 3 + 2 + 6 + 3 + 4 + 2 = 23 items covered in 21 tests (some tests cover multiple items)
+
+**Coverage Areas**:
+
+1. **User message insertion and deduplication** (3 tests)
    - Initial insertion
    - Deduplication on re-execution
    - Multiple distinct messages without duplication
@@ -152,7 +164,7 @@ function getMessageContent(message: any): string {
    - defData() proxy interpolation
    - Multiple proxy interpolations
 
-6. **Message history tracking** (3 tests)
+6. **Message history tracking** (4 tests)
    - User messages in step history
    - Assistant messages in step history
    - Conversation structure across multiple steps
