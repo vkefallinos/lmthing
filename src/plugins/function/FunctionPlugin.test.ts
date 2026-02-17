@@ -4,19 +4,31 @@ import { runPrompt } from '../../runPrompt';
 import { functionPlugin, func, funcAgent } from './index';
 import { createMockModel } from '../../test/createMockModel';
 
-function getRunToolCodeResults(prompt: any) {
-  return prompt.steps
-    .flatMap((step: any) => step.input?.prompt || [])
-    .flatMap((message: any) => message.content || [])
-    .filter((content: any) => content.type === 'tool-result' && content.toolName === 'runToolCode');
-}
+type RunToolCodeResult = {
+  success: boolean;
+  message?: string;
+  result?: unknown;
+  errors?: unknown[];
+  error?: string;
+};
 
-function getMessageText(content: any): string {
-  if (typeof content === 'string') return content;
-  if (Array.isArray(content)) {
-    return content.map((part: any) => (typeof part === 'string' ? part : part?.text || '')).join('');
+function getRunToolCodeResults(prompt: { steps?: any[] }): RunToolCodeResult[] {
+  const results: RunToolCodeResult[] = [];
+  const steps = prompt.steps || [];
+
+  for (const step of steps) {
+    if (!step.input?.prompt) continue;
+    for (const message of step.input.prompt) {
+      if (message.role !== 'tool' || !message.content) continue;
+      for (const content of message.content) {
+        if (content.type === 'tool-result' && content.toolName === 'runToolCode') {
+          results.push(content.output.value);
+        }
+      }
+    }
   }
-  return '';
+
+  return results;
 }
 
 describe('FunctionPlugin', () => {
@@ -301,6 +313,74 @@ describe('FunctionPlugin', () => {
       // Snapshot the complete execution steps
       expect(steps).toMatchSnapshot('typescript-validation-failed-wrong-types-steps');
     });
+
+    it('should support type-check correction flow from invalid to corrected code', async () => {
+      const addFn = vi.fn(async ({ a, b }) => ({ result: a + b }));
+
+      const invalidModel = createMockModel([
+        { type: 'text', text: 'Attempting...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await math.add({ x: 8, y: 2 });\nreturn result.result;' }
+        },
+        { type: 'text', text: 'Error' }
+      ]);
+
+      const { result: invalidResult, prompt: invalidPrompt } = await runPrompt(async ({ defFunction, $ }) => {
+        defFunction('math', 'Math operations', [
+          func('add', 'Add numbers',
+            z.object({ a: z.number(), b: z.number() }),
+            addFn,
+            { responseSchema: z.object({ result: z.number() }) }
+          )
+        ]);
+
+        $`Calculate 8 + 2`;
+      }, {
+        model: invalidModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await invalidResult.text;
+      const invalidResults = getRunToolCodeResults(invalidPrompt);
+      expect(invalidResults.some((result) => result.success === false)).toBe(true);
+      expect(invalidResults.some((result) => result.message === 'TypeScript validation failed. Fix the errors and try again.')).toBe(true);
+      expect(addFn).not.toHaveBeenCalled();
+
+      const validModel = createMockModel([
+        { type: 'text', text: 'Retrying...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_2',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await math.add({ a: 8, b: 2 });\nreturn result.result;' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result: validResult, prompt: validPrompt } = await runPrompt(async ({ defFunction, $ }) => {
+        defFunction('math', 'Math operations', [
+          func('add', 'Add numbers',
+            z.object({ a: z.number(), b: z.number() }),
+            addFn,
+            { responseSchema: z.object({ result: z.number() }) }
+          )
+        ]);
+
+        $`Calculate 8 + 2`;
+      }, {
+        model: validModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await validResult.text;
+      const validResults = getRunToolCodeResults(validPrompt);
+      expect(validResults.some((result) => result.success === true && result.result === 10)).toBe(true);
+      expect(addFn).toHaveBeenCalledTimes(1);
+      expect(addFn).toHaveBeenCalledWith({ a: 8, b: 2 });
+    });
   });
 
   describe('Sandbox execution', () => {
@@ -388,6 +468,41 @@ describe('FunctionPlugin', () => {
       const steps = (prompt as any).steps;
       expect(steps).toMatchSnapshot('composite-function-execution-steps');
     });
+
+    it('should enforce response schema for function outputs', async () => {
+      const executeFn = vi.fn(async ({ a, b }) => ({ total: a + b }));
+
+      const mockModel = createMockModel([
+        { type: 'text', text: 'Calculating...' },
+        {
+          type: 'tool-call',
+          toolCallId: 'call_1',
+          toolName: 'runToolCode',
+          args: { code: 'const result = await calculate({ a: 10, b: 5 });\nreturn result;' }
+        },
+        { type: 'text', text: 'Done' }
+      ]);
+
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
+        defFunction('calculate', 'Add two numbers',
+          z.object({ a: z.number(), b: z.number() }),
+          executeFn as any,
+          { responseSchema: z.object({ sum: z.number() }) }
+        );
+
+        $`Calculate 10 + 5`;
+      }, {
+        model: mockModel as any,
+        plugins: [functionPlugin]
+      });
+
+      await result.text;
+
+      const runToolCodeResults = getRunToolCodeResults(prompt);
+      expect(runToolCodeResults).toHaveLength(1);
+      expect(runToolCodeResults[0].success).toBe(false);
+      expect(runToolCodeResults[0].message).toBe('Runtime error during execution.');
+    });
   });
 
   describe('Callbacks', () => {
@@ -463,7 +578,9 @@ describe('FunctionPlugin', () => {
 
     it('should execute onError callback on validation errors', async () => {
       const onErrorFn = vi.fn(async (input, error) => undefined);
-      const executeFn = vi.fn(async ({ a, b }) => ({ sum: a + b }));
+      const executeFn = vi.fn(async (_args: { a: number; b: number }) => {
+        throw new Error('Execution failed');
+      });
 
       const mockModel = createMockModel([
         { type: 'text', text: 'Calculating...' },
@@ -471,12 +588,12 @@ describe('FunctionPlugin', () => {
           type: 'tool-call',
           toolCallId: 'call_1',
           toolName: 'runToolCode',
-          args: { code: 'const result = await calculate({ a: "invalid", b: 3 });' } // Invalid input
+          args: { code: 'const result = await calculate({ a: 5, b: 3 });\nreturn result;' }
         },
         { type: 'text', text: 'Done' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunction, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('calculate', 'Add two numbers',
           z.object({ a: z.number(), b: z.number() }),
           executeFn,
@@ -493,7 +610,14 @@ describe('FunctionPlugin', () => {
       });
 
       await result.text;
-      // onError should be called due to validation failure
+      expect(onErrorFn).toHaveBeenCalledTimes(1);
+      expect(onErrorFn).toHaveBeenCalledWith(
+        { a: 5, b: 3 },
+        expect.objectContaining({ message: 'Execution failed' })
+      );
+      const runToolCodeResults = getRunToolCodeResults(prompt);
+      expect(runToolCodeResults[0].success).toBe(false);
+      expect(runToolCodeResults[0].message).toBe('Runtime error during execution.');
     });
 
     it('should allow beforeCall to short-circuit execution', async () => {
@@ -546,7 +670,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Error' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunction, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('test', 'Test function',
           z.object({}),
           async () => ({ result: 'ok' }),
@@ -560,7 +684,9 @@ describe('FunctionPlugin', () => {
       });
 
       await result.text;
-      // Should fail due to security restrictions
+      const runToolCodeResults = getRunToolCodeResults(prompt);
+      expect(runToolCodeResults).toHaveLength(1);
+      expect(runToolCodeResults[0].success).toBe(false);
     });
 
     it('should block eval calls', async () => {
@@ -575,7 +701,7 @@ describe('FunctionPlugin', () => {
         { type: 'text', text: 'Error' }
       ]);
 
-      const { result } = await runPrompt(async ({ defFunction, $ }) => {
+      const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('test', 'Test function',
           z.object({}),
           async () => ({ result: 'ok' }),
@@ -589,7 +715,11 @@ describe('FunctionPlugin', () => {
       });
 
       await result.text;
-      // Should fail due to security restrictions
+      const runToolCodeResults = getRunToolCodeResults(prompt);
+      expect(runToolCodeResults).toHaveLength(1);
+      const firstResult = runToolCodeResults[0];
+      expect(firstResult.success).toBe(false);
+      expect(firstResult.message).toBe('Runtime error during execution.');
     });
   });
 
