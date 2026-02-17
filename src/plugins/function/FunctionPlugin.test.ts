@@ -623,6 +623,9 @@ describe('FunctionPlugin', () => {
 
       await result.text;
       expect(onErrorFn).toHaveBeenCalled();
+      const onErrorCall = onErrorFn.mock.calls[0];
+      expect(onErrorCall?.[1]).toBeInstanceOf(Error);
+      expect((onErrorCall?.[1] as Error).message).toContain('Invalid input');
 
       const steps = (prompt as any).steps;
       let toolResult: any = null;
@@ -1085,7 +1088,7 @@ describe('FunctionPlugin', () => {
       expect(echoToolFn).toHaveBeenCalledWith({ message: 'hello' }, expect.anything());
     });
 
-    it('should integrate with defState and defEffect across function-call re-execution', async () => {
+    it('should integrate with defState and defEffect during function execution', async () => {
       const mockModel = createMockModel([
         { type: 'text', text: 'First pass' },
         {
@@ -1098,7 +1101,7 @@ describe('FunctionPlugin', () => {
       ]);
 
       const { result, prompt } = await runPrompt(async ({ defFunction, defState, defEffect, defSystem, getState, $ }) => {
-        const [, setCallCount] = defState('callCount', 0);
+        const [_unusedCallCount, setCallCount] = defState('callCount', 0);
         defSystem('call_count', `count:${getState<number>('callCount')}`);
 
         defEffect(() => {
