@@ -365,7 +365,7 @@ describe('FunctionPlugin', () => {
       const { result, prompt } = await runPrompt(async ({ defFunction, $ }) => {
         defFunction('calculate', 'Add two numbers',
           z.object({ a: z.number(), b: z.number() }),
-          async ({ a, b }) => ({ total: a + b }),
+          async ({ a, b }) => ({ wrongProperty: a + b }),
           { responseSchema: z.object({ sum: z.number() }) }
         );
 
