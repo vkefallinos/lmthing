@@ -33,13 +33,13 @@ This document summarizes the findings from comprehensive validation testing of t
 - Multiple `remind()` calls
 - Conditional disable based on state
 
-### ✅ Edge Cases (5 tests)
+### ✅ Edge Cases (4 tests)
 - Very long variable values (10,000 characters)
 - Variable names with underscores and numbers
 - Unicode characters (emoji, Chinese, Arabic)
 - Rapid successive def() calls (100 variables)
 
-### ✅ Interactions with Related APIs (5 tests)
+### ✅ Interactions with Related APIs (6 tests)
 - Integration with `$` template literal
 - Integration with `defMessage`
 - Integration with `defEffect`
