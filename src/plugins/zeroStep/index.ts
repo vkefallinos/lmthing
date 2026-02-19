@@ -21,5 +21,8 @@
 
 export { zeroStepPlugin, defMethod } from './ZeroStepPlugin';
 export type { MethodDefinition } from './types';
+export type { TypeCheckError, TypeCheckResult } from './typeChecker';
 export { MethodRegistry } from './MethodRegistry';
 export { createZeroStepTransformer } from './streamProcessor';
+export { validateTypeScript } from './typeChecker';
+export { generateTypeDeclarations } from './typeGenerator';

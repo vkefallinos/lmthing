@@ -1,5 +1,6 @@
 import { VM } from 'vm2';
 import type { MethodRegistry } from './MethodRegistry';
+import { validateTypeScript } from './typeChecker';
 
 const RUN_CODE_OPEN = '<run_code>';
 const RUN_CODE_CLOSE = '</run_code>';
@@ -37,16 +38,26 @@ function buildSandbox(registry: MethodRegistry): Record<string, any> {
 }
 
 /**
- * Executes a code block in a secure sandbox.
+ * Executes a code block in a secure sandbox, after first validating it with
+ * the TypeScript type checker.
  * Returns:
  *  - { type: 'return', value } when the code returns a non-undefined value
  *  - { type: 'no-return' } when the code returns undefined (no explicit return)
- *  - { type: 'error', message } when execution throws
+ *  - { type: 'error', message } when type checking or execution throws
  */
 async function tryExecuteCode(
   code: string,
   registry: MethodRegistry
 ): Promise<{ type: 'return'; value: any } | { type: 'no-return' } | { type: 'error'; message: string }> {
+  // --- TypeScript validation (line-by-line gate) ---
+  const typeCheck = validateTypeScript(code, registry);
+  if (!typeCheck.valid) {
+    const errorSummary = typeCheck.errors
+      .map(e => `Line ${e.line}: ${e.message}`)
+      .join('\n');
+    return { type: 'error', message: `TypeScript error:\n${errorSummary}` };
+  }
+
   const sandbox = buildSandbox(registry);
   const vm = new VM({
     timeout: 5000,
