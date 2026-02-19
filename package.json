@@ -17,6 +17,10 @@
     "./plugins": {
       "types": "./dist/plugins/index.d.ts",
       "default": "./dist/plugins/index.js"
+    },
+    "./observability": {
+      "types": "./dist/observability/index.d.ts",
+      "default": "./dist/observability/index.js"
     }
   },
   "bin": {
@@ -51,9 +55,12 @@
     "@ai-sdk/mistral": "^3.0.20",
     "@ai-sdk/openai": "^3.0.29",
     "@ai-sdk/openai-compatible": "^2.0.30",
+    "@langfuse/otel": "^4.6.1",
+    "@opentelemetry/sdk-trace-node": "^2.5.1",
     "ai": "^6.0.86",
     "dotenv": "^16.4.5",
     "js-yaml": "^4.1.1",
+    "langfuse": "^3.38.6",
     "vm2": "^3.9.19",
     "zod": "^4.1.13",
     "zod-to-ts": "^2.0.0"
