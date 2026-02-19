@@ -307,6 +307,207 @@ preferredUnit: metric
 ]
 `;
 
+exports[`runPrompt > should snapshot defState re-execution across multiple steps 1`] = `
+[
+  {
+    "activeTools": [
+      "increment",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Current counter value is 0",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "amount": 5,
+          },
+          "toolCallId": "tc_increment",
+          "toolName": "increment",
+          "type": "tool-call",
+        },
+        {
+          "text": "Step 0 reply",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "increment",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Current counter value is 0",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Step 0 reply",
+              "type": "text",
+            },
+            {
+              "input": {
+                "amount": 5,
+              },
+              "toolCallId": "tc_increment",
+              "toolName": "increment",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "newCount": 5,
+                },
+              },
+              "toolCallId": "tc_increment",
+              "toolName": "increment",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "amount": 3,
+          },
+          "toolCallId": "tc_increment_2",
+          "toolName": "increment",
+          "type": "tool-call",
+        },
+        {
+          "text": "Step 1 reply",
+          "type": "text",
+        },
+      ],
+      "finishReason": "tool-calls",
+    },
+  },
+  {
+    "activeTools": [
+      "increment",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Current counter value is 0",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "text": "Step 0 reply",
+              "type": "text",
+            },
+            {
+              "input": {
+                "amount": 5,
+              },
+              "toolCallId": "tc_increment",
+              "toolName": "increment",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "newCount": 5,
+                },
+              },
+              "toolCallId": "tc_increment",
+              "toolName": "increment",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "text": "Step 1 reply",
+              "type": "text",
+            },
+            {
+              "input": {
+                "amount": 3,
+              },
+              "toolCallId": "tc_increment_2",
+              "toolName": "increment",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "newCount": 8,
+                },
+              },
+              "toolCallId": "tc_increment_2",
+              "toolName": "increment",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Step 2 reply",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
 exports[`runPrompt > should support defAgent for creating hierarchical agent workflows 1`] = `
 [
   {
@@ -676,6 +877,36 @@ Transform, filter, and aggregate data.
       "content": [
         {
           "text": "All agent tasks completed successfully!",
+          "type": "text",
+        },
+      ],
+      "finishReason": "stop",
+    },
+  },
+]
+`;
+
+exports[`runPrompt > should work with minimal configuration 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Hello, world!",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "Simple response without tools.",
           "type": "text",
         },
       ],

@@ -174,7 +174,7 @@ describe('runPrompt', () => {
 
     const config = { model: mockModel };
 
-    const {result} = await runPrompt(simplePromptFunction, config);
+    const { result, prompt } = await runPrompt(simplePromptFunction, config);
 
     const text = await result.text;
     expect(text).toBe('Simple response without tools.');
@@ -184,6 +184,9 @@ describe('runPrompt', () => {
     
     const toolResults = await result.toolResults;
     expect(toolResults).toHaveLength(0);
+
+    // Snapshot the steps to verify the prompt/response structure
+    expect(prompt.steps).toMatchSnapshot();
   });
 
   it('should support defAgent for creating hierarchical agent workflows', async () => {
@@ -303,5 +306,62 @@ describe('runPrompt', () => {
       ) || []
     );
     expect(agentToolCalls.length).toBe(2);
+  });
+
+  it('should snapshot defState re-execution across multiple steps', async () => {
+    // This test verifies the stateful re-execution lifecycle:
+    //  - The prompt function re-runs after each tool call (providing updated `count` to tools)
+    //  - Tool results in the snapshot reflect the accumulating counter (5, then 8)
+    //  - User messages ($`...`) are deduplicated: only added once on first execution,
+    //    so the message reads "Current counter value is 0" throughout even though the
+    //    internal state does update. Use defEffect + stepModifier to inject dynamic
+    //    messages if live user-message updates are needed.
+    const mockModel = createMockModel([
+      { type: 'text', text: 'Step 0 reply' },
+      {
+        type: 'tool-call',
+        toolCallId: 'tc_increment',
+        toolName: 'increment',
+        args: { amount: 5 }
+      },
+      { type: 'text', text: 'Step 1 reply' },
+      {
+        type: 'tool-call',
+        toolCallId: 'tc_increment_2',
+        toolName: 'increment',
+        args: { amount: 3 }
+      },
+      { type: 'text', text: 'Step 2 reply' }
+    ]);
+
+    const { result, prompt } = await runPrompt(
+      async ({ defState, defTool, $ }) => {
+        const [count, setCount] = defState('counter', 0);
+
+        defTool(
+          'increment',
+          'Increment the counter',
+          z.object({ amount: z.number() }),
+          async ({ amount }) => {
+            setCount((prev: number) => prev + amount);
+            return { newCount: count + amount };
+          }
+        );
+
+        $`Current counter value is ${count}`;
+      },
+      { model: mockModel }
+    );
+
+    await result.text;
+
+    // Verify the snapshot captures the full 3-step lifecycle
+    expect(prompt.steps.length).toBe(3);
+
+    // The final counter state should be 0+5+3=8, verified via getState
+    expect(prompt.getState('counter')).toBe(8);
+
+    // Full steps snapshot for comprehensive regression coverage
+    expect(prompt.steps).toMatchSnapshot();
   });
 });
