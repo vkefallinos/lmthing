@@ -32,6 +32,9 @@ export type PrepareStepOptions<TOOLS extends ToolSet> = {
     messages: Array<ModelMessage>;
 };
 
+// Type for stream transformers that can modify the raw LLM output stream
+export type StreamTransformer = (stream: ReadableStream<any>) => ReadableStream<any>;
+
 export class StreamTextBuilder {
     private _model?: LanguageModel;
     private _systemParts: Array<string> = [];
@@ -47,6 +50,8 @@ export class StreamTextBuilder {
     // prepareStep hooks return modifications to the step
     private _prepareStepHooks: Array<(options: PrepareStepOptions<any>) => PrepareStepResult<any> | Promise<PrepareStepResult<any>>> = [];
     private _lastPrepareStep?: (options: PrepareStepOptions<any>) => PrepareStepResult<any> | Promise<PrepareStepResult<any>>;
+    // Stream transformers applied to the consumer stream in middleware
+    private _streamTransformers: Array<StreamTransformer> = [];
     constructor(model?: ModelInput) {
         if (model) {
           this.withModel(model);
@@ -107,10 +112,16 @@ export class StreamTextBuilder {
                 }
               })();
               
-              // Return the consumer stream for the actual streamText consumer
+              // Apply any registered stream transformers to the consumer stream
+              let transformedStream: ReadableStream<any> = consumerStream;
+              for (const transformer of this._streamTransformers) {
+                transformedStream = transformer(transformedStream);
+              }
+
+              // Return the (possibly transformed) consumer stream for the actual streamText consumer
               return {
                 ...result,
-                stream: consumerStream,
+                stream: transformedStream,
               };
             }
         };
@@ -263,6 +274,16 @@ export class StreamTextBuilder {
      */
     public addPrepareStep(callback: (options: PrepareStepOptions<any>) => PrepareStepResult<any> | Promise<PrepareStepResult<any>>): this {
         this._prepareStepHooks.push(callback);
+        return this;
+    }
+
+    /**
+     * Registers a stream transformer that is applied to the raw LLM output stream.
+     * Transformers are applied in registration order and can modify, filter, or
+     * inject chunks into the text stream (e.g., to process <run_code> blocks).
+     */
+    public addStreamTransformer(transformer: StreamTransformer): this {
+        this._streamTransformers.push(transformer);
         return this;
     }
     public withOptions(options: Partial<Omit<StreamTextOptions, 'model' | 'system' | 'messages' | 'tools' | 'onFinish' | 'onStepFinish' | 'prepareStep'>>): this {

@@ -29,11 +29,14 @@
 import { taskListPlugin } from './taskList';
 import { taskGraphPlugin } from './taskGraph';
 import { functionPlugin } from './function';
+import { zeroStepPlugin } from './zeroStep';
 
 // Re-export individual plugins and utilities
 export { taskListPlugin, defTaskList } from './taskList';
 export { taskGraphPlugin, defTaskGraph, detectCycles, validateTaskGraph, normalizeTaskGraph, getUnblockedTasks } from './taskGraph';
 export { functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from './function';
+export { zeroStepPlugin, defMethod } from './zeroStep';
+export type { MethodDefinition } from './zeroStep';
 
 /**
  * Array of all built-in plugins that are auto-loaded on every prompt instance.
@@ -52,7 +55,7 @@ export { functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from '
  *   $`Complete the tasks`;
  * }, { model: 'openai:gpt-4o' });
  */
-export const builtInPlugins = [taskListPlugin, taskGraphPlugin, functionPlugin] as const;
+export const builtInPlugins = [taskListPlugin, taskGraphPlugin, functionPlugin, zeroStepPlugin] as const;
 
 // Plugin types
 export type {
