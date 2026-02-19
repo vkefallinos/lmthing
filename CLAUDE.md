@@ -39,6 +39,7 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/plugins/taskList.ts` | Built-in task list plugin with `defTaskList` |
 | `src/plugins/taskGraph.ts` | Built-in task graph (DAG) plugin with `defTaskGraph` |
 | `src/plugins/function/` | Built-in function plugin with `defFunction` and `defFunctionAgent` |
+| `src/plugins/zeroStep/` | Built-in zero-step plugin with `defMethod` (inline `<run_code>` execution) |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
 | `tests/integration/` | Integration tests with real LLM APIs |
 
@@ -523,7 +524,7 @@ npx lmthing run <file.lmt.mjs>
 - `config` (required) - Configuration object with `model` property
 - `mock` (optional) - Mock response array when using `model: 'mock'`
 
-**Note:** Built-in plugins (`defTaskList`, `defTaskGraph`, `defFunction`, `defFunctionAgent`) are automatically available in all `.lmt.mjs` files.
+**Note:** Built-in plugins (`defTaskList`, `defTaskGraph`, `defFunction`, `defFunctionAgent`, `defMethod`) are automatically available in all `.lmt.mjs` files.
 
 ```javascript
 // myagent.lmt.mjs
@@ -717,6 +718,7 @@ LM_TEST_MODEL=anthropic:claude-3-5-sonnet-20241022 npm test -- --run tests/integ
 - `tests/integration/defAgent.test.ts` - Agent integration tests
 - `tests/integration/defFunction.test.ts` - Function plugin integration tests
 - `tests/integration/defHooks.test.ts` - State and effect integration tests
+- `tests/integration/defMethod.test.ts` - Zero-step tool calling integration tests
 - `tests/integration/defTaskList.test.ts` - Task list plugin integration tests
 - `tests/integration/defTaskGraph.test.ts` - Task graph (DAG) plugin integration tests
 - `tests/integration/defTool.test.ts` - Tool integration tests
@@ -845,6 +847,7 @@ const { result } = await runPrompt(async ({ defTaskList, defTaskGraph, defFuncti
 - `taskListPlugin` - Provides `defTaskList()` for simple task lists
 - `taskGraphPlugin` - Provides `defTaskGraph()` for dependency-aware DAG tasks
 - `functionPlugin` - Provides `defFunction()` and `defFunctionAgent()` for TypeScript-validated function execution
+- `zeroStepPlugin` - Provides `defMethod()` for inline `<run_code>` zero-step execution
 
 ### Using Custom Plugins
 
@@ -1186,6 +1189,88 @@ If the LLM writes invalid TypeScript (type errors, calling undefined functions, 
 - No access to file system, network, or other Node.js APIs unless explicitly provided
 - TypeScript validation prevents many common errors before execution
 
+**zeroStepPlugin** (`src/plugins/zeroStep/`):
+- Provides `defMethod()` for Zero-Step Tool Calling — the LLM calls registered functions **inline in its text stream** via `<run_code>` blocks, with no tool-call round-trip
+- Code inside `<run_code>` is **TypeScript type-checked line-by-line** before sandbox execution
+- Executes code in a vm2 sandbox with Zod input/output validation on every call
+- Automatically updates the system prompt with each method's description and full TypeScript signature
+- Returns `<code_response>value</code_response>` on explicit `return`, nothing on no-return, and `<code_error>message</code_error>` on type or runtime errors
+
+**Signature:**
+```typescript
+defMethod(name, description, parameterSchema, handler, responseSchema)
+```
+
+| Parameter | Type | Description |
+|---|---|---|
+| `name` | `string` | Method name used inside `<run_code>` code |
+| `description` | `string` | Human-readable description included in the system prompt |
+| `parameterSchema` | `z.ZodType<TInput>` | Zod schema for validating input arguments |
+| `handler` | `(args: TInput) => TOutput \| Promise<TOutput>` | Implementation function |
+| `responseSchema` | `z.ZodType<TOutput>` | Zod schema for validating the return value |
+
+**Example:**
+```typescript
+import { runPrompt } from 'lmthing';
+import { z } from 'zod';
+// No need to import zeroStepPlugin - it's auto-loaded!
+
+const { result } = await runPrompt(async ({ defMethod, $ }) => {
+  defMethod(
+    'fetchUser',
+    'Fetch a user record by ID',
+    z.object({ id: z.string() }),
+    async ({ id }) => ({ name: 'Jane', role: 'Admin' }),
+    z.object({ name: z.string(), role: z.string() })
+  );
+
+  $`Who is user 42? Call fetchUser to find out.`;
+}, { model: 'openai:gpt-4o' });
+
+// LLM response might contain:
+// I'll look that up for you:
+// <run_code>
+//   const user = await fetchUser({ id: "42" });
+//   return user.name;
+// </run_code>
+//
+// The stream transformer replaces that block with:
+//   <code_response>Jane</code_response>
+```
+
+**Execution scenarios:**
+
+| Scenario | Trigger | Stream output |
+|---|---|---|
+| **A — return** | `return` statement reached (line-by-line early detection) | `<code_response>value</code_response>`, stream halted |
+| **B — no return** | `</run_code>` closing tag reached with no `return` | Nothing emitted; streaming continues normally |
+| **C — error** | TypeScript type error or runtime exception | `<code_error>message</code_error>`, stream halted |
+
+**TypeScript type checking:**
+
+Every `<run_code>` block is validated against TypeScript declarations generated from the registered Zod schemas before sandbox execution. If a line fails type checking, the stream halts immediately and the error is reported in a `<code_error>` tag — the handler is never invoked.
+
+```typescript
+// These TypeScript declarations are auto-generated from the schemas:
+declare function fetchUser(args: { id: string }): Promise<{ name: string; role: string }>;
+
+// So this code fails before execution:
+// const u = await fetchUser({ id: 123 }); // TS2322: number not assignable to string
+```
+
+The generated signature also appears in the system prompt so the LLM knows the exact types it must use.
+
+**Internal architecture (`src/plugins/zeroStep/`):**
+
+| File | Purpose |
+|---|---|
+| `types.ts` | `MethodDefinition<TInput, TOutput>` interface |
+| `MethodRegistry.ts` | Stores registered method definitions by name |
+| `typeGenerator.ts` | `generateTypeDeclarations(registry)` — converts Zod schemas → `declare function` TS strings via `zod-to-ts`; `generateMethodSignature(def)` for per-method use |
+| `typeChecker.ts` | `validateTypeScript(code, registry)` — runs TypeScript compiler against generated declarations; returns `TypeCheckResult` with `TypeCheckError[]` |
+| `streamProcessor.ts` | `createZeroStepTransformer(registry)` — `ReadableStream` state-machine transformer (PASSTHROUGH ↔ CODE_BLOCK); runs type check then vm2 sandbox on each complete line |
+| `ZeroStepPlugin.ts` | `defMethod` plugin function; wires transformer once per instance; builds system prompt with signatures |
+
 ### Creating Custom Plugins
 
 ```typescript
@@ -1292,7 +1377,8 @@ Usage:
 ```typescript
 import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier, ToolOptions, AgentOptions, ToolEventCallback } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
-import { taskListPlugin, defTaskList, taskGraphPlugin, defTaskGraph, functionPlugin, defFunction, defFunctionAgent, func, funcAgent } from 'lmthing/plugins';
+import { taskListPlugin, defTaskList, taskGraphPlugin, defTaskGraph, functionPlugin, defFunction, defFunctionAgent, func, funcAgent, zeroStepPlugin, defMethod } from 'lmthing/plugins';
+import type { MethodDefinition, TypeCheckError, TypeCheckResult } from 'lmthing/plugins';
 ```
 
 ## Dependencies
@@ -1303,7 +1389,8 @@ import { taskListPlugin, defTaskList, taskGraphPlugin, defTaskGraph, functionPlu
 - `@ai-sdk/openai-compatible` - OpenAI-compatible provider support
 - `zod` (^4.1.13) - Schema validation
 - `js-yaml` (^4.1.1) - YAML serialization
-- `vm2` (^3.9.19) - Sandboxed code execution for function plugin
+- `vm2` (^3.9.19) - Sandboxed code execution for function plugin and zero-step (`defMethod`) code blocks
+- `zod-to-ts` (^2.0.0) - Converts Zod schemas to TypeScript type nodes (used by `defMethod` type checking)
 
 ### Development
 - `vitest` (^4.0.15) - Test framework
