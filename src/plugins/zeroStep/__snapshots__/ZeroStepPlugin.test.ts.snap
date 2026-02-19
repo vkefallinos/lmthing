@@ -78,6 +78,15 @@ Rules:
 ### fetchUser
 Fetch user by ID
 
+**Signature:**
+\`\`\`typescript
+declare function fetchUser(args: {
+    id: string;
+}): {
+    name: string;
+};
+\`\`\`
+
 </zero_step_methods>",
           "role": "system",
         },
@@ -132,6 +141,16 @@ Rules:
 ### fetchUser
 Fetch user by ID
 
+**Signature:**
+\`\`\`typescript
+declare function fetchUser(args: {
+    id: string;
+}): {
+    name: string;
+    role: string;
+};
+\`\`\`
+
 </zero_step_methods>",
           "role": "system",
         },
@@ -181,8 +200,28 @@ Rules:
 ### fetchUser
 Fetch user by ID
 
+**Signature:**
+\`\`\`typescript
+declare function fetchUser(args: {
+    id: string;
+}): Promise<{
+    name: string;
+    role: string;
+}>;
+\`\`\`
+
 ### add
 Add two numbers
+
+**Signature:**
+\`\`\`typescript
+declare function add(args: {
+    a: number;
+    b: number;
+}): Promise<{
+    sum: number;
+}>;
+\`\`\`
 "
 `;
 

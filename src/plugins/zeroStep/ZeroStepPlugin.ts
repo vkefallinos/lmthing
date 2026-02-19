@@ -3,6 +3,7 @@ import { StatefulPrompt } from '../../StatefulPrompt';
 import type { MethodDefinition } from './types';
 import { MethodRegistry } from './MethodRegistry';
 import { createZeroStepTransformer } from './streamProcessor';
+import { generateMethodSignature } from './typeGenerator';
 
 // Symbol keys for per-instance state
 const METHOD_REGISTRY = Symbol('zeroStepMethodRegistry');
@@ -51,6 +52,11 @@ function buildSystemDescription(registry: MethodRegistry): string {
   for (const [name, def] of registry.getAll()) {
     lines.push(`### ${name}`);
     lines.push(def.description);
+    lines.push('');
+    lines.push('**Signature:**');
+    lines.push('```typescript');
+    lines.push(generateMethodSignature(def));
+    lines.push('```');
     lines.push('');
   }
 

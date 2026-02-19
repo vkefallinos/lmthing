@@ -25,4 +25,4 @@ export type { TypeCheckError, TypeCheckResult } from './typeChecker';
 export { MethodRegistry } from './MethodRegistry';
 export { createZeroStepTransformer } from './streamProcessor';
 export { validateTypeScript } from './typeChecker';
-export { generateTypeDeclarations } from './typeGenerator';
+export { generateTypeDeclarations, generateMethodSignature } from './typeGenerator';

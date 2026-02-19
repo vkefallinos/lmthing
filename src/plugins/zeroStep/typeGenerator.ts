@@ -42,6 +42,14 @@ function generateMethodDeclaration(definition: MethodDefinition): string {
 }
 
 /**
+ * Generates a single TypeScript `declare function` signature string for one method.
+ * Exported so the system prompt builder can embed the signature per method.
+ */
+export function generateMethodSignature(definition: MethodDefinition): string {
+  return generateMethodDeclaration(definition);
+}
+
+/**
  * Generates TypeScript `declare function` statements for all methods in the registry.
  * These are used as a preamble when type-checking code inside `<run_code>` blocks.
  */
