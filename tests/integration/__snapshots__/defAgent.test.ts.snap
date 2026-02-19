@@ -1,0 +1,614 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defAgent Integration Tests > executes a composite agent (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "helpers",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the helpers counter agent to count words in "hello world test". Return just the number.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "text": "hello world test",
+                },
+                "name": "counter",
+              },
+            ],
+          },
+          "toolCallId": "call_c0d3569bea52472a8b7e1acc",
+          "toolName": "helpers",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "helpers",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Count the words in "hello world test". Return just the number.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+3",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "helpers",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the helpers counter agent to count words in "hello world test". Return just the number.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "text": "hello world test",
+                    },
+                    "name": "counter",
+                  },
+                ],
+              },
+              "toolCallId": "call_c0d3569bea52472a8b7e1acc",
+              "toolName": "helpers",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "counter",
+                      "response": "
+3",
+                      "steps": [
+                        {
+                          "activeTools": [],
+                          "input": {
+                            "prompt": [
+                              {
+                                "content": [
+                                  {
+                                    "text": "Count the words in "hello world test". Return just the number.",
+                                    "type": "text",
+                                  },
+                                ],
+                                "role": "user",
+                              },
+                            ],
+                          },
+                          "output": {
+                            "content": [
+                              {
+                                "text": "
+3",
+                                "type": "text",
+                              },
+                            ],
+                            "finishReason": {
+                              "raw": "stop",
+                              "unified": "stop",
+                            },
+                          },
+                        },
+                      ],
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_c0d3569bea52472a8b7e1acc",
+              "toolName": "helpers",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+3",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defAgent Integration Tests > executes a simple agent (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "summarizer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the summarizer agent to summarize: "The quick brown fox jumps over the lazy dog."",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "text": "The quick brown fox jumps over the lazy dog.",
+          },
+          "toolCallId": "call_f9daa9818e1546c395d93c2d",
+          "toolName": "summarizer",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "summarizer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Summarize this in one sentence: The quick brown fox jumps over the lazy dog.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+A fox jumps over a dog.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "summarizer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the summarizer agent to summarize: "The quick brown fox jumps over the lazy dog."",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "text": "The quick brown fox jumps over the lazy dog.",
+              },
+              "toolCallId": "call_f9daa9818e1546c395d93c2d",
+              "toolName": "summarizer",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": [
+                          {
+                            "text": "Summarize this in one sentence: The quick brown fox jumps over the lazy dog.",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "
+A fox jumps over a dog.",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": {
+                      "raw": "stop",
+                      "unified": "stop",
+                    },
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "
+A fox jumps over a dog.",
+              },
+              "toolCallId": "call_f9daa9818e1546c395d93c2d",
+              "toolName": "summarizer",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+The summarizer has condensed the sentence "The quick brown fox jumps over the lazy dog." to: **"A fox jumps over a dog."**
+
+The summary captures the essential action while removing the descriptive adjectives (quick, brown, lazy) that aren't critical to understanding the core event.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defAgent Integration Tests > uses agent with responseSchema (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "analyzer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the analyzer agent to analyze the sentiment of "I love this amazing product!"",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "text": "I love this amazing product!",
+          },
+          "toolCallId": "call_67225fa5370145718b9f9383",
+          "toolName": "analyzer",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "analyzer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "sentiment": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "sentiment",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Analyze the sentiment of "I love this amazing product!". Return JSON with: sentiment (positive/negative/neutral) and score (0-100).",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+{
+  "sentiment": "positive",
+  "score": 95
+}",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "analyzer",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the analyzer agent to analyze the sentiment of "I love this amazing product!"",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "text": "I love this amazing product!",
+              },
+              "toolCallId": "call_67225fa5370145718b9f9383",
+              "toolName": "analyzer",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "agentSteps": [
+                {
+                  "activeTools": [],
+                  "input": {
+                    "prompt": [
+                      {
+                        "content": "<responseFormat>
+You must respond with a valid JSON object that matches this schema:
+
+{
+  "type": "object",
+  "properties": {
+    "sentiment": {
+      "type": "string"
+    },
+    "score": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "sentiment",
+    "score"
+  ]
+}
+
+Return only the JSON object in your response, without any additional text or explanation.
+</responseFormat>",
+                        "role": "system",
+                      },
+                      {
+                        "content": [
+                          {
+                            "text": "Analyze the sentiment of "I love this amazing product!". Return JSON with: sentiment (positive/negative/neutral) and score (0-100).",
+                            "type": "text",
+                          },
+                        ],
+                        "role": "user",
+                      },
+                    ],
+                  },
+                  "output": {
+                    "content": [
+                      {
+                        "text": "
+{
+  "sentiment": "positive",
+  "score": 95
+}",
+                        "type": "text",
+                      },
+                    ],
+                    "finishReason": {
+                      "raw": "stop",
+                      "unified": "stop",
+                    },
+                  },
+                },
+              ],
+              "output": {
+                "type": "text",
+                "value": "
+{
+  "sentiment": "positive",
+  "score": 95
+}",
+              },
+              "toolCallId": "call_67225fa5370145718b9f9383",
+              "toolName": "analyzer",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+The sentiment analysis of "I love this amazing product!" shows:
+
+- **Sentiment**: Positive
+- **Score**: 95
+
+This indicates a very strong positive sentiment, which aligns perfectly with the enthusiastic language used in the text including words like "love" and "amazing."",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;

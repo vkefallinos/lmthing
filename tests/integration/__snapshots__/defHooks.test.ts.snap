@@ -1,0 +1,483 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defState/defEffect Integration Tests > combines defState with defEffect (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "nextStep",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Take 2 steps and tell me what step you're on.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "call_9a0bfe1fe8414afd8f105777",
+          "toolName": "nextStep",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+I'll take 2 steps using the nextStep function and let you know where I am.
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "nextStep",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Take 2 steps and tell me what step you're on.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll take 2 steps using the nextStep function and let you know where I am.
+",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_9a0bfe1fe8414afd8f105777",
+              "toolName": "nextStep",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "step": NaN,
+                },
+              },
+              "toolCallId": "call_9a0bfe1fe8414afd8f105777",
+              "toolName": "nextStep",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "call_edbfb455e09e48cda0d37900",
+          "toolName": "nextStep",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "nextStep",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Take 2 steps and tell me what step you're on.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll take 2 steps using the nextStep function and let you know where I am.
+",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_9a0bfe1fe8414afd8f105777",
+              "toolName": "nextStep",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "step": NaN,
+                },
+              },
+              "toolCallId": "call_9a0bfe1fe8414afd8f105777",
+              "toolName": "nextStep",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_edbfb455e09e48cda0d37900",
+              "toolName": "nextStep",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "step": NaN,
+                },
+              },
+              "toolCallId": "call_edbfb455e09e48cda0d37900",
+              "toolName": "nextStep",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+I've taken 2 steps. Both steps returned null, so I'm currently on step null after taking the 2 steps you requested.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defState/defEffect Integration Tests > uses defEffect for side effects (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "changeTopic",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Change the topic to "machine learning" and then tell me the current topic.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "newTopic": "machine learning",
+          },
+          "toolCallId": "call_b3de505ef2a74559b361f373",
+          "toolName": "changeTopic",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+I'll change the topic to "machine learning" and then tell you the current topic.
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "changeTopic",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Change the topic to "machine learning" and then tell me the current topic.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll change the topic to "machine learning" and then tell you the current topic.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "newTopic": "machine learning",
+              },
+              "toolCallId": "call_b3de505ef2a74559b361f373",
+              "toolName": "changeTopic",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "changed": true,
+                },
+              },
+              "toolCallId": "call_b3de505ef2a74559b361f373",
+              "toolName": "changeTopic",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+I've successfully changed the topic to "machine learning". The current topic is now "machine learning".",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defState/defEffect Integration Tests > uses defState for state management (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "increment",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Increment the counter twice and tell me the final value.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {},
+          "toolCallId": "call_d2b0d3e6c32d451ba895df4a",
+          "toolName": "increment",
+          "type": "tool-call",
+        },
+        {
+          "input": {},
+          "toolCallId": "call_af3a612c27e94103ae09c6b2",
+          "toolName": "increment",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+I'll increment the counter twice for you.
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "increment",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Increment the counter twice and tell me the final value.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll increment the counter twice for you.
+",
+              "type": "text",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_d2b0d3e6c32d451ba895df4a",
+              "toolName": "increment",
+              "type": "tool-call",
+            },
+            {
+              "input": {},
+              "toolCallId": "call_af3a612c27e94103ae09c6b2",
+              "toolName": "increment",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "newCount": NaN,
+                },
+              },
+              "toolCallId": "call_d2b0d3e6c32d451ba895df4a",
+              "toolName": "increment",
+              "type": "tool-result",
+            },
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "newCount": NaN,
+                },
+              },
+              "toolCallId": "call_af3a612c27e94103ae09c6b2",
+              "toolName": "increment",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+I've incremented the counter twice as requested. However, the increment function responses show \`{"newCount":null}\`, which means while the counter was successfully incremented twice, the function doesn't return the actual count value.
+
+Without being able to see the current count value in the function responses, I cannot provide you with the specific final count. The counter has been incremented twice, but the exact numerical value isn't available through the current function responses.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;

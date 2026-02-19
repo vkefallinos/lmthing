@@ -41,6 +41,7 @@ function buildSystemDescription(registry: MethodRegistry): string {
     '',
     'Rules:',
     '- Use `await` for all method calls (they are async).',
+    '- Always pass parameters as an object: `await methodName({ param: "value" })`.',
     '- If you need to return a value to the conversation, end the block with a `return` statement.',
     '- If no `return` is present, execution runs silently and the stream continues.',
     '- Errors are reported inside <code_error> tags.',
@@ -58,9 +59,49 @@ function buildSystemDescription(registry: MethodRegistry): string {
     lines.push(generateMethodSignature(def));
     lines.push('```');
     lines.push('');
+    lines.push('**Example usage:**');
+    lines.push('```typescript');
+    const exampleParams = generateExampleParams(def.parameterSchema);
+    lines.push(`await ${name}(${exampleParams});`);
+    lines.push('```');
+    lines.push('');
   }
 
   return lines.join('\n');
+}
+
+/**
+ * Generates example parameter values from a Zod schema.
+ * This helps LLMs understand the expected structure.
+ */
+function generateExampleParams(schema: z.ZodTypeAny): string {
+  try {
+    // For object schemas, generate example with placeholder values
+    if (schema instanceof z.ZodObject) {
+      const shape = (schema as z.ZodObject<any>).shape;
+      const pairs: string[] = [];
+      for (const [key, value] of Object.entries(shape)) {
+        const zodValue = value as z.ZodTypeAny;
+        if (zodValue instanceof z.ZodString) {
+          pairs.push(`${key}: "value"`);
+        } else if (zodValue instanceof z.ZodNumber) {
+          pairs.push(`${key}: 123`);
+        } else if (zodValue instanceof z.ZodBoolean) {
+          pairs.push(`${key}: true`);
+        } else if (zodValue instanceof z.ZodArray) {
+          pairs.push(`${key}: []`);
+        } else if (zodValue instanceof z.ZodObject) {
+          pairs.push(`${key}: {}`);
+        } else {
+          pairs.push(`${key}: "value"`);
+        }
+      }
+      return `{ ${pairs.join(', ')} }`;
+    }
+    return '{}';
+  } catch {
+    return '{}';
+  }
 }
 
 /**

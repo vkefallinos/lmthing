@@ -1,0 +1,392 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defTool Integration Tests > executes a composite tool (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "math",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the math tool to add 10 and 5, then multiply the result by 2. Return just the final number.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "calls": [
+              {
+                "args": {
+                  "a": 10,
+                  "b": 5,
+                },
+                "name": "add",
+              },
+              {
+                "args": {
+                  "a": 15,
+                  "b": 2,
+                },
+                "name": "multiply",
+              },
+            ],
+          },
+          "toolCallId": "call_71f45b9e356942ccaab8236c",
+          "toolName": "math",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "math",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Use the math tool to add 10 and 5, then multiply the result by 2. Return just the final number.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "calls": [
+                  {
+                    "args": {
+                      "a": 10,
+                      "b": 5,
+                    },
+                    "name": "add",
+                  },
+                  {
+                    "args": {
+                      "a": 15,
+                      "b": 2,
+                    },
+                    "name": "multiply",
+                  },
+                ],
+              },
+              "toolCallId": "call_71f45b9e356942ccaab8236c",
+              "toolName": "math",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "results": [
+                    {
+                      "name": "add",
+                      "result": {
+                        "result": 15,
+                      },
+                    },
+                    {
+                      "name": "multiply",
+                      "result": {
+                        "result": 30,
+                      },
+                    },
+                  ],
+                },
+              },
+              "toolCallId": "call_71f45b9e356942ccaab8236c",
+              "toolName": "math",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+30",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defTool Integration Tests > executes a simple tool (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "calculate",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Add 15 and 27 using the calculate tool. Return just the result number.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "a": 15,
+            "b": 27,
+          },
+          "toolCallId": "call_cff778bc19b9474899e342d7",
+          "toolName": "calculate",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "calculate",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Add 15 and 27 using the calculate tool. Return just the result number.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "a": 15,
+                "b": 27,
+              },
+              "toolCallId": "call_cff778bc19b9474899e342d7",
+              "toolName": "calculate",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "sum": 42,
+                },
+              },
+              "toolCallId": "call_cff778bc19b9474899e342d7",
+              "toolName": "calculate",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+42",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defTool Integration Tests > handles tool with responseSchema (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "analyze",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Analyze the text "hello world" using the analyze tool. Tell me the word count.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "text": "hello world",
+          },
+          "toolCallId": "call_d4390373a03d48c2b26c7b57",
+          "toolName": "analyze",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "analyze",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Analyze the text "hello world" using the analyze tool. Tell me the word count.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "text": "hello world",
+              },
+              "toolCallId": "call_d4390373a03d48c2b26c7b57",
+              "toolName": "analyze",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "firstChar": "h",
+                  "wordCount": 2,
+                },
+              },
+              "toolCallId": "call_d4390373a03d48c2b26c7b57",
+              "toolName": "analyze",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+The text "hello world" has a word count of 2 words.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;

@@ -1,0 +1,146 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`def/defData/defSystem Integration Tests > combines def, defData, and defSystem (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+You are a helpful assistant.
+</role>
+<task>
+Summarize the user information in one sentence.
+</task>
+<variables>
+  <NAME>
+ Bob
+  </NAME>
+  <AGE>
+ 25
+  </AGE>
+  <PREFERENCES>
+theme: dark
+language: TypeScript
+editor: VS Code
+
+  </PREFERENCES>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "My name is <NAME> and I'm <AGE> years old. My preferences are in the PREFERENCES variable. Please summarize this.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+25-year-old Bob prefers a dark theme, TypeScript, and VS Code.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`def/defData/defSystem Integration Tests > uses defData for structured data (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<variables>
+  <CONFIG>
+apiUrl: https://api.example.com
+timeout: 5000
+retries: 3
+
+  </CONFIG>
+</variables>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "What is the API URL and timeout in the CONFIG? Return them in a sentence.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+The API URL is https://api.example.com and the timeout is 5000.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`def/defData/defSystem Integration Tests > uses defSystem for prompt structure (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [],
+    "input": {
+      "prompt": [
+        {
+          "content": "<role>
+You are a pirate. Always respond in pirate speak.
+</role>
+<rules>
+Never mention you are an AI.
+</rules>",
+          "role": "system",
+        },
+        {
+          "content": [
+            {
+              "text": "Introduce yourself briefly.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+Ahoy there, matey! They call me Captain Codebeard, the saltiest dog to ever sail these digital seas. I chart a course for knowledge and hunt for treasure most rare. What brings ye to my ship?",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;

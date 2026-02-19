@@ -1,0 +1,2449 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`defTaskList Integration Tests > completes multiple tasks in sequence (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete all three tasks in order by ID. Start task "1", complete it, then task "2", complete it, then task "3", complete it. Tell me when all are done.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_638a9ad43338433289fbacf4",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+I'll complete all three tasks in order. Let me start with task 1.
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete all three tasks in order by ID. Start task "1", complete it, then task "2", complete it, then task "3", complete it. Tell me when all are done.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll complete all three tasks in order. Let me start with task 1.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_da92709db6e844a9b2bce66c",
+          "toolName": "completeTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete all three tasks in order by ID. Start task "1", complete it, then task "2", complete it, then task "3", complete it. Tell me when all are done.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll complete all three tasks in order. Let me start with task 1.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "2",
+          },
+          "toolCallId": "call_7c99a79883594154be56daa4",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete all three tasks in order by ID. Start task "1", complete it, then task "2", complete it, then task "3", complete it. Tell me when all are done.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll complete all three tasks in order. Let me start with task 1.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task B"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Task B",
+                    "status": "in_progress",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "2",
+          },
+          "toolCallId": "call_40d53a7ba4fa45668a52fc31",
+          "toolName": "completeTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete all three tasks in order by ID. Start task "1", complete it, then task "2", complete it, then task "3", complete it. Tell me when all are done.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll complete all three tasks in order. Let me start with task 1.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task B"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Task B",
+                    "status": "in_progress",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_40d53a7ba4fa45668a52fc31",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task B"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Task B",
+                    "status": "completed",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_40d53a7ba4fa45668a52fc31",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "3",
+          },
+          "toolCallId": "call_36e599f7750648ba9e173a47",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete all three tasks in order by ID. Start task "1", complete it, then task "2", complete it, then task "3", complete it. Tell me when all are done.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll complete all three tasks in order. Let me start with task 1.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task B"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Task B",
+                    "status": "in_progress",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_40d53a7ba4fa45668a52fc31",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task B"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Task B",
+                    "status": "completed",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_40d53a7ba4fa45668a52fc31",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "3",
+              },
+              "toolCallId": "call_36e599f7750648ba9e173a47",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task C"",
+                  "success": true,
+                  "task": {
+                    "id": "3",
+                    "name": "Task C",
+                    "status": "in_progress",
+                  },
+                  "taskId": "3",
+                },
+              },
+              "toolCallId": "call_36e599f7750648ba9e173a47",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "3",
+          },
+          "toolCallId": "call_4ac69cefc8964c678d94359c",
+          "toolName": "completeTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Complete all three tasks in order by ID. Start task "1", complete it, then task "2", complete it, then task "3", complete it. Tell me when all are done.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll complete all three tasks in order. Let me start with task 1.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_638a9ad43338433289fbacf4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task A"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Task A",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_da92709db6e844a9b2bce66c",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task B"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Task B",
+                    "status": "in_progress",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_7c99a79883594154be56daa4",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_40d53a7ba4fa45668a52fc31",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task B"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Task B",
+                    "status": "completed",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_40d53a7ba4fa45668a52fc31",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "3",
+              },
+              "toolCallId": "call_36e599f7750648ba9e173a47",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Task C"",
+                  "success": true,
+                  "task": {
+                    "id": "3",
+                    "name": "Task C",
+                    "status": "in_progress",
+                  },
+                  "taskId": "3",
+                },
+              },
+              "toolCallId": "call_36e599f7750648ba9e173a47",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "3",
+              },
+              "toolCallId": "call_4ac69cefc8964c678d94359c",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Task C"",
+                  "success": true,
+                  "task": {
+                    "id": "3",
+                    "name": "Task C",
+                    "status": "completed",
+                  },
+                  "taskId": "3",
+                },
+              },
+              "toolCallId": "call_4ac69cefc8964c678d94359c",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+All three tasks have been completed in order:
+
+✅ Task 1 ("Task A") - completed
+✅ Task 2 ("Task B") - completed  
+✅ Task 3 ("Task C") - completed
+
+All tasks are now done!",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defTaskList Integration Tests > handles task failure and recovery (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task "1" (Download data), then fail it with reason "Network timeout". Then restart it and complete it. Tell me what happened.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_b33510bbfb1444afb8757a03",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+I'll help you simulate that workflow. Let me start task "1", fail it, restart it, and then complete it.
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task "1" (Download data), then fail it with reason "Network timeout". Then restart it and complete it. Tell me what happened.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll help you simulate that workflow. Let me start task "1", fail it, restart it, and then complete it.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Download data"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Download data",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "reason": "Network timeout",
+            "taskId": "1",
+          },
+          "toolCallId": "call_3572f2cc446c4e35a796a23a",
+          "toolName": "failTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task "1" (Download data), then fail it with reason "Network timeout". Then restart it and complete it. Tell me what happened.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll help you simulate that workflow. Let me start task "1", fail it, restart it, and then complete it.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Download data"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Download data",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "reason": "Network timeout",
+                "taskId": "1",
+              },
+              "toolCallId": "call_3572f2cc446c4e35a796a23a",
+              "toolName": "failTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Failed task: "Download data" - Network timeout",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "metadata": {
+                      "failureReason": "Network timeout",
+                    },
+                    "name": "Download data",
+                    "status": "failed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_3572f2cc446c4e35a796a23a",
+              "toolName": "failTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_557216aa2d0047528838ea84",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task "1" (Download data), then fail it with reason "Network timeout". Then restart it and complete it. Tell me what happened.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll help you simulate that workflow. Let me start task "1", fail it, restart it, and then complete it.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Download data"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Download data",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "reason": "Network timeout",
+                "taskId": "1",
+              },
+              "toolCallId": "call_3572f2cc446c4e35a796a23a",
+              "toolName": "failTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Failed task: "Download data" - Network timeout",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "metadata": {
+                      "failureReason": "Network timeout",
+                    },
+                    "name": "Download data",
+                    "status": "failed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_3572f2cc446c4e35a796a23a",
+              "toolName": "failTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_557216aa2d0047528838ea84",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Restarted failed task: "Download data"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "metadata": {
+                      "failureReason": "Network timeout",
+                    },
+                    "name": "Download data",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_557216aa2d0047528838ea84",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_1fbd88cfd4d5493fbfb064eb",
+          "toolName": "completeTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task "1" (Download data), then fail it with reason "Network timeout". Then restart it and complete it. Tell me what happened.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll help you simulate that workflow. Let me start task "1", fail it, restart it, and then complete it.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Download data"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Download data",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_b33510bbfb1444afb8757a03",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "reason": "Network timeout",
+                "taskId": "1",
+              },
+              "toolCallId": "call_3572f2cc446c4e35a796a23a",
+              "toolName": "failTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Failed task: "Download data" - Network timeout",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "metadata": {
+                      "failureReason": "Network timeout",
+                    },
+                    "name": "Download data",
+                    "status": "failed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_3572f2cc446c4e35a796a23a",
+              "toolName": "failTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_557216aa2d0047528838ea84",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Restarted failed task: "Download data"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "metadata": {
+                      "failureReason": "Network timeout",
+                    },
+                    "name": "Download data",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_557216aa2d0047528838ea84",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_1fbd88cfd4d5493fbfb064eb",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Download data"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "metadata": {
+                      "failureReason": "Network timeout",
+                    },
+                    "name": "Download data",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_1fbd88cfd4d5493fbfb064eb",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+Here's what happened with task "1" (Download data):
+
+1. **Started**: The task was initially started and marked as "in_progress"
+
+2. **Failed**: The task failed due to a "Network timeout" - the system recorded this as the failure reason in the task metadata
+
+3. **Restarted**: The failed task was successfully restarted and returned to "in_progress" status, while maintaining the record of its previous failure in the metadata
+
+4. **Completed**: After being restarted, the task was successfully completed and marked as "completed"
+
+The task went through a complete lifecycle: start → fail → restart → complete. The system preserved the failure history (network timeout) in the task metadata even after it was successfully completed on the second attempt.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;
+
+exports[`defTaskList Integration Tests > uses defTaskList for task management (zai:glm-4.6) 1`] = `
+[
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task ID "1" (Set up project), then complete it. Then start task ID "2" (Write tests). Tell me the current task status.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_a74276b4b2fe4a6db8d96821",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+I'll help you manage those tasks step by step. Let me start by setting up the project, then complete it, start writing tests, and finally report the status.
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task ID "1" (Set up project), then complete it. Then start task ID "2" (Write tests). Tell me the current task status.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll help you manage those tasks step by step. Let me start by setting up the project, then complete it, start writing tests, and finally report the status.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_a74276b4b2fe4a6db8d96821",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Set up project"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Set up project",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_a74276b4b2fe4a6db8d96821",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "1",
+          },
+          "toolCallId": "call_fa5de87501ed4db2b38c10d8",
+          "toolName": "completeTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task ID "1" (Set up project), then complete it. Then start task ID "2" (Write tests). Tell me the current task status.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll help you manage those tasks step by step. Let me start by setting up the project, then complete it, start writing tests, and finally report the status.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_a74276b4b2fe4a6db8d96821",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Set up project"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Set up project",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_a74276b4b2fe4a6db8d96821",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_fa5de87501ed4db2b38c10d8",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Set up project"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Set up project",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_fa5de87501ed4db2b38c10d8",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "input": {
+            "taskId": "2",
+          },
+          "toolCallId": "call_e2dfbdc5fa0c46b386106294",
+          "toolName": "startTask",
+          "type": "tool-call",
+        },
+        {
+          "text": "
+",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "tool_calls",
+        "unified": "tool-calls",
+      },
+    },
+  },
+  {
+    "activeTools": [
+      "startTask",
+      "completeTask",
+      "failTask",
+    ],
+    "input": {
+      "prompt": [
+        {
+          "content": [
+            {
+              "text": "Start task ID "1" (Set up project), then complete it. Then start task ID "2" (Write tests). Tell me the current task status.",
+              "type": "text",
+            },
+          ],
+          "role": "user",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+I'll help you manage those tasks step by step. Let me start by setting up the project, then complete it, start writing tests, and finally report the status.
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_a74276b4b2fe4a6db8d96821",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Set up project"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Set up project",
+                    "status": "in_progress",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_a74276b4b2fe4a6db8d96821",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "1",
+              },
+              "toolCallId": "call_fa5de87501ed4db2b38c10d8",
+              "toolName": "completeTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Completed task: "Set up project"",
+                  "success": true,
+                  "task": {
+                    "id": "1",
+                    "name": "Set up project",
+                    "status": "completed",
+                  },
+                  "taskId": "1",
+                },
+              },
+              "toolCallId": "call_fa5de87501ed4db2b38c10d8",
+              "toolName": "completeTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+        {
+          "content": [
+            {
+              "output": undefined,
+              "toolCallId": undefined,
+              "toolName": undefined,
+              "type": "reasoning",
+            },
+            {
+              "text": "
+",
+              "type": "text",
+            },
+            {
+              "input": {
+                "taskId": "2",
+              },
+              "toolCallId": "call_e2dfbdc5fa0c46b386106294",
+              "toolName": "startTask",
+              "type": "tool-call",
+            },
+          ],
+          "role": "assistant",
+        },
+        {
+          "content": [
+            {
+              "output": {
+                "type": "json",
+                "value": {
+                  "message": "Started task: "Write tests"",
+                  "success": true,
+                  "task": {
+                    "id": "2",
+                    "name": "Write tests",
+                    "status": "in_progress",
+                  },
+                  "taskId": "2",
+                },
+              },
+              "toolCallId": "call_e2dfbdc5fa0c46b386106294",
+              "toolName": "startTask",
+              "type": "tool-result",
+            },
+          ],
+          "role": "tool",
+        },
+      ],
+    },
+    "output": {
+      "content": [
+        {
+          "text": "
+Here's the current task status:
+
+**Task 1 - "Set up project"**: ✅ **Completed**
+- This task has been successfully completed.
+
+**Task 2 - "Write tests"**: 🔄 **In Progress**
+- This task is currently active and being worked on.
+
+Summary: I've successfully completed the project setup and am now working on writing tests. Task 1 is done and Task 2 is in progress.",
+          "type": "text",
+        },
+      ],
+      "finishReason": {
+        "raw": "stop",
+        "unified": "stop",
+      },
+    },
+  },
+]
+`;

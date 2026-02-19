@@ -166,7 +166,7 @@ describe('defMethod Integration Tests (Zero-Step Tool Calling)', () => {
 
       const db = makeDb();
 
-      const { result } = await runPrompt(
+      const { result, prompt } = await runPrompt(
         async ({ defMethod, defSystem, $ }) => {
           defSystem(
             'instructions',
@@ -196,6 +196,15 @@ describe('defMethod Integration Tests (Zero-Step Tool Calling)', () => {
       const text = await result.text;
       console.log(`  > Response:\n${text}\n`);
       console.log(`  > Audit log:`, db.auditLog);
+
+      // Debug: log the system prompt being sent
+      const firstStep = prompt.steps?.[0];
+      if (firstStep) {
+        const systemMsg = firstStep.input.prompt?.find((m: any) => m.role === 'system');
+        if (systemMsg) {
+          console.log(`  > System prompt sent to LLM:\n${systemMsg.content}\n`);
+        }
+      }
 
       // No <code_response> should be injected when there is no return
       expect(text).not.toContain('<code_response>');
