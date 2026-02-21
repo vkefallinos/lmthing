@@ -879,7 +879,7 @@ Use "startTask" to begin a pending task and "completeTask" when finished.
 
 ### Using the Task Graph Plugin
 
-The built-in task graph plugin provides `defTaskGraph` for dependency-aware task management using a Directed Acyclic Graph (DAG). Unlike `defTaskList` which manages a flat list of tasks, `defTaskGraph` supports task dependencies, automatic unblocking, and context propagation between tasks.
+The built-in task graph plugin provides `defTaskGraph` for dependency-aware task management using a Directed Acyclic Graph (DAG). Unlike `defTaskList` which manages a flat list of tasks, `defTaskGraph` supports task dependencies, automatic unblocking, context propagation between tasks, and CORD protocol primitives for dynamic task creation and human-in-the-loop workflows.
 
 ```typescript
 import { runPrompt } from 'lmthing';
@@ -894,6 +894,7 @@ const { result } = await runPrompt(async ({ defTaskGraph, $ }) => {
       status: 'pending', dependencies: ['research'], unblocks: ['review'],
       required_capabilities: ['writing'] },
     { id: 'review', title: 'Review', description: 'Review the final report',
+      node_type: 'fork',  // receives ALL completed tasks' output as context
       status: 'pending', dependencies: ['write'], unblocks: [],
       required_capabilities: ['review'] },
   ]);
@@ -912,14 +913,23 @@ interface TaskNode {
   title: string;                  // Concise task name
   description: string;            // Detailed execution instructions
   status: TaskNodeStatus;         // 'pending' | 'in_progress' | 'completed' | 'failed'
+  node_type?: 'spawn' | 'fork' | 'ask'; // CORD protocol node type (default: 'spawn')
   dependencies: string[];         // IDs of upstream tasks that must complete first
   unblocks: string[];             // IDs of downstream tasks waiting on this one
   required_capabilities: string[];// e.g., ["database", "web-search"]
   assigned_subagent?: string;     // Subagent handling this task
+  question?: string;              // For 'ask' nodes: the question to present to the human
+  answer_options?: string[];      // For 'ask' nodes: optional list of answer choices
   input_context?: string;         // Context from upstream tasks (auto-propagated)
   output_result?: string;         // Summary/artifact produced upon completion
 }
 ```
+
+**Node Types (CORD Protocol):**
+
+- **`spawn`** (default): Gets context only from direct dependencies' outputs — clean slate, focused spec
+- **`fork`**: Gets context from ALL completed tasks' outputs — knows everything the team has learned
+- **`ask`**: Human-in-the-loop question node; downstream tasks blocked until answered via `answerQuestion`
 
 **Automatically Registered Tools:**
 
@@ -941,11 +951,43 @@ interface TaskNode {
   // Returns: { success: boolean, taskId: string, message: string, newlyUnblockedTasks?: TaskNode[] }
   ```
 
+- **`spawnTask`**: Dynamically add a new spawn task to the running graph (CORD `spawn()` primitive)
+  ```typescript
+  { id: string, title: string, description: string, dependencies: string[], unblocks: string[], required_capabilities: string[], assigned_subagent?: string }
+  // Returns: { success: boolean, message: string, task?: TaskNode }
+  ```
+
+- **`forkTask`**: Dynamically add a new fork task — inherits ALL completed tasks' outputs as context (CORD `fork()` primitive)
+  ```typescript
+  { id: string, title: string, description: string, dependencies: string[], unblocks: string[], required_capabilities: string[], assigned_subagent?: string }
+  // Returns: { success: boolean, message: string, task?: TaskNode }
+  ```
+
+- **`askHuman`**: Create a human-in-the-loop question node; downstream tasks blocked until answered (CORD `ask()` primitive)
+  ```typescript
+  { id: string, question: string, answer_options?: string[], dependencies: string[], unblocks: string[] }
+  // Returns: { success: boolean, message: string, task?: TaskNode }
+  ```
+
+- **`answerQuestion`**: Provide a human answer to a pending ask node, completing it and unblocking downstream tasks
+  ```typescript
+  { taskId: string, answer: string }
+  // Returns: { success: boolean, taskId: string, message: string, task?: TaskNode, newlyUnblockedTasks?: TaskNode[] }
+  ```
+
+- **`readTree`**: View the full task coordination tree in hierarchical CORD-style format (CORD `read_tree()` primitive)
+  ```typescript
+  {}
+  // Returns: { success: boolean, message: string, tree: string, tasks: TaskNode[] }
+  ```
+
 **Key Features:**
 
 - **Dependency Enforcement**: Tasks cannot start until all upstream dependencies are completed
 - **Automatic Unblocking**: When a task completes, downstream tasks with all dependencies met are automatically unblocked
-- **Context Propagation**: `output_result` from completed tasks is automatically passed as `input_context` to downstream tasks
+- **Context Propagation**: `output_result` from completed tasks is automatically passed as `input_context` to downstream tasks (spawn = direct deps only, fork = all completed tasks)
+- **Dynamic Task Creation**: Add new tasks at runtime using `spawnTask` and `forkTask` tools
+- **Human-in-the-loop**: Create question nodes with `askHuman` that block downstream tasks until answered
 - **Cycle Detection**: The graph is validated for circular dependencies using Kahn's algorithm
 - **Graph Normalization**: Dependencies and unblocks relationships are kept symmetric automatically
 
