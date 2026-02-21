@@ -61,6 +61,18 @@ export interface FailTaskResult {
 export type TaskNodeStatus = 'pending' | 'in_progress' | 'completed' | 'failed';
 
 /**
+ * Node type for a task graph node (inspired by CORD protocol).
+ *
+ * - `spawn` (default): Gets context only from direct dependencies' outputs.
+ *   Like hiring a contractor — clean slate, focused spec.
+ * - `fork`: Gets context from ALL completed tasks' outputs at the time it runs.
+ *   Like briefing a team member — knows everything the team has learned so far.
+ * - `ask`: A human-in-the-loop question node. Contains a question to ask the
+ *   human; downstream tasks are blocked until the question is answered.
+ */
+export type TaskNodeType = 'spawn' | 'fork' | 'ask';
+
+/**
  * A node in the task graph DAG.
  *
  * Each node declares its relationships (edges) to other nodes via
@@ -76,6 +88,14 @@ export interface TaskNode {
   /** Current status of the task */
   status: TaskNodeStatus;
 
+  /**
+   * Node type controlling context propagation behavior (default: 'spawn').
+   * - `spawn`: Receives only direct dependencies' output as context.
+   * - `fork`: Receives ALL completed tasks' outputs as context.
+   * - `ask`: Human-in-the-loop question; answered via `answerQuestion` tool.
+   */
+  node_type?: TaskNodeType;
+
   // Dependency Management (The DAG Edges)
   /** IDs of tasks that MUST be completed before this can start */
   dependencies: string[];
@@ -87,6 +107,12 @@ export interface TaskNode {
   required_capabilities: string[];
   /** The specific subagent handling this task */
   assigned_subagent?: string;
+
+  // Ask-node fields
+  /** For `ask` nodes: the question to present to the human */
+  question?: string;
+  /** For `ask` nodes: optional list of answer choices */
+  answer_options?: string[];
 
   // State & Data Passing
   /** Context passed from upstream tasks */
@@ -123,4 +149,43 @@ export interface UpdateTaskStatusResult {
   message: string;
   task?: TaskNode;
   newlyUnblockedTasks?: TaskNode[];
+}
+
+/**
+ * Result of spawning / forking a new task dynamically
+ */
+export interface SpawnTaskResult {
+  success: boolean;
+  message: string;
+  task?: TaskNode;
+}
+
+/**
+ * Result of creating an ask (human-in-the-loop) node
+ */
+export interface AskHumanResult {
+  success: boolean;
+  message: string;
+  task?: TaskNode;
+}
+
+/**
+ * Result of answering a pending ask node
+ */
+export interface AnswerQuestionResult {
+  success: boolean;
+  taskId: string;
+  message: string;
+  task?: TaskNode;
+  newlyUnblockedTasks?: TaskNode[];
+}
+
+/**
+ * Result of reading the full task tree
+ */
+export interface ReadTreeResult {
+  success: boolean;
+  message: string;
+  tree: string;
+  tasks: TaskNode[];
 }

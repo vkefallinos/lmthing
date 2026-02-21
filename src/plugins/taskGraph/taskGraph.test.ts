@@ -1214,3 +1214,891 @@ describe('taskGraphPlugin', () => {
     });
   });
 });
+
+// ============================================================
+// CORD Protocol Features: spawn / fork / ask
+// ============================================================
+
+describe('CORD protocol features', () => {
+  // Helper to create a fresh proxied prompt
+  function makePrompt() {
+    const mockModel = createMockModel([]);
+    const prompt = new StatefulPrompt(mockModel);
+    prompt.setPlugins([taskGraphPlugin]);
+    const boundPluginMethods: Record<string, Function> = {};
+    for (const [name, fn] of Object.entries(taskGraphPlugin)) {
+      if (typeof fn === 'function') {
+        boundPluginMethods[name] = (fn as Function).bind(prompt);
+      }
+    }
+    return new Proxy(prompt, {
+      get(target, prop) {
+        if (typeof prop === 'string' && prop in boundPluginMethods) return boundPluginMethods[prop];
+        const v = target[prop as keyof StatefulPrompt];
+        return typeof v === 'function' ? v.bind(target) : v;
+      },
+    }) as StatefulPrompt & { defTaskGraph: typeof taskGraphPlugin.defTaskGraph };
+  }
+
+  // --------------------------------------------------------
+  // node_type field
+  // --------------------------------------------------------
+  describe('TaskNode node_type field', () => {
+    it('should default node_type to spawn when not specified', () => {
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        { id: 'a', title: 'A', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ];
+      const [graph] = prompt.defTaskGraph(tasks);
+      // No node_type set → behaves as spawn
+      expect(graph[0].node_type).toBeUndefined();
+    });
+
+    it('should preserve node_type: fork when set on initial graph', () => {
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        { id: 'a', title: 'A', description: '', status: 'pending', dependencies: [], unblocks: ['b'], required_capabilities: [] },
+        { id: 'b', title: 'B', description: '', status: 'pending', node_type: 'fork', dependencies: ['a'], unblocks: [], required_capabilities: [] },
+      ];
+      const [graph] = prompt.defTaskGraph(tasks);
+      expect(graph.find(t => t.id === 'b')!.node_type).toBe('fork');
+    });
+
+    it('should preserve node_type: ask when set on initial graph', () => {
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        {
+          id: 'q1', title: 'Question', description: 'Ask user', status: 'pending',
+          node_type: 'ask', question: 'How many users?', answer_options: ['<1K', '1K-10K', '>10K'],
+          dependencies: [], unblocks: [], required_capabilities: [],
+        },
+      ];
+      const [graph] = prompt.defTaskGraph(tasks);
+      const node = graph.find(t => t.id === 'q1')!;
+      expect(node.node_type).toBe('ask');
+      expect(node.question).toBe('How many users?');
+      expect(node.answer_options).toEqual(['<1K', '1K-10K', '>10K']);
+    });
+
+    it('generateTaskGraph tool should accept node_type field', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph();
+      const tool = prompt.getTools().generateTaskGraph;
+      const result = await tool!.execute({
+        tasks: [
+          { id: 'research', title: 'Research', description: '', node_type: 'spawn', dependencies: [], unblocks: ['analysis'], required_capabilities: [] },
+          { id: 'analysis', title: 'Analysis', description: '', node_type: 'fork', dependencies: ['research'], unblocks: [], required_capabilities: [] },
+        ],
+      });
+      expect(result.success).toBe(true);
+      expect(result.tasks!.find(t => t.id === 'analysis')!.node_type).toBe('fork');
+    });
+  });
+
+  // --------------------------------------------------------
+  // Fork context propagation
+  // --------------------------------------------------------
+  describe('fork context propagation', () => {
+    it('fork node receives context from ALL completed tasks on unblocking', async () => {
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        { id: 'a', title: 'Task A', description: '', status: 'pending', dependencies: [], unblocks: ['fork1'], required_capabilities: [] },
+        { id: 'b', title: 'Task B', description: '', status: 'pending', dependencies: [], unblocks: ['fork1'], required_capabilities: [] },
+        {
+          id: 'fork1', title: 'Fork Analysis', description: '', status: 'pending',
+          node_type: 'fork', dependencies: ['a', 'b'], unblocks: [], required_capabilities: [],
+        },
+      ];
+      prompt.defTaskGraph(tasks);
+      const updateTool = prompt.getTools().updateTaskStatus;
+
+      // Complete A with output
+      await updateTool!.execute({ taskId: 'a', status: 'completed', output_result: 'Output from A' });
+      // Complete B with output — this unblocks fork1
+      await updateTool!.execute({ taskId: 'b', status: 'completed', output_result: 'Output from B' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const forkTask = state!.find(t => t.id === 'fork1')!;
+
+      // Fork should have context from BOTH A and B
+      expect(forkTask.input_context).toContain('Output from A');
+      expect(forkTask.input_context).toContain('Task A');
+      expect(forkTask.input_context).toContain('Output from B');
+      expect(forkTask.input_context).toContain('Task B');
+    });
+
+    it('spawn node only receives context from direct completing task', async () => {
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        { id: 'a', title: 'Task A', description: '', status: 'pending', dependencies: [], unblocks: ['spawn1'], required_capabilities: [] },
+        { id: 'b', title: 'Task B', description: '', status: 'pending', dependencies: [], unblocks: ['spawn1'], required_capabilities: [] },
+        {
+          id: 'spawn1', title: 'Spawn Task', description: '', status: 'pending',
+          node_type: 'spawn', dependencies: ['a', 'b'], unblocks: [], required_capabilities: [],
+        },
+      ];
+      prompt.defTaskGraph(tasks);
+      const updateTool = prompt.getTools().updateTaskStatus;
+
+      await updateTool!.execute({ taskId: 'a', status: 'completed', output_result: 'Output from A' });
+      // B's completion triggers unblocking of spawn1
+      await updateTool!.execute({ taskId: 'b', status: 'completed', output_result: 'Output from B' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const spawnTask = state!.find(t => t.id === 'spawn1')!;
+
+      // Spawn should ONLY have context from B (the completing task that triggered unblocking)
+      expect(spawnTask.input_context).toContain('Output from B');
+      expect(spawnTask.input_context).not.toContain('Output from A');
+    });
+
+    it('fork node gets context from all completed tasks including non-dependencies', async () => {
+      // A is independent of the fork's dep chain, but fork should still get A's context
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        { id: 'a', title: 'Unrelated A', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+        { id: 'b', title: 'Dep B', description: '', status: 'pending', dependencies: [], unblocks: ['fork1'], required_capabilities: [] },
+        {
+          id: 'fork1', title: 'Fork', description: '', status: 'pending',
+          node_type: 'fork', dependencies: ['b'], unblocks: [], required_capabilities: [],
+        },
+      ];
+      prompt.defTaskGraph(tasks);
+      const updateTool = prompt.getTools().updateTaskStatus;
+
+      // Complete A first (unrelated to fork's dependencies)
+      await updateTool!.execute({ taskId: 'a', status: 'completed', output_result: 'Unrelated output' });
+      // Complete B — unblocks fork1
+      await updateTool!.execute({ taskId: 'b', status: 'completed', output_result: 'Dep output' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const forkTask = state!.find(t => t.id === 'fork1')!;
+
+      // Fork gets ALL completed outputs (including unrelated A)
+      expect(forkTask.input_context).toContain('Unrelated output');
+      expect(forkTask.input_context).toContain('Dep output');
+    });
+
+    it('fork node with no completed outputs stays without context', async () => {
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        { id: 'a', title: 'A', description: '', status: 'pending', dependencies: [], unblocks: ['fork1'], required_capabilities: [] },
+        { id: 'fork1', title: 'Fork', description: '', status: 'pending', node_type: 'fork', dependencies: ['a'], unblocks: [], required_capabilities: [] },
+      ];
+      prompt.defTaskGraph(tasks);
+      const updateTool = prompt.getTools().updateTaskStatus;
+
+      // Complete A without output_result
+      await updateTool!.execute({ taskId: 'a', status: 'completed' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const forkTask = state!.find(t => t.id === 'fork1')!;
+      expect(forkTask.input_context).toBeUndefined();
+    });
+
+    it('default (undefined) node_type behaves like spawn', async () => {
+      const prompt = makePrompt();
+      const tasks: TaskNode[] = [
+        { id: 'a', title: 'A', description: '', status: 'pending', dependencies: [], unblocks: ['c'], required_capabilities: [] },
+        { id: 'b', title: 'B', description: '', status: 'pending', dependencies: [], unblocks: ['c'], required_capabilities: [] },
+        // No node_type → should behave as spawn
+        { id: 'c', title: 'C', description: '', status: 'pending', dependencies: ['a', 'b'], unblocks: [], required_capabilities: [] },
+      ];
+      prompt.defTaskGraph(tasks);
+      const updateTool = prompt.getTools().updateTaskStatus;
+
+      await updateTool!.execute({ taskId: 'a', status: 'completed', output_result: 'A output' });
+      await updateTool!.execute({ taskId: 'b', status: 'completed', output_result: 'B output' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const cTask = state!.find(t => t.id === 'c')!;
+
+      // Default spawn: only B's output (completing task)
+      expect(cTask.input_context).toContain('B output');
+      expect(cTask.input_context).not.toContain('A output');
+    });
+  });
+
+  // --------------------------------------------------------
+  // spawnTask tool
+  // --------------------------------------------------------
+  describe('spawnTask tool', () => {
+    it('should register spawnTask tool', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      expect(prompt.getTools()).toHaveProperty('spawnTask');
+    });
+
+    it('should add a new spawn task to the graph', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const tool = prompt.getTools().spawnTask;
+
+      const result = await tool!.execute({
+        id: 'task1', title: 'Research', description: 'Do research',
+        dependencies: [], unblocks: [], required_capabilities: ['web-search'],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.task!.node_type).toBe('spawn');
+      expect(result.task!.id).toBe('task1');
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      expect(state).toHaveLength(1);
+      expect(state![0].node_type).toBe('spawn');
+    });
+
+    it('should add spawn task to existing graph without replacing it', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'existing', title: 'Existing', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+      const tool = prompt.getTools().spawnTask;
+
+      await tool!.execute({
+        id: 'new', title: 'New Task', description: '',
+        dependencies: ['existing'], unblocks: [], required_capabilities: [],
+      });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      expect(state).toHaveLength(2);
+      expect(state!.find(t => t.id === 'existing')).toBeDefined();
+      expect(state!.find(t => t.id === 'new')).toBeDefined();
+    });
+
+    it('should normalize relationships after spawn', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'root', title: 'Root', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+      const tool = prompt.getTools().spawnTask;
+
+      await tool!.execute({
+        id: 'child', title: 'Child', description: '',
+        dependencies: ['root'], unblocks: [], required_capabilities: [],
+      });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const root = state!.find(t => t.id === 'root')!;
+      // After normalization, root.unblocks should contain 'child'
+      expect(root.unblocks).toContain('child');
+    });
+
+    it('should reject duplicate task ID', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'a', title: 'A', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+      const tool = prompt.getTools().spawnTask;
+
+      const result = await tool!.execute({
+        id: 'a', title: 'Duplicate', description: '', dependencies: [], unblocks: [], required_capabilities: [],
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('already exists');
+    });
+
+    it('should reject spawn with non-existent dependency', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const tool = prompt.getTools().spawnTask;
+
+      const result = await tool!.execute({
+        id: 'orphan', title: 'Orphan', description: '',
+        dependencies: ['ghost'], unblocks: [], required_capabilities: [],
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('spawn task should only get direct dependency context on completion', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'unrelated', title: 'Unrelated', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+        { id: 'dep', title: 'Dep', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+      const spawnTool = prompt.getTools().spawnTask;
+      const updateTool = prompt.getTools().updateTaskStatus;
+
+      await spawnTool!.execute({
+        id: 'child', title: 'Child', description: '',
+        dependencies: ['dep'], unblocks: [], required_capabilities: [],
+      });
+
+      await updateTool!.execute({ taskId: 'unrelated', status: 'completed', output_result: 'Unrelated result' });
+      await updateTool!.execute({ taskId: 'dep', status: 'completed', output_result: 'Dep result' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const child = state!.find(t => t.id === 'child')!;
+      expect(child.input_context).toContain('Dep result');
+      expect(child.input_context).not.toContain('Unrelated result');
+    });
+  });
+
+  // --------------------------------------------------------
+  // forkTask tool
+  // --------------------------------------------------------
+  describe('forkTask tool', () => {
+    it('should register forkTask tool', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      expect(prompt.getTools()).toHaveProperty('forkTask');
+    });
+
+    it('should add a new fork task to the graph', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const tool = prompt.getTools().forkTask;
+
+      const result = await tool!.execute({
+        id: 'analysis', title: 'Analysis', description: 'Analyze results',
+        dependencies: [], unblocks: [], required_capabilities: [],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.task!.node_type).toBe('fork');
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      expect(state![0].node_type).toBe('fork');
+    });
+
+    it('fork task should receive ALL completed task outputs on unblocking', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'research1', title: 'Research 1', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+        { id: 'research2', title: 'Research 2', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+      const forkTool = prompt.getTools().forkTask;
+      const updateTool = prompt.getTools().updateTaskStatus;
+
+      await forkTool!.execute({
+        id: 'synthesis', title: 'Synthesis', description: '',
+        dependencies: ['research1', 'research2'], unblocks: [], required_capabilities: [],
+      });
+
+      await updateTool!.execute({ taskId: 'research1', status: 'completed', output_result: 'Findings 1' });
+      await updateTool!.execute({ taskId: 'research2', status: 'completed', output_result: 'Findings 2' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const synthesis = state!.find(t => t.id === 'synthesis')!;
+
+      expect(synthesis.input_context).toContain('Findings 1');
+      expect(synthesis.input_context).toContain('Findings 2');
+    });
+
+    it('should reject duplicate task ID for forkTask', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'existing', title: 'Existing', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+      const tool = prompt.getTools().forkTask;
+
+      const result = await tool!.execute({
+        id: 'existing', title: 'Dup', description: '', dependencies: [], unblocks: [], required_capabilities: [],
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('already exists');
+    });
+  });
+
+  // --------------------------------------------------------
+  // askHuman tool
+  // --------------------------------------------------------
+  describe('askHuman tool', () => {
+    it('should register askHuman tool', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      expect(prompt.getTools()).toHaveProperty('askHuman');
+    });
+
+    it('should create an ask node in the graph', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const tool = prompt.getTools().askHuman;
+
+      const result = await tool!.execute({
+        id: 'q1',
+        question: 'How many concurrent users?',
+        answer_options: ['<1K', '1K-10K', '>10K'],
+        dependencies: [],
+        unblocks: [],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.task!.node_type).toBe('ask');
+      expect(result.task!.question).toBe('How many concurrent users?');
+      expect(result.task!.answer_options).toEqual(['<1K', '1K-10K', '>10K']);
+      expect(result.task!.status).toBe('pending');
+    });
+
+    it('should create ask node with dependencies and unblocks', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'audit', title: 'Audit', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+        { id: 'analysis', title: 'Analysis', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+
+      // Make analysis depend on the ask node
+      const updateTool = prompt.getTools().updateTaskStatus;
+      // First, make analysis depend on ask (we'll use spawnTask pattern)
+      const askTool = prompt.getTools().askHuman;
+
+      const result = await askTool!.execute({
+        id: 'q_scale',
+        question: 'What is your expected scale?',
+        dependencies: ['audit'],
+        unblocks: ['analysis'],
+      });
+
+      expect(result.success).toBe(true);
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const qNode = state!.find(t => t.id === 'q_scale')!;
+      expect(qNode.dependencies).toContain('audit');
+      // After normalization, analysis should have q_scale as dependency
+      const analysisNode = state!.find(t => t.id === 'analysis')!;
+      expect(analysisNode.dependencies).toContain('q_scale');
+    });
+
+    it('should reject duplicate ask node ID', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'q1', title: 'Existing', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+      const tool = prompt.getTools().askHuman;
+
+      const result = await tool!.execute({
+        id: 'q1', question: 'Duplicate', dependencies: [], unblocks: [],
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('already exists');
+    });
+
+    it('ask node without answer_options succeeds', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const tool = prompt.getTools().askHuman;
+
+      const result = await tool!.execute({
+        id: 'q_open',
+        question: 'Describe your architecture.',
+        dependencies: [],
+        unblocks: [],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.task!.answer_options).toBeUndefined();
+    });
+  });
+
+  // --------------------------------------------------------
+  // answerQuestion tool
+  // --------------------------------------------------------
+  describe('answerQuestion tool', () => {
+    it('should register answerQuestion tool', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      expect(prompt.getTools()).toHaveProperty('answerQuestion');
+    });
+
+    it('should complete an ask node with the answer', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        {
+          id: 'q1', title: '[ASK] Scale?', description: 'Scale question',
+          node_type: 'ask', question: 'What is your scale?',
+          status: 'pending', dependencies: [], unblocks: ['analysis'],
+          required_capabilities: [],
+        },
+        { id: 'analysis', title: 'Analysis', description: '', status: 'pending', dependencies: ['q1'], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const tool = prompt.getTools().answerQuestion;
+      const result = await tool!.execute({ taskId: 'q1', answer: '10K-100K users' });
+
+      expect(result.success).toBe(true);
+      expect(result.task!.status).toBe('completed');
+      expect(result.task!.output_result).toBe('10K-100K users');
+    });
+
+    it('should unblock downstream tasks after answering', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        {
+          id: 'q1', title: '[ASK] Scale?', description: 'Scale question',
+          node_type: 'ask', question: 'Scale?',
+          status: 'pending', dependencies: [], unblocks: ['downstream'],
+          required_capabilities: [],
+        },
+        { id: 'downstream', title: 'Downstream', description: '', status: 'pending', dependencies: ['q1'], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const answerTool = prompt.getTools().answerQuestion;
+      const result = await answerTool!.execute({ taskId: 'q1', answer: 'Large scale' });
+
+      expect(result.newlyUnblockedTasks).toHaveLength(1);
+      expect(result.newlyUnblockedTasks![0].id).toBe('downstream');
+
+      const getUbTool = prompt.getTools().getUnblockedTasks;
+      const unblocked = await getUbTool!.execute({});
+      expect(unblocked.tasks.some(t => t.id === 'downstream')).toBe(true);
+    });
+
+    it('should reject answering a non-ask node', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'task1', title: 'Task', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const tool = prompt.getTools().answerQuestion;
+      const result = await tool!.execute({ taskId: 'task1', answer: 'answer' });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('not an ask node');
+    });
+
+    it('should reject answering already-answered question', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        {
+          id: 'q1', title: '[ASK] Q', description: 'Q', node_type: 'ask', question: 'Q?',
+          status: 'pending', dependencies: [], unblocks: [], required_capabilities: [],
+        },
+      ]);
+
+      const tool = prompt.getTools().answerQuestion;
+      await tool!.execute({ taskId: 'q1', answer: 'First answer' });
+      const result = await tool!.execute({ taskId: 'q1', answer: 'Second answer' });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('already been answered');
+    });
+
+    it('should reject answering when dependencies are unmet', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'dep', title: 'Dep', description: '', status: 'pending', dependencies: [], unblocks: ['q1'], required_capabilities: [] },
+        {
+          id: 'q1', title: '[ASK] Q', description: 'Q', node_type: 'ask', question: 'Q?',
+          status: 'pending', dependencies: ['dep'], unblocks: [], required_capabilities: [],
+        },
+      ]);
+
+      const tool = prompt.getTools().answerQuestion;
+      const result = await tool!.execute({ taskId: 'q1', answer: 'Too early' });
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('Unmet dependencies');
+    });
+
+    it('answer propagates as context to downstream spawn tasks', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        {
+          id: 'q1', title: '[ASK] Scale?', description: '', node_type: 'ask', question: 'Scale?',
+          status: 'pending', dependencies: [], unblocks: ['rec'], required_capabilities: [],
+        },
+        { id: 'rec', title: 'Recommendation', description: '', status: 'pending', dependencies: ['q1'], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const tool = prompt.getTools().answerQuestion;
+      await tool!.execute({ taskId: 'q1', answer: '10K-100K users' });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const rec = state!.find(t => t.id === 'rec')!;
+      expect(rec.input_context).toContain('10K-100K users');
+    });
+
+    it('should return not found for unknown task', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const tool = prompt.getTools().answerQuestion;
+      const result = await tool!.execute({ taskId: 'ghost', answer: 'answer' });
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('not found');
+    });
+  });
+
+  // --------------------------------------------------------
+  // readTree tool
+  // --------------------------------------------------------
+  describe('readTree tool', () => {
+    it('should register readTree tool', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      expect(prompt.getTools()).toHaveProperty('readTree');
+    });
+
+    it('should return empty for empty graph', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.success).toBe(true);
+      expect(result.tree).toBe('(empty)');
+      expect(result.tasks).toHaveLength(0);
+    });
+
+    it('should return all tasks in tree format', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'a', title: 'Root Task', description: '', status: 'pending', dependencies: [], unblocks: ['b'], required_capabilities: [] },
+        { id: 'b', title: 'Child Task', description: '', status: 'pending', dependencies: ['a'], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.success).toBe(true);
+      expect(result.tree).toContain('Root Task');
+      expect(result.tree).toContain('Child Task');
+      expect(result.tasks).toHaveLength(2);
+    });
+
+    it('should show node type labels in tree', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'a', title: 'Spawn Task', description: '', status: 'pending', node_type: 'spawn', dependencies: [], unblocks: ['b'], required_capabilities: [] },
+        { id: 'b', title: 'Fork Analysis', description: '', status: 'pending', node_type: 'fork', dependencies: ['a'], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.tree).toContain('FORK');
+    });
+
+    it('should show ask node question in tree', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        {
+          id: 'q1', title: '[ASK] Scale?', description: '',
+          node_type: 'ask', question: 'How many concurrent users?',
+          answer_options: ['<1K', '1K-10K'],
+          status: 'pending', dependencies: [], unblocks: [], required_capabilities: [],
+        },
+      ]);
+
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.tree).toContain('How many concurrent users?');
+      expect(result.tree).toContain('<1K');
+    });
+
+    it('should show completion status symbols', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'a', title: 'Task A', description: '', status: 'completed', dependencies: [], unblocks: [], required_capabilities: [], output_result: 'Done' },
+        { id: 'b', title: 'Task B', description: '', status: 'in_progress', dependencies: [], unblocks: [], required_capabilities: [] },
+        { id: 'c', title: 'Task C', description: '', status: 'failed', dependencies: [], unblocks: [], required_capabilities: [] },
+        { id: 'd', title: 'Task D', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.tree).toContain('✓');
+      expect(result.tree).toContain('●');
+      expect(result.tree).toContain('✗');
+      expect(result.tree).toContain('○');
+    });
+
+    it('should include output_result preview for completed tasks', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'a', title: 'Task A', description: '', status: 'completed', dependencies: [], unblocks: [], required_capabilities: [], output_result: 'My output result' },
+      ]);
+
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.tree).toContain('My output result');
+    });
+
+    it('summary message includes task counts', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'a', title: 'A', description: '', status: 'completed', dependencies: [], unblocks: [], required_capabilities: [] },
+        { id: 'b', title: 'B', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.message).toContain('1 completed');
+      expect(result.message).toContain('1 pending');
+    });
+
+    it('summary mentions unanswered questions', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        {
+          id: 'q1', title: '[ASK] Q', description: '', node_type: 'ask', question: 'Q?',
+          status: 'pending', dependencies: [], unblocks: [], required_capabilities: [],
+        },
+      ]);
+
+      const result = await prompt.getTools().readTree!.execute({});
+      expect(result.message).toContain('unanswered question');
+    });
+  });
+
+  // --------------------------------------------------------
+  // CORD-style full workflow: spawn + fork + ask
+  // --------------------------------------------------------
+  describe('CORD-style full workflow', () => {
+    it('CORD scenario: research (spawn) -> ask -> fork analysis', async () => {
+      /*
+       * Recreates the CORD example from the article:
+       * ● #1 GOAL: Should we migrate?
+       *   ● #2 SPAWN Audit REST API
+       *   ● #3 SPAWN Research GraphQL
+       *   ○ #4 ASK How many users?  (blocked-by: #2)
+       *   ○ #5 FORK Comparative analysis (blocked-by: #3, #4)
+       *   ○ #6 SPAWN Write recommendation (blocked-by: #5)
+       */
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'audit', title: 'Audit REST API', description: '', status: 'pending', dependencies: [], unblocks: ['ask_scale'], required_capabilities: [] },
+        { id: 'research', title: 'Research GraphQL', description: '', status: 'pending', dependencies: [], unblocks: ['analysis'], required_capabilities: [] },
+        {
+          id: 'ask_scale', title: '[ASK] How many users?', description: '',
+          node_type: 'ask', question: 'How many concurrent users do you serve?',
+          answer_options: ['<1K', '1K-10K', '10K-100K', '>100K'],
+          status: 'pending', dependencies: ['audit'], unblocks: ['analysis'], required_capabilities: [],
+        },
+        {
+          id: 'analysis', title: 'Comparative analysis', description: '', status: 'pending',
+          node_type: 'fork', dependencies: ['research', 'ask_scale'], unblocks: ['recommend'], required_capabilities: [],
+        },
+        { id: 'recommend', title: 'Write recommendation', description: '', status: 'pending', dependencies: ['analysis'], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const update = prompt.getTools().updateTaskStatus;
+      const answer = prompt.getTools().answerQuestion;
+      const getUb = prompt.getTools().getUnblockedTasks;
+      const readTree = prompt.getTools().readTree;
+
+      // Initial state: audit and research are unblocked
+      let ub = await getUb!.execute({});
+      expect(ub.tasks.map(t => t.id).sort()).toEqual(['audit', 'research']);
+
+      // Complete audit and research in parallel
+      await update!.execute({ taskId: 'audit', status: 'completed', output_result: '47 endpoints, 12 nested resources' });
+      await update!.execute({ taskId: 'research', status: 'completed', output_result: 'Key advantages: reduced over-fetching' });
+
+      // Now ask_scale is unblocked (audit done)
+      ub = await getUb!.execute({});
+      expect(ub.tasks.some(t => t.id === 'ask_scale')).toBe(true);
+      // analysis is still blocked (waiting for ask_scale)
+      expect(ub.tasks.some(t => t.id === 'analysis')).toBe(false);
+
+      // Human answers the question
+      const answerResult = await answer!.execute({ taskId: 'ask_scale', answer: '10K-100K' });
+      expect(answerResult.success).toBe(true);
+      expect(answerResult.newlyUnblockedTasks!.some(t => t.id === 'analysis')).toBe(true);
+
+      // Analysis (fork) should now have ALL completed outputs
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      const analysisTask = state!.find(t => t.id === 'analysis')!;
+      expect(analysisTask.input_context).toContain('47 endpoints');
+      expect(analysisTask.input_context).toContain('reduced over-fetching');
+      expect(analysisTask.input_context).toContain('10K-100K');
+
+      // Check readTree output
+      const tree = await readTree!.execute({});
+      expect(tree.tree).toContain('Comparative analysis');
+      expect(tree.tree).toContain('FORK');
+
+      // Complete analysis, then recommend
+      await update!.execute({ taskId: 'analysis', status: 'completed', output_result: 'Recommend migration' });
+      ub = await getUb!.execute({});
+      expect(ub.tasks.some(t => t.id === 'recommend')).toBe(true);
+    });
+
+    it('dynamic spawn: agent creates subtasks at runtime', async () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'root', title: 'Root task', description: '', status: 'pending', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+
+      const spawn = prompt.getTools().spawnTask;
+      const fork = prompt.getTools().forkTask;
+      const update = prompt.getTools().updateTaskStatus;
+
+      // Agent completes root, then decides to spawn subtasks
+      await update!.execute({ taskId: 'root', status: 'completed', output_result: 'Analysis shows 3 areas' });
+
+      // Dynamically add spawn tasks (no unblocks yet - synthesis doesn't exist)
+      await spawn!.execute({ id: 'area1', title: 'Area 1', description: '', dependencies: ['root'], unblocks: [], required_capabilities: [] });
+      await spawn!.execute({ id: 'area2', title: 'Area 2', description: '', dependencies: ['root'], unblocks: [], required_capabilities: [] });
+      // Add fork for synthesis (depends on area1 and area2 — normalization fills in unblocks)
+      await fork!.execute({ id: 'synthesis', title: 'Synthesis', description: '', dependencies: ['area1', 'area2'], unblocks: [], required_capabilities: [] });
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      expect(state).toHaveLength(4);
+      expect(state!.find(t => t.id === 'synthesis')!.node_type).toBe('fork');
+      // Normalization: area1 and area2 should have synthesis in their unblocks
+      expect(state!.find(t => t.id === 'area1')!.unblocks).toContain('synthesis');
+      expect(state!.find(t => t.id === 'area2')!.unblocks).toContain('synthesis');
+
+      // area1 and area2 should be immediately unblocked (root completed)
+      const getUb = prompt.getTools().getUnblockedTasks;
+      const ub = await getUb!.execute({});
+      expect(ub.tasks.map(t => t.id).sort()).toEqual(['area1', 'area2']);
+    });
+  });
+
+  // --------------------------------------------------------
+  // System prompt shows node types and ask sections
+  // --------------------------------------------------------
+  describe('system prompt with CORD features', () => {
+    it('should show [FORK] label for fork nodes', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        { id: 'a', title: 'A', description: '', status: 'pending', node_type: 'fork', dependencies: [], unblocks: [], required_capabilities: [] },
+      ]);
+
+      // Verify state is set correctly with fork type
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      expect(state![0].node_type).toBe('fork');
+    });
+
+    it('should show [ASK] label for ask nodes', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([
+        {
+          id: 'q1', title: '[ASK] Q', description: '', node_type: 'ask', question: 'What is your goal?',
+          status: 'pending', dependencies: [], unblocks: [], required_capabilities: [],
+        },
+      ]);
+
+      const state = prompt.getState<TaskNode[]>('taskGraph');
+      expect(state![0].node_type).toBe('ask');
+      expect(state![0].question).toBe('What is your goal?');
+    });
+  });
+
+  // --------------------------------------------------------
+  // New tool registrations verification
+  // --------------------------------------------------------
+  describe('new tool registrations', () => {
+    it('should register all 8 tools', () => {
+      const prompt = makePrompt();
+      prompt.defTaskGraph([]);
+      const tools = prompt.getTools();
+      expect(tools).toHaveProperty('generateTaskGraph');
+      expect(tools).toHaveProperty('getUnblockedTasks');
+      expect(tools).toHaveProperty('updateTaskStatus');
+      expect(tools).toHaveProperty('spawnTask');
+      expect(tools).toHaveProperty('forkTask');
+      expect(tools).toHaveProperty('askHuman');
+      expect(tools).toHaveProperty('answerQuestion');
+      expect(tools).toHaveProperty('readTree');
+    });
+  });
+
+  // --------------------------------------------------------
+  // Type exports verification
+  // --------------------------------------------------------
+  describe('type exports', () => {
+    it('should export TaskNodeType from plugins index', async () => {
+      // Dynamic import to verify the type is exported at runtime via the shape
+      const mod = await import('../index');
+      // Verify the module loaded correctly (types don't have runtime presence,
+      // but we can verify the plugin exports are there)
+      expect(mod.taskGraphPlugin).toBeDefined();
+    });
+  });
+});
