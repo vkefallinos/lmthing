@@ -60,7 +60,9 @@ export const builtInPlugins = [taskListPlugin, taskGraphPlugin, functionPlugin, 
 // Plugin types
 export type {
   Task, TaskStatus, StartTaskResult, CompleteTaskResult, FailTaskResult,
-  TaskNode, TaskNodeStatus, GenerateTaskGraphResult, GetUnblockedTasksResult, UpdateTaskStatusResult,
+  TaskNode, TaskNodeType, TaskNodeStatus,
+  GenerateTaskGraphResult, GetUnblockedTasksResult, UpdateTaskStatusResult,
+  SpawnTaskResult, AskHumanResult, AnswerQuestionResult, ReadTreeResult,
 } from './types';
 export type {
   FunctionDefinition,
