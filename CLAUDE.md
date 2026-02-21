@@ -36,8 +36,8 @@ StreamTextBuilder (src/StreamText.ts)
 | `src/providers/resolver.ts` | Model string resolution (`provider:model_id` → LanguageModel) |
 | `src/providers/custom.ts` | Custom OpenAI-compatible provider support |
 | `src/plugins/` | Plugin system for extending StatefulPrompt |
-| `src/plugins/taskList.ts` | Built-in task list plugin with `defTaskList` |
-| `src/plugins/taskGraph.ts` | Built-in task graph (DAG) plugin with `defTaskGraph` |
+| `src/plugins/taskList/` | Built-in task list plugin with `defTaskList` |
+| `src/plugins/taskGraph/` | Built-in task graph (DAG) plugin with `defTaskGraph` and CORD protocol primitives |
 | `src/plugins/function/` | Built-in function plugin with `defFunction` and `defFunctionAgent` |
 | `src/plugins/zeroStep/` | Built-in zero-step plugin with `defMethod` (inline `<run_code>` execution) |
 | `src/test/createMockModel.ts` | Mock model for testing without API calls |
@@ -926,18 +926,18 @@ The plugin automatically updates the system prompt with current task status:
   (none)
 ```
 
-**taskGraphPlugin** (`src/plugins/taskGraph.ts`):
+**taskGraphPlugin** (`src/plugins/taskGraph/`):
 - Provides `defTaskGraph(tasks)` method for dependency-aware task management using a DAG
-- Creates `generateTaskGraph`, `getUnblockedTasks`, and `updateTaskStatus` tools automatically
+- Creates `generateTaskGraph`, `getUnblockedTasks`, `updateTaskStatus`, and CORD protocol tools automatically
 - Validates task graph for cycles and missing references using Kahn's algorithm
 - Normalizes symmetric `dependencies`/`unblocks` relationships
-- Propagates `output_result` from completed tasks as `input_context` to downstream tasks
+- Propagates `output_result` from completed tasks as `input_context` to downstream tasks (spawn = direct deps only, fork = all completed tasks)
 - Updates system prompt with DAG status via `defEffect`
 - Returns `[taskGraph, setTaskGraph]` tuple for state access
 
 **Task Graph Tools:**
 
-The plugin automatically creates three tools for managing the DAG:
+The plugin automatically creates eight tools for managing the DAG:
 
 ```typescript
 import { runPrompt } from 'lmthing';
@@ -961,9 +961,14 @@ const { result } = await runPrompt(async ({ defTaskGraph, $ }) => {
 ```
 
 **Available Tools:**
-- `generateTaskGraph(tasks)` - Create or replace the task DAG. Validates for cycles and missing references.
+- `generateTaskGraph(tasks)` - Create or replace the task DAG. Validates for cycles and missing references. Supports `node_type` ('spawn', 'fork', 'ask').
 - `getUnblockedTasks()` - Get all tasks whose dependencies are fully completed and are ready to start.
 - `updateTaskStatus(taskId, status, output_result?)` - Update task status to `in_progress`, `completed`, or `failed`. Automatically unblocks downstream tasks on completion.
+- `spawnTask(id, title, description, dependencies, unblocks, required_capabilities, assigned_subagent?)` - Dynamically add a new spawn task (CORD `spawn()` primitive). Gets context only from direct dependencies.
+- `forkTask(id, title, description, dependencies, unblocks, required_capabilities, assigned_subagent?)` - Dynamically add a new fork task (CORD `fork()` primitive). Inherits ALL completed tasks' outputs as context.
+- `askHuman(id, question, answer_options?, dependencies, unblocks)` - Create a human-in-the-loop question node (CORD `ask()` primitive). Downstream tasks blocked until answered.
+- `answerQuestion(taskId, answer)` - Provide a human answer to a pending ask node, completing it and unblocking downstream tasks.
+- `readTree()` - View the full task coordination tree in hierarchical CORD-style format (CORD `read_tree()` primitive).
 
 **TaskNode Interface:**
 ```typescript
@@ -972,14 +977,22 @@ interface TaskNode {
   title: string;                  // Concise task name
   description: string;            // Detailed execution instructions
   status: TaskNodeStatus;         // 'pending' | 'in_progress' | 'completed' | 'failed'
+  node_type?: 'spawn' | 'fork' | 'ask'; // CORD protocol node type (default: 'spawn')
   dependencies: string[];         // IDs of upstream tasks that must complete first
   unblocks: string[];             // IDs of downstream tasks waiting on this one
   required_capabilities: string[];// e.g., ["database", "web-search"]
   assigned_subagent?: string;     // Subagent handling this task
+  question?: string;              // For 'ask' nodes: the question to present to the human
+  answer_options?: string[];      // For 'ask' nodes: optional list of answer choices
   input_context?: string;         // Context from upstream tasks (auto-propagated)
   output_result?: string;         // Summary/artifact produced upon completion
 }
 ```
+
+**Node Types (CORD Protocol):**
+- `spawn` (default): Gets context only from direct dependencies' outputs — clean slate, focused spec
+- `fork`: Gets context from ALL completed tasks' outputs — knows everything the team has learned
+- `ask`: Human-in-the-loop question node; downstream tasks blocked until answered via `answerQuestion`
 
 **Task Status Values:**
 - `pending` - Task not yet started
@@ -1377,8 +1390,8 @@ Usage:
 ```typescript
 import { runPrompt, StatefulPrompt, tool, agent, PromptContext, StepModifier, ToolOptions, AgentOptions, ToolEventCallback } from 'lmthing';
 import { createMockModel } from 'lmthing/test';
-import { taskListPlugin, defTaskList, taskGraphPlugin, defTaskGraph, functionPlugin, defFunction, defFunctionAgent, func, funcAgent, zeroStepPlugin, defMethod } from 'lmthing/plugins';
-import type { MethodDefinition, TypeCheckError, TypeCheckResult } from 'lmthing/plugins';
+import { taskListPlugin, defTaskList, taskGraphPlugin, defTaskGraph, detectCycles, validateTaskGraph, normalizeTaskGraph, functionPlugin, defFunction, defFunctionAgent, func, funcAgent, zeroStepPlugin, defMethod } from 'lmthing/plugins';
+import type { TaskNode, TaskNodeType, TaskNodeStatus, SpawnTaskResult, AskHumanResult, AnswerQuestionResult, ReadTreeResult, MethodDefinition, TypeCheckError, TypeCheckResult } from 'lmthing/plugins';
 ```
 
 ## Dependencies
